@@ -1,0 +1,134 @@
+
+/* Container and layout */
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 30%;
+  padding: 20px;
+  background: #f8f9fa;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.map {
+  flex: 1;
+}
+
+/* Typography */
+.header {
+  font-size: 18px;
+  font-weight: bold;
+  color: #343a40;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 5px;
+}
+
+/* Inputs and Buttons */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input {
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.button, .secondaryButton {
+  padding: 10px;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.button {
+  background: #007bff;
+}
+
+.secondaryButton {
+  background: #6c757d;
+}
+
+/* Suggestions List */
+.suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  background-color: #fff;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.suggestionItem {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.roadList {
+  margin-top: 20px;
+}
+
+.roadItems {
+  list-style-type: none;
+  padding: 0;
+}
+
+.roadItem {
+  margin-bottom: 10px;
+}
+
+.roadItem {
+  background-color: #fff;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.roadItem:hover {
+  background-color: #f1f1f1; 
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.toggleGroup {
+  display: flex;        
+  align-items: center;       
+  gap: 10px;                  
+}
+
+.toggleIcon {
+  cursor: pointer;
+  width: 55px;
+  height: 55px;
+  vertical-align: middle;
+}
+
+

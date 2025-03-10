@@ -1,0 +1,19 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: roadvision_classifier
+    volumes:
+      - /var/lib/mongodb:/data/db
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    external: true
