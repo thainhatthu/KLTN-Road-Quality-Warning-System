@@ -1,0 +1,46 @@
+# Docker Compose file for setting up PostgreSQL with PgBouncer and Adminer
+
+version: '3.8'  # Specify the Docker Compose version
+
+services:
+  # PostgreSQL database service
+  postgredb:
+    image: caothi/postgresql:1.0.9
+    container_name: postgredb
+    environment:
+      # Environment variables are loaded from the .env file
+      POSTGRES_USER: ${POSTGRES_USER}  # Database user (from .env)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Database password (from .env)
+      POSTGRES_DB: ${POSTGRES_DB}  # Database name (from .env)
+      POSTGRES_USER_DEV: ${POSTGRES_USER_DEV}  # Database user for development (from .env)
+      POSTGRES_PASSWORD_DEV: ${POSTGRES_PASSWORD_DEV}  # Database password for development (from .env)
+      LANG:  en_US.utf8
+      POSTGRES_HOST_AUTH_METHOD: trust   # Authentication method
+      POSTGRES_INITDB_ARGS: --auth=md5  # Initialize DB with MD5 auth
+      ALLOW_EMPTY_PASSWORD: yes
+    ports:
+      - 5432:5432  
+    volumes:
+      - /var/lib/postgres-data/:/var/lib/postgresql/data   # Persist data in a local folder
+      - ./init_db/:/docker-entrypoint-initdb.d/
+    networks:
+      - app_network
+    restart: always 
+  adminer:
+    image: adminer:latest  # Use the latest Adminer image
+    restart: always  # Always restart Adminer if it stops
+    ports:
+      - 15432:8080  # Expose Adminer on port 8080
+    environment:
+      ADMINER_DEFAULT_SERVER: postgredb  # Set PgBouncer as the default server
+      ADMINER_DEFAULT_SYSTEM: PostgreSQL  # Set PostgreSQL as the default system
+    depends_on:
+      - postgredb  # Ensure PgBouncer starts before Adminer
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    external: true
+
+

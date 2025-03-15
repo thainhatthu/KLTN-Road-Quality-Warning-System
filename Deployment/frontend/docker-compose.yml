@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: caothi/frontend_roadvision_classifier:latest
+    container_name: frontend
+    restart: always
+    networks:
+      - app_network
+    environment:
+      - VITE_BASE_URL=$VITE_BASE_URL
+
+networks:
+  app_network:
+    external: true

@@ -1,0 +1,8 @@
+python-dotenv
+fastapi
+PyJWT
+uvicorn==0.32.0
+psycopg2-binary
+pydantic
+requests
+python-multipart
