@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  deeplearning_service:
+    image: caothi/deeplearning_service:latest
+    container_name: deeplearning_service
+    environment:
+      - POSTGRESQL_HOST=$POSTGRESQL_HOST
+      - POSTGRESQL_DB=$POSTGRESQL_DB
+      - POSTGRESQL_USER=$POSTGRESQL_USER
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+      - POSTGRESQL_PORT=$POSTGRESQL_PORT
+    restart: always
+    networks:
+      - app_network
+    volumes:
+      - /home/$USER/models/:/app/models/
+      - /home/$USER/logs/:/app/logs/
+      
+
+networks:
+  app_network:
+    external: true

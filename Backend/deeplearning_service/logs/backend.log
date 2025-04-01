@@ -1,0 +1,13 @@
+2024-12-14 16:29:44,495 - Deeplearning_Service - INFO - Image 56 classified as Satisfactory
+2024-12-14 16:29:44,495 - Deeplearning_Service - INFO - Image 56 classified as Satisfactory
+2024-12-14 16:30:24,988 - Deeplearning_Service - INFO - Image 57 classified as Satisfactory
+2024-12-14 16:30:24,988 - Deeplearning_Service - INFO - Image 57 classified as Satisfactory
+2024-12-14 16:31:56,797 - Deeplearning_Service - INFO - Image 58 classified as Satisfactory
+2024-12-14 16:31:56,797 - Deeplearning_Service - INFO - Image 58 classified as Satisfactory
+2024-12-14 16:33:13,157 - Deeplearning_Service - INFO - Image 59 classified as Satisfactory
+2024-12-14 16:33:48,176 - Deeplearning_Service - INFO - Image 60 classified as Satisfactory
+2024-12-14 16:34:33,240 - Deeplearning_Service - INFO - Image 61 classified as Satisfactory
+2024-12-14 18:12:27,796 - Deeplearning_Service - INFO - Image 62 classified as Satisfactory2024-12-14 22:25:06,377 - Deeplearning_Service - INFO - Image 63 classified as Very poor
+2024-12-21 16:13:47,232 - Deeplearning_Service - ERROR - [Errno 2] No such file or directory: 'models\\ResEViT_multiclass.pth'
+2024-12-21 16:13:47,232 - Deeplearning_Service - ERROR - [Errno 2] No such file or directory: 'models\\ResEViT_multiclass.pth'
+2024-12-21 16:15:16,085 - Deeplearning_Service - INFO - Image 83 classified as Very poor

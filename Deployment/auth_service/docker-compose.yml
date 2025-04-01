@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  auth_service:
+    image: caothi/auth_service:latest
+    container_name: auth_service
+    environment:
+      - POSTGRESQL_HOST=$POSTGRESQL_HOST
+      - POSTGRESQL_DB=$POSTGRESQL_DB
+      - POSTGRESQL_USER=$POSTGRESQL_USER
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+      - POSTGRESQL_PORT=$POSTGRESQL_PORT
+      - SECRET_KEY=$SECRET_KEY
+      - SECURITY_ALGORITHM=$SECURITY_ALGORITHM
+    restart: always
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    external: true

@@ -1,0 +1,12 @@
+python-dotenv
+fastapi
+kafka-python
+uvicorn==0.32.0
+psycopg2-binary
+requests
+python-multipart==0.0.18
+pillow
+pymongo==4.10.1
+numpy==1.26.4
+geopy==2.4.1
+scikit-learn==1.6.0
