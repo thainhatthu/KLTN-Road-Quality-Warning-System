@@ -112,7 +112,7 @@ export default function History() {
       key: "image",
       align: "center" as "center",
       render: (image: string) => {
-        const fullImageUrl = `http://192.168.120.26/${image}`;
+        const fullImageUrl = `http://192.168.120.64/${image}`;
         return (
           <img
             src={fullImageUrl}

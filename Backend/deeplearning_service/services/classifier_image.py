@@ -45,7 +45,7 @@ class ImageTransform():
 
 def classifier_road(img):
     model=restevit_road_cls(num_class=4)
-    checkpoint = torch.load('models/ResEViT_multiclass.pth',map_location=torch.device("cpu"))
+    checkpoint = torch.load('models/ResEViT_multiclass_full.pth',map_location=torch.device("cpu"))
     model.load_state_dict(checkpoint)
     img=ImageTransform(224)(img)
     model.eval()
@@ -66,7 +66,7 @@ def classifier_road(img):
 def getRoadImage():
     consumer=consumer = KafkaConsumer(
         'image',
-        bootstrap_servers='192.168.120.26:9092',
+        bootstrap_servers='192.168.120.64:9092',
         auto_offset_reset='earliest',
         enable_auto_commit=False,
         group_id='road_classifier',
