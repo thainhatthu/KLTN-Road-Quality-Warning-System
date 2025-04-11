@@ -80,12 +80,21 @@ WEB_URL=http://localhost
             }
         }
 
+        stage('Start all containers (initialization)') {
+            steps {
+                sh '''
+                    echo "[INFO] Building and starting all services (if not running)..."
+                    sudo docker-compose up -d postgredb mongodb kafka zookeeper nginx
+                '''
+            }
+        }
+
         stage('Deploy authentication service') {
             when {
                 expression { return env.AUTHEN_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Authen' }
             }
             steps {
-                sh 'sudo docker-compose up -d auth_service'
+                sh 'sudo docker-compose up -d --build auth_service'
             }
         }
 
@@ -94,7 +103,7 @@ WEB_URL=http://localhost
                 expression { return env.DATA_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Data' }
             }
             steps {
-                sh 'sudo docker-compose up -d data_service'
+                sh 'sudo docker-compose up -d --build data_service'
             }
         }
 
@@ -103,7 +112,7 @@ WEB_URL=http://localhost
                 expression { return env.DEEPLEARNING_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Deeplearning' }
             }
             steps {
-                sh 'sudo docker-compose up -d deeplearning_service'
+                sh 'sudo docker-compose up -d --build deeplearning_service'
             }
         }
 
@@ -112,7 +121,7 @@ WEB_URL=http://localhost
                 expression { return env.USER_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'User' }
             }
             steps {
-                sh 'sudo docker-compose up -d user_service'
+                sh 'sudo docker-compose up -d --build user_service'
             }
         }
 
@@ -121,7 +130,7 @@ WEB_URL=http://localhost
                 expression { return env.FRONTEND_CHANGED == 'true' || params.RUN_STAGE == 'Frontend' }
             }
             steps {
-                sh 'sudo docker-compose up -d frontend'
+                sh 'sudo docker-compose up -d --build frontend'
             }
         }
 
@@ -130,7 +139,7 @@ WEB_URL=http://localhost
                 expression { return env.POSTGRES_CHANGED == 'true' || params.RUN_STAGE == 'Postgresql' }
             }
             steps {
-                sh 'sudo docker-compose up -d postgredb'
+                sh 'sudo docker-compose up -d --build postgredb'
             }
         }
 
@@ -139,7 +148,7 @@ WEB_URL=http://localhost
                 expression { return env.MONGODB_CHANGED == 'true' || params.RUN_STAGE == 'Mongodb' }
             }
             steps {
-                sh 'sudo docker-compose up -d mongodb'
+                sh 'sudo docker-compose up -d --build mongodb'
             }
         }
 
