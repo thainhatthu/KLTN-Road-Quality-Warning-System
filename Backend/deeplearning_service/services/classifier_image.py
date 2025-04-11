@@ -62,7 +62,6 @@ def classifier_road(img):
         return 'Very poor'
 
 
-
 def getRoadImage():
     consumer=consumer = KafkaConsumer(
         'image',

@@ -5,7 +5,6 @@ import os
 
 load_dotenv()
 
-
 API_AUTHORIZATION_URL = f"http://{os.getenv('SERVER_AUTH')}/auth/api/authorization"
 print(API_AUTHORIZATION_URL)
 

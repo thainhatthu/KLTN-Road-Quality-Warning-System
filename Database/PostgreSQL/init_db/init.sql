@@ -68,7 +68,6 @@ ALTER TABLE public."AccessRoad_id_road_seq" OWNER TO admin;
 
 ALTER SEQUENCE public."AccessRoad_id_road_seq" OWNED BY public."AccessRoad".id_road;
 
-
 --
 -- Name: AccessRoad_id_user_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
