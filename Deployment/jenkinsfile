@@ -84,7 +84,7 @@ WEB_URL=http://localhost
             steps {
                 sh '''
                     echo "[INFO] Building and starting all services (if not running)..."
-                    sudo docker-compose up -d postgredb mongodb kafka zookeeper nginx
+                    sudo docker-compose up -d adminer kafka zookeeper nginx
                 '''
             }
         }
