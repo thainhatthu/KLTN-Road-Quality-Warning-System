@@ -1,15 +1,15 @@
-pipeline {
+pipeline { 
     agent { label 'server' }
     parameters {
         choice(
-        name: 'RUN_STAGE',
-        choices: ['None','Authen', 'Data','Deeplearning','User','Frontend','Postgresql','Mongodb'],
-        description: 'Chọn một giai đoạn để chạy'
+            name: 'RUN_STAGE',
+            choices: ['None','Authen', 'Data','Deeplearning','User','Frontend','Postgresql','Mongodb'],
+            description: 'Chọn một giai đoạn để chạy'
         )
     }
     environment {
-        REPO_GIT="https://github.com/N3Twork-nc/RoadVision-Classifier.git"
-        POSTGRESQL_DB='roadvision_classifier'
+        REPO_GIT = "https://github.com/thainhatthu/KLTN-Road-Quality-Warning-System.git"
+        POSTGRESQL_DB = 'roadvision_classifier'
     }
     triggers {
         pollSCM('* * * * *')
@@ -19,7 +19,6 @@ pipeline {
             steps {
                 git url: "${REPO_GIT}", branch: 'deployment', credentialsId: 'github'
                 script {
-                    echo "checkout directory changed"
                     def changedDirs = sh(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim().split('\n')
                     env.FRONTEND_CHANGED = changedDirs.any { it.startsWith('Frontend/RoadVision-Classifier') } ? 'true' : 'false'
                     env.AUTHEN_SERVICE_CHANGED = changedDirs.any { it.startsWith('Backend/auth_service') } ? 'true' : 'false'
@@ -30,14 +29,15 @@ pipeline {
                     env.MONGODB_CHANGED = changedDirs.any { it.startsWith('Database/MongoDB') } ? 'true' : 'false'
 
                     withCredentials([usernamePassword(credentialsId: 'POSTGRES_USER_DEV', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        env.POSTGRESQL_USER=USERNAME
-                        env.POSTGRESQL_PASSWORD=PASSWORD
-                        env.POSTGRESQL_HOST="192.168.1.14"
-                        env.POSTGRESQL_PORT="5432"
+                        env.POSTGRESQL_USER = USERNAME
+                        env.POSTGRESQL_PASSWORD = PASSWORD
+                        env.POSTGRESQL_HOST = "192.168.1.14"
+                        env.POSTGRESQL_PORT = "5432"
                     }
                 }
             }
         }
+
         stage('Login to Docker Hub') {
             steps {
                 script {
@@ -50,10 +50,12 @@ pipeline {
 
         stage('Start all containers (initialization)') {
             steps {
-                sh '''
-                    echo "[INFO] Building and starting all services (if not running)..."
-                    sudo docker-compose up -d adminer kafka zookeeper nginx
-                '''
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh '''
+                        echo "[INFO] Building and starting all services (if not running)..."
+                        sudo docker-compose up -d adminer kafka zookeeper nginx
+                    '''
+                }
             }
         }
 
@@ -65,13 +67,16 @@ pipeline {
                 withCredentials([string(credentialsId: 'secretjwt', variable: 'SECRET_TOKEN')]) {
                     script {
                         env.SECRET_KEY = SECRET_TOKEN
-                        env.SECURITY_ALGORITHM='HS256'
+                        env.SECURITY_ALGORITHM = 'HS256'
                     }
                 }
-                sh 'sudo docker-compose down auth_service'
-                sh 'sudo docker-compose up -d auth_service'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'sudo docker-compose down auth_service'
+                    sh 'sudo docker-compose up -d auth_service'
+                }
             }
         }
+
         stage('Deploy data service') {
             when {
                 expression { return env.DATA_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Data' }
@@ -79,35 +84,44 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'MONGODB_USER', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     script {
-                        env.MONGODB_USER=USERNAME
-                        env.MONGODB_PASSWORD=PASSWORD
-                        env.MONGODB_DB='roadvision_classifier'
-                        env.MONGODB_PORT='27017'
-                        env.MONGODB_HOST='mongodb'
+                        env.MONGODB_USER = USERNAME
+                        env.MONGODB_PASSWORD = PASSWORD
+                        env.MONGODB_DB = 'roadvision_classifier'
+                        env.MONGODB_PORT = '27017'
+                        env.MONGODB_HOST = 'mongodb'
                     }
                 }
-                sh 'sudo docker-compose down data_service'
-                sh 'sudo docker-compose up -d data_service'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'sudo docker-compose down data_service'
+                    sh 'sudo docker-compose up -d data_service'
+                }
             }
         }
+
         stage('Deploy deeplearning service') {
             when {
                 expression { return env.DEEPLEARNING_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Deeplearning' }
             }
             steps {
-                sh 'sudo docker-compose down deeplearning_service'
-                sh 'sudo docker-compose up -d deeplearning_service'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'sudo docker-compose down deeplearning_service'
+                    sh 'sudo docker-compose up -d deeplearning_service'
+                }
             }
         }
+
         stage('Deploy user service') {
             when {
                 expression { return env.USER_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'User' }
             }
             steps {
-                sh 'sudo docker-compose down user_service'
-                sh 'sudo docker-compose up -d user_service'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'sudo docker-compose down user_service'
+                    sh 'sudo docker-compose up -d user_service'
+                }
             }
         }
+
         stage('Deploy Postgresql') {
             when {
                 expression { return env.POSTGRES_CHANGED == 'true' || params.RUN_STAGE == 'Postgresql' }
@@ -121,14 +135,17 @@ pipeline {
                 }
                 withCredentials([usernamePassword(credentialsId: 'POSTGRES_USER_DEV', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     script {
-                        env.POSTGRES_USER_DEV=USERNAME
-                        env.POSTGRES_PASSWORD_DEV=PASSWORD
+                        env.POSTGRES_USER_DEV = USERNAME
+                        env.POSTGRES_PASSWORD_DEV = PASSWORD
                     }
                 }
-                sh 'sudo docker-compose down adminer postgredb'
-                sh 'sudo docker-compose up -d adminer postgredb'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'sudo docker-compose down adminer postgredb'
+                    sh 'sudo docker-compose up -d adminer postgredb'
+                }
             }
         }
+
         stage('Deploy Mongodb') {
             when {
                 expression { return env.MONGODB_CHANGED == 'true' || params.RUN_STAGE == 'Mongodb' }
@@ -136,27 +153,35 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'MONGODB_USER', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     script {
-                        env.MONGODB_USERNAME=USERNAME
-                        env.MONGODB_PASSWORD=PASSWORD
+                        env.MONGODB_USERNAME = USERNAME
+                        env.MONGODB_PASSWORD = PASSWORD
                     }
                 }
-                sh 'sudo docker-compose down mongodb'
-                sh 'sudo docker-compose up -d mongodb'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'sudo docker-compose down mongodb'
+                    sh 'sudo docker-compose up -d mongodb'
+                }
             }
         }
+
         stage('Deploy frontend') {
             when {
                 expression { return env.FRONTEND_CHANGED == 'true' || params.RUN_STAGE == 'Frontend' }
             }
             steps {
-                sh 'export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"'
-                sh 'sudo docker-compose down frontend'
-                sh 'sudo docker-compose up -d frontend'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"'
+                    sh 'sudo docker-compose down frontend'
+                    sh 'sudo docker-compose up -d frontend'
+                }
             }
         }
+
         stage('Restart Nginx') {
             steps {
-                sh 'sudo docker-compose restart nginx'
+                dir('KLTN-Road-Quality-Warning-System') {
+                    sh 'sudo docker-compose restart nginx'
+                }
             }
         }
     }
