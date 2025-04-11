@@ -1,7 +1,6 @@
 import psycopg2
 import os
 
-
 class Postgresql:
     def __init__(self):
         self.connection_params={
