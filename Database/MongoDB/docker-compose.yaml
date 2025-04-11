@@ -11,7 +11,7 @@ services:
       MONGO_INITDB_DATABASE: roadvision_classifier
     volumes:
       - /var/lib/mongodb:/data/db
-    networks:
+    networks: 
       - app_network
 
 networks:
