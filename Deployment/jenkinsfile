@@ -21,7 +21,6 @@ pipeline {
     stages {
         stage('Clone Git Repository') {
             steps {
-                cleanWs()
                 git url: "${REPO_GIT}", branch: 'deployment', credentialsId: 'github'
                 script {
                     def changedDirs = sh(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim().split('\n')
