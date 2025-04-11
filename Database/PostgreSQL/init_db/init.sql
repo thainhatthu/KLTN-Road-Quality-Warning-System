@@ -80,7 +80,6 @@ CREATE SEQUENCE public."AccessRoad_id_user_seq"
     NO MAXVALUE
     CACHE 1;
 
-
 ALTER TABLE public."AccessRoad_id_user_seq" OWNER TO admin;
 
 --

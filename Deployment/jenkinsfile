@@ -1,5 +1,6 @@
-pipeline { 
+pipeline {
     agent { label 'server' }
+
     parameters {
         choice(
             name: 'RUN_STAGE',
@@ -7,14 +8,18 @@ pipeline {
             description: 'Chọn một giai đoạn để chạy'
         )
     }
+
     environment {
         REPO_GIT = "https://github.com/thainhatthu/KLTN-Road-Quality-Warning-System.git"
         POSTGRESQL_DB = 'roadvision_classifier'
     }
+
     triggers {
         pollSCM('* * * * *')
     }
+
     stages {
+
         stage('Clone Git Repository') {
             steps {
                 git url: "${REPO_GIT}", branch: 'deployment', credentialsId: 'github'
@@ -50,7 +55,7 @@ pipeline {
 
         stage('Start all containers (initialization)') {
             steps {
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh '''
                         echo "[INFO] Building and starting all services (if not running)..."
                         sudo docker-compose up -d adminer kafka zookeeper nginx
@@ -70,7 +75,7 @@ pipeline {
                         env.SECURITY_ALGORITHM = 'HS256'
                     }
                 }
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'sudo docker-compose down auth_service'
                     sh 'sudo docker-compose up -d auth_service'
                 }
@@ -91,7 +96,7 @@ pipeline {
                         env.MONGODB_HOST = 'mongodb'
                     }
                 }
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'sudo docker-compose down data_service'
                     sh 'sudo docker-compose up -d data_service'
                 }
@@ -103,7 +108,7 @@ pipeline {
                 expression { return env.DEEPLEARNING_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Deeplearning' }
             }
             steps {
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'sudo docker-compose down deeplearning_service'
                     sh 'sudo docker-compose up -d deeplearning_service'
                 }
@@ -115,7 +120,7 @@ pipeline {
                 expression { return env.USER_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'User' }
             }
             steps {
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'sudo docker-compose down user_service'
                     sh 'sudo docker-compose up -d user_service'
                 }
@@ -139,7 +144,7 @@ pipeline {
                         env.POSTGRES_PASSWORD_DEV = PASSWORD
                     }
                 }
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'sudo docker-compose down adminer postgredb'
                     sh 'sudo docker-compose up -d adminer postgredb'
                 }
@@ -157,7 +162,7 @@ pipeline {
                         env.MONGODB_PASSWORD = PASSWORD
                     }
                 }
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'sudo docker-compose down mongodb'
                     sh 'sudo docker-compose up -d mongodb'
                 }
@@ -169,7 +174,7 @@ pipeline {
                 expression { return env.FRONTEND_CHANGED == 'true' || params.RUN_STAGE == 'Frontend' }
             }
             steps {
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"'
                     sh 'sudo docker-compose down frontend'
                     sh 'sudo docker-compose up -d frontend'
@@ -179,7 +184,7 @@ pipeline {
 
         stage('Restart Nginx') {
             steps {
-                dir('KLTN-Road-Quality-Warning-System') {
+                dir('KLTN') {
                     sh 'sudo docker-compose restart nginx'
                 }
             }
