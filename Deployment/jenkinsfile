@@ -8,7 +8,7 @@ pipeline {
         )
     }
     environment {
-        REPO_GIT="https://github.com/N3Twork-nc/RoadVision-Classifier.git"
+        REPO_GIT="https://github.com/thainhatthu/KLTN-Road-Quality-Warning-System.git"
         POSTGRESQL_DB='roadvision_classifier'
     }
     triggers {
