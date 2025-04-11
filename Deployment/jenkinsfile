@@ -19,9 +19,9 @@ pipeline {
     }
 
     stages {
-
         stage('Clone Git Repository') {
             steps {
+                cleanWs()
                 git url: "${REPO_GIT}", branch: 'deployment', credentialsId: 'github'
                 script {
                     def changedDirs = sh(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim().split('\n')
@@ -36,7 +36,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'POSTGRES_USER_DEV', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         env.POSTGRESQL_USER = USERNAME
                         env.POSTGRESQL_PASSWORD = PASSWORD
-                        env.POSTGRESQL_HOST = "192.168.1.14"
+                        env.POSTGRESQL_HOST = "192.168.1.61"
                         env.POSTGRESQL_PORT = "5432"
                     }
                 }
@@ -55,12 +55,10 @@ pipeline {
 
         stage('Start all containers (initialization)') {
             steps {
-                dir('KLTN') {
-                    sh '''
-                        echo "[INFO] Building and starting all services (if not running)..."
-                        sudo docker-compose up -d adminer kafka zookeeper nginx
-                    '''
-                }
+                sh '''
+                    echo "[INFO] Building and starting all services (if not running)..."
+                    sudo docker-compose up -d adminer kafka zookeeper nginx
+                '''
             }
         }
 
@@ -75,10 +73,8 @@ pipeline {
                         env.SECURITY_ALGORITHM = 'HS256'
                     }
                 }
-                dir('KLTN') {
-                    sh 'sudo docker-compose down auth_service'
-                    sh 'sudo docker-compose up -d auth_service'
-                }
+                sh 'sudo docker-compose down auth_service'
+                sh 'sudo docker-compose up -d auth_service'
             }
         }
 
@@ -96,10 +92,8 @@ pipeline {
                         env.MONGODB_HOST = 'mongodb'
                     }
                 }
-                dir('KLTN') {
-                    sh 'sudo docker-compose down data_service'
-                    sh 'sudo docker-compose up -d data_service'
-                }
+                sh 'sudo docker-compose down data_service'
+                sh 'sudo docker-compose up -d data_service'
             }
         }
 
@@ -108,10 +102,8 @@ pipeline {
                 expression { return env.DEEPLEARNING_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Deeplearning' }
             }
             steps {
-                dir('KLTN') {
-                    sh 'sudo docker-compose down deeplearning_service'
-                    sh 'sudo docker-compose up -d deeplearning_service'
-                }
+                sh 'sudo docker-compose down deeplearning_service'
+                sh 'sudo docker-compose up -d deeplearning_service'
             }
         }
 
@@ -120,10 +112,8 @@ pipeline {
                 expression { return env.USER_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'User' }
             }
             steps {
-                dir('KLTN') {
-                    sh 'sudo docker-compose down user_service'
-                    sh 'sudo docker-compose up -d user_service'
-                }
+                sh 'sudo docker-compose down user_service'
+                sh 'sudo docker-compose up -d user_service'
             }
         }
 
@@ -144,10 +134,8 @@ pipeline {
                         env.POSTGRES_PASSWORD_DEV = PASSWORD
                     }
                 }
-                dir('KLTN') {
-                    sh 'sudo docker-compose down adminer postgredb'
-                    sh 'sudo docker-compose up -d adminer postgredb'
-                }
+                sh 'sudo docker-compose down adminer postgredb'
+                sh 'sudo docker-compose up -d adminer postgredb'
             }
         }
 
@@ -162,10 +150,8 @@ pipeline {
                         env.MONGODB_PASSWORD = PASSWORD
                     }
                 }
-                dir('KLTN') {
-                    sh 'sudo docker-compose down mongodb'
-                    sh 'sudo docker-compose up -d mongodb'
-                }
+                sh 'sudo docker-compose down mongodb'
+                sh 'sudo docker-compose up -d mongodb'
             }
         }
 
@@ -174,19 +160,15 @@ pipeline {
                 expression { return env.FRONTEND_CHANGED == 'true' || params.RUN_STAGE == 'Frontend' }
             }
             steps {
-                dir('KLTN') {
-                    sh 'export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"'
-                    sh 'sudo docker-compose down frontend'
-                    sh 'sudo docker-compose up -d frontend'
-                }
+                sh 'export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"'
+                sh 'sudo docker-compose down frontend'
+                sh 'sudo docker-compose up -d frontend'
             }
         }
 
         stage('Restart Nginx') {
             steps {
-                dir('KLTN') {
-                    sh 'sudo docker-compose restart nginx'
-                }
+                sh 'sudo docker-compose restart nginx'
             }
         }
     }

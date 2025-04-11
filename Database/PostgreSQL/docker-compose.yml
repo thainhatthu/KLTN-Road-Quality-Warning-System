@@ -38,7 +38,7 @@ services:
       - postgredb  # Ensure PgBouncer starts before Adminer
     networks:
       - app_network
-
+ 
 networks:
   app_network:
     external: true
