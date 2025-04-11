@@ -18,6 +18,15 @@ services:
     volumes:
       - ./postgres-data/:/var/lib/postgresql/data  
       - ./Database/PostgrerSQL/init_db:/docker-entrypoint-initdb.d/
+  
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - "15432:8080"
+    depends_on:
+      - postgredb
 
   mongodb:
     image: mongo
@@ -42,7 +51,7 @@ services:
     restart: always
 
   kafka:
-    image: "bitnami/kafka:latest"
+    image: "bitnami/kafka:2.8.1"
     container_name: kafka
     user: root
     ports:
@@ -72,6 +81,7 @@ services:
       - SECRET_KEY=$SECRET_KEY
       - SECURITY_ALGORITHM=$SECURITY_ALGORITHM
     restart: always
+
   user_service:
     build:
       context: ./Backend/user_service
@@ -87,6 +97,7 @@ services:
     restart: always
     volumes:
       - ./image/avata/:/app/avatar
+
   data_service:
     build:
       context: ./Backend/data_service
@@ -122,6 +133,7 @@ services:
     restart: always
     volumes:
       - ./models/:/app/models/
+
   frontend:
     build :
       context: ./Frontend/RoadVision-Classifier
@@ -130,6 +142,7 @@ services:
     restart: always
     environment:
       - VITE_BASE_URL=$WEB_URL
+      
   nginx:
     image: nginx:1.16.0-alpine
     container_name: nginx
