@@ -188,7 +188,7 @@ pipeline {
 
         stage('Restart Nginx') {
             steps {
-                sh 'sudo docker-compose --env-file .env restart nginx'
+                sh 'sudo docker-compose restart nginx'
             }
         }
     }
