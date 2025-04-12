@@ -63,4 +63,4 @@ RUN wget -O /var/lib/postgresql/pg_cron.tgz https://github.com/citusdata/pg_cron
     && cp /usr/lib/postgresql14/pg_cron.so /usr/local/lib/postgresql/ \
     && cp /usr/share/postgresql14/extension/* /usr/local/share/postgresql/extension
 
-CMD ["-c", "shared_preload_libraries=pg_cron"] 
+CMD ["-c", "shared_preload_libraries=pg_cron"]

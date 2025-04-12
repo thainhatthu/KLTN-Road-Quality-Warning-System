@@ -56,7 +56,7 @@ pipeline {
             steps {
                 sh '''
                     echo "[INFO] Building and starting all services (if not running)..."
-                    sudo docker-compose --env-file .env up -d adminer kafka zookeeper nginx
+                    sudo docker-compose --env-file .env up -d kafka zookeeper nginx
                 '''
             }
         }
@@ -72,8 +72,11 @@ pipeline {
                         env.SECURITY_ALGORITHM = 'HS256'
                     }
                 }
-                sh 'sudo docker-compose --env-file .env down auth_service'
-                sh 'sudo docker-compose --env-file .env up -d auth_service'
+                sh '''
+                    sudo docker-compose --env-file .env stop auth_service
+                    sudo docker-compose --env-file .env rm -f auth_service
+                    sudo docker-compose --env-file .env up -d auth_service
+                '''
             }
         }
 
@@ -91,8 +94,11 @@ pipeline {
                         env.MONGODB_HOST = 'mongodb'
                     }
                 }
-                sh 'sudo docker-compose --env-file .env down data_service'
-                sh 'sudo docker-compose --env-file .env up -d data_service'
+                sh '''
+                    sudo docker-compose --env-file .env stop data_service
+                    sudo docker-compose --env-file .env rm -f data_service
+                    sudo docker-compose --env-file .env up -d data_service
+                '''
             }
         }
 
@@ -101,8 +107,11 @@ pipeline {
                 expression { return env.DEEPLEARNING_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Deeplearning' }
             }
             steps {
-                sh 'sudo docker-compose --env-file .env down deeplearning_service'
-                sh 'sudo docker-compose --env-file .env up -d deeplearning_service'
+                sh '''
+                    sudo docker-compose --env-file .env stop deeplearning_service
+                    sudo docker-compose --env-file .env rm -f deeplearning_service
+                    sudo docker-compose --env-file .env up -d deeplearning_service
+                '''
             }
         }
 
@@ -111,8 +120,11 @@ pipeline {
                 expression { return env.USER_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'User' }
             }
             steps {
-                sh 'sudo docker-compose --env-file .env down user_service'
-                sh 'sudo docker-compose --env-file .env up -d user_service'
+                sh '''
+                    sudo docker-compose --env-file .env stop user_service
+                    sudo docker-compose --env-file .env rm -f user_service
+                    sudo docker-compose --env-file .env up -d user_service
+                '''
             }
         }
 
@@ -133,8 +145,11 @@ pipeline {
                         env.POSTGRES_PASSWORD_DEV = PASSWORD
                     }
                 }
-                sh 'sudo docker-compose --env-file .env down adminer postgredb'
-                sh 'sudo docker-compose --env-file .env up -d adminer postgredb'
+                sh '''
+                    sudo docker-compose --env-file .env stop postgredb adminer
+                    sudo docker-compose --env-file .env rm -f postgredb adminer
+                    sudo docker-compose --env-file .env up -d postgredb adminer
+                '''
             }
         }
 
@@ -149,8 +164,11 @@ pipeline {
                         env.MONGODB_PASSWORD = PASSWORD
                     }
                 }
-                sh 'sudo docker-compose --env-file .env down mongodb'
-                sh 'sudo docker-compose --env-file .env up -d mongodb'
+                sh '''
+                    sudo docker-compose --env-file .env stop mongodb
+                    sudo docker-compose --env-file .env rm -f mongodb
+                    sudo docker-compose --env-file .env up -d mongodb
+                '''
             }
         }
 
@@ -159,9 +177,12 @@ pipeline {
                 expression { return env.FRONTEND_CHANGED == 'true' || params.RUN_STAGE == 'Frontend' }
             }
             steps {
-                sh 'export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"'
-                sh 'sudo docker-compose --env-file .env down frontend'
-                sh 'sudo docker-compose --env-file .env up -d frontend'
+                sh '''
+                    export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"
+                    sudo docker-compose --env-file .env stop frontend
+                    sudo docker-compose --env-file .env rm -f frontend
+                    sudo docker-compose --env-file .env up -d frontend
+                '''
             }
         }
 
