@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Switch,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
@@ -19,7 +20,8 @@ export default function PublicMapScreen() {
   const router = useRouter();
   const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
-  // Lấy vị trí thật
+  const [showBadRoutes, setShowBadRoutes] = useState(true);
+
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -41,6 +43,22 @@ export default function PublicMapScreen() {
       }
     })();
   }, []);
+  const [showNearby, setShowNearby] = useState(true);
+
+  const nearbyData = [
+    {
+      address: "Đường số 10, Phường Dĩ An, Thành phố Dĩ An, Tỉnh Bình Dương",
+      status: "Very poor",
+    },
+    {
+      address: "Đường Cà Phê Xóm Vắng 2, Phường Tân Đông Hiệp",
+      status: "Poor",
+    },
+    {
+      address: "QL1K, Khu phố Đông Tân, P. Dĩ An",
+      status: "Moderate",
+    },
+  ];
 
   return (
     <View style={styles.container}>
@@ -86,10 +104,10 @@ export default function PublicMapScreen() {
             onLoadEnd={() => {
               if (location) {
                 const js = `
-        if (window.setUserLocation) {
-          window.setUserLocation(${location.latitude}, ${location.longitude});
-        }
-      `;
+                  if (window.setUserLocation) {
+                    window.setUserLocation(${location.latitude}, ${location.longitude});
+                  }
+                `;
                 webviewRef.current?.injectJavaScript(js);
               }
             }}
@@ -103,10 +121,56 @@ export default function PublicMapScreen() {
             <Ionicons name="expand-outline" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
+
+        {/* View Bad Routes Toggle */}
+        <View style={styles.toggleRow}>
+          <Text style={styles.toggleLabel}>View Bad Routes</Text>
+          <Switch
+            value={showBadRoutes}
+            onValueChange={setShowBadRoutes}
+            trackColor={{ true: "#2D82C6", false: "#ccc" }}
+          />
+        </View>
+
+        {/* Nearby Damaged Roads */}
+        <View style={styles.roadBox}>
+          <TouchableOpacity
+            onPress={() => setShowNearby((prev) => !prev)}
+            style={styles.roadBoxHeader}
+          >
+            <Text style={styles.roadBoxTitle}>
+              Routes information:
+            </Text>
+            <Ionicons
+              name={showNearby ? "chevron-up" : "chevron-down"}
+              size={18}
+              color="#333"
+            />
+          </TouchableOpacity>
+
+          {showNearby && (
+            <ScrollView style={styles.roadScroll} nestedScrollEnabled>
+              {nearbyData.map((item, idx) => (
+                <View style={styles.roadScrollItem} key={idx}>
+                  <Ionicons
+                    name="ellipse"
+                    size={6}
+                    color="#2D82C6"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={styles.roadScrollText}>
+                    {item.address} - Trạng thái: {item.status}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -182,12 +246,8 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 32,
+    marginBottom: 20,
     position: "relative",
-  },
-  mapWebview: {
-    height: "100%",
-    width: "100%",
   },
   expandButton: {
     position: "absolute",
@@ -197,5 +257,60 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     zIndex: 10,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  toggleLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  roadBox: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    overflow: "hidden",
+  },
+  roadBoxHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+  },
+  roadBoxTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  roadScroll: {
+    maxHeight: 180,
+    paddingHorizontal: 12,
+  },
+  roadScrollItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
+  roadScrollText: {
+    fontSize: 13,
+    color: "#444",
+    flex: 1,
+    lineHeight: 18,
   },
 });
