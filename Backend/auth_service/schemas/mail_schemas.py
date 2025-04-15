@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 
 class Mail():
 
-    def __init__(self, smtp_host='smtp.gmail.com', smtp_port=587, smtp_username='cloudkeeper4@gmail.com', smtp_password='pygr pjpa cxht wgel'):
+    def __init__(self, smtp_host='smtp.gmail.com', smtp_port=587, smtp_username='cloudkeeper4@gmail.com', smtp_password='mozm ocab rfvs fydz'):
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
         self.smtp_username = smtp_username
