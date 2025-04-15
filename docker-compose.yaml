@@ -88,8 +88,6 @@ services:
       - POSTGRESQL_PORT=$POSTGRESQL_PORT
       - SECRET_KEY=$SECRET_KEY
       - SECURITY_ALGORITHM=$SECURITY_ALGORITHM
-    ports:
-      - "8082:8080"
     restart: always
     networks:
       - kltn_network
@@ -106,8 +104,6 @@ services:
       - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
       - POSTGRESQL_PORT=$POSTGRESQL_PORT
       - SERVER_AUTH=$SERVER_AUTH
-    ports:
-      - "8083:8080"
     restart: always
     volumes:
       - ./image/avata/:/app/avatar
@@ -131,8 +127,6 @@ services:
       - MONGODB_PORT=$MONGODB_PORT
       - MONGODB_HOST=$MONGODB_HOST
       - SERVER_AUTH=$SERVER_AUTH
-    ports:
-      - "8084:8080"
     restart: always
     volumes:
       - ./image/road:/app/roadImages/
