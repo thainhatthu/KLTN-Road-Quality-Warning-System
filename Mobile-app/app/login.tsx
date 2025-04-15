@@ -11,10 +11,91 @@ import {
 } from "react-native";
 import { Link, router } from "expo-router";
 import { useState } from "react";
+import z from "zod";
+import { ERROR_MESSAGES } from "@/defination/consts/messages.const";
+import { useRecoilState } from "recoil";
+import { accountState } from "@/atoms/authState";
+import authService from "@/services/auth.service";
+import { API_URL } from "@/configs";
+import { LoginDataType } from "@/defination/types/auth.type";
+import { saveAccessToken, setStoredUserInfo } from "@/utils/auth.util";
 
+// Input validation schema using zod
+const signInSchema = z.object({
+  username: z.string().min(6, ERROR_MESSAGES.auth.username),
+  password: z.string().min(6, ERROR_MESSAGES.auth.password),
+});
+
+// Type for the sign-in data inferred from the schema
+type SignInData = z.infer<typeof signInSchema>;
 export default function LoginScreen() {
-  const [rememberMe, setRememberMe] = useState(false);
+  // State for form input data
+  const [formData, setFormData] = useState<SignInData>({
+    username: "",
+    password: "",
+  });
 
+  // State for error messages
+  const [error, setError] = useState<string | null>(null);
+
+  // Recoil state for user information
+  const [, setAccountState] = useRecoilState(accountState);
+  // Handle input field changes
+  const handleChange = (fieldName: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+  };
+
+  const [rememberMe, setRememberMe] = useState(false);
+  // Handle sign-in button click
+  const handleSignInClick = async () => {
+    setError(null);
+
+    // Validate input data using zod schema
+    const parseResult = signInSchema.safeParse(formData);
+    if (!parseResult.success) {
+      const errorMessage = parseResult.error.errors[0].message;
+      setError(errorMessage);
+      return;
+    }
+
+    try {
+      // Call the API for sign-in
+      const data = await authService.signIn(formData);
+
+
+      const { info, token } = data; // Extract user info and token from response
+
+      if (info && token) {
+        const user_avatar = `${API_URL}/user/api/getAvatar?username=${info.username}`;
+        info.avatar = user_avatar;
+        saveAccessToken(token); // Save token for future API calls
+        setStoredUserInfo(info); // Save user info to local storage
+        setAccountState(info);
+
+        if (data.info.role) {
+          // localStorage.setItem("userRole", data.info.role);
+          // saveUserRole(data.info.role); Cookie
+          // if (data.info.role === "user") {
+          //   navigateHome();
+          // } else if (data.info.role === "admin") {
+          //   navigateToDashboard();
+          // } else if (data.info.role === "technical") {
+          //   navigateToDashboardTechnician();
+          // }
+        } else {
+          console.error("Role is undefined");
+        }
+
+        router.push("/home"); // Navigate to home screen
+
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -40,6 +121,8 @@ export default function LoginScreen() {
             placeholder="uit@gmail.com"
             placeholderTextColor="#888"
             style={styles.input}
+            value={formData.username}
+            onChangeText={(text) => handleChange("username", text)}
           />
 
           <Text style={styles.label}>Password</Text>
@@ -48,6 +131,8 @@ export default function LoginScreen() {
             secureTextEntry
             placeholderTextColor="#888"
             style={styles.input}
+            value={formData.password}
+            onChangeText={(text) => handleChange("password", text)}
           />
 
           <View style={styles.rememberRow}>
@@ -73,7 +158,7 @@ export default function LoginScreen() {
 
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={() => router.replace("/(tabs)/public-map")}
+            onPress={handleSignInClick}
           >
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>

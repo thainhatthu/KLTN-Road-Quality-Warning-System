@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Modal,
+  TextInput,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
@@ -16,11 +18,45 @@ import type { LocationObjectCoords } from "expo-location";
 import type { WebView as WebViewType } from "react-native-webview";
 import { getLeafletHtml } from "@/utils/leafletMapHtml";
 
+import * as ImagePicker from "expo-image-picker";
+import Header from "@/components/ui/header";
+
 export default function PrivateMapScreen() {
   const router = useRouter();
   const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
   const [showBadRoutes, setShowBadRoutes] = useState(true);
+
+  const [uploadLat, setUploadLat] = useState("");
+  const [uploadLng, setUploadLng] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const openCamera = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      alert("Camera permission is required");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -72,22 +108,12 @@ export default function PrivateMapScreen() {
     },
   ];
 
+  const [showUploadModal, setShowUploadModal] = useState(false);
+
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.headerWrapper}>
-        <View style={styles.header}>
-          <Image
-            source={require("@/assets/images/react-logo.png")}
-            style={styles.icon}
-          />
-          <Text style={styles.mainTitle}>Public Map</Text>
-          <Image
-            source={require("@/assets/images/img_avatar.png")}
-            style={styles.avatar}
-          />
-        </View>
-      </View>
+      <Header title="Map management"></Header>
 
       <ScrollView
         style={styles.scrollView}
@@ -103,9 +129,7 @@ export default function PrivateMapScreen() {
             Welcome to Road Classifier System
           </Text>
         </View>
-
         <Text style={styles.sectionTitle}>Map</Text>
-
         {/* Bản đồ + icon expand */}
         <View style={styles.mapWrapper}>
           <WebView
@@ -133,7 +157,6 @@ export default function PrivateMapScreen() {
             <Ionicons name="expand-outline" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
-
         {/* View Bad Routes Toggle */}
         <View style={styles.toggleRow}>
           <Text style={styles.toggleLabel}>View Bad Routes</Text>
@@ -143,7 +166,39 @@ export default function PrivateMapScreen() {
             trackColor={{ true: "#2D82C6", false: "#ccc" }}
           />
         </View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginTop: 12,
+          }}
+        >
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: "#FF9800" }]}
+            onPress={openCamera}
+          >
+            <Ionicons
+              name="camera"
+              size={20}
+              color="#fff"
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.actionButtonText}>Take Photo</Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: "#2D82C6" }]}
+            onPress={() => setShowUploadModal(true)}
+          >
+            <Ionicons
+              name="cloud-upload"
+              size={20}
+              color="#fff"
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.actionButtonText}>Upload</Text>
+          </TouchableOpacity>
+        </View>
         {/* Nearby Damaged Roads */}
         <View style={styles.roadBox}>
           <TouchableOpacity
@@ -178,6 +233,71 @@ export default function PrivateMapScreen() {
             </ScrollView>
           )}
         </View>
+
+        {/* Modal Upload */}
+        <Modal visible={showUploadModal} transparent animationType="slide">
+          <View style={styles.modalWrapper}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Upload Đoạn đường</Text>
+
+              <TextInput
+                placeholder="Latitude"
+                style={styles.inputModal}
+                keyboardType="numeric"
+                value={uploadLat}
+                onChangeText={setUploadLat}
+              />
+              <TextInput
+                placeholder="Longitude"
+                style={styles.inputModal}
+                keyboardType="numeric"
+                value={uploadLng}
+                onChangeText={setUploadLng}
+              />
+
+              <TouchableOpacity
+                style={[styles.actionButton, { marginVertical: 12 }]}
+                onPress={pickImage}
+              >
+                <Ionicons
+                  name="image"
+                  size={20}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.actionButtonText}>Choose Image</Text>
+              </TouchableOpacity>
+
+              {selectedImage && (
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={{
+                    width: "100%",
+                    height: 160,
+                    borderRadius: 8,
+                    marginBottom: 12,
+                  }}
+                />
+              )}
+
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: "#2D82C6" }]}
+                onPress={() => {
+                  setShowUploadModal(false);
+                  // TODO: Submit uploadLat, uploadLng, selectedImage
+                  console.log(
+                    "Uploaded info:",
+                    uploadLat,
+                    uploadLng,
+                    selectedImage
+                  );
+                }}
+              >
+                <Text style={styles.actionButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </View>
   );
@@ -324,5 +444,51 @@ const styles = StyleSheet.create({
     color: "#444",
     flex: 1,
     lineHeight: 18,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  actionButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  modalWrapper: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#2D82C6",
+  },
+  inputModal: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
   },
 });

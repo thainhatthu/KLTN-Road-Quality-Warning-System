@@ -1,15 +1,15 @@
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function LibraryScreen() {
+export default function HistoryScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>📚 This is the Library screen!</Text>
+      <Text style={styles.text}>📚 This is the History screen!</Text>
     </View>
   );
 }
 
 export const options = {
-  title: 'Library',
+  title: 'History',
 };
 
 const styles = StyleSheet.create({

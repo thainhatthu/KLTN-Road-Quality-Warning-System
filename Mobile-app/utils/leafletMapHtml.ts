@@ -14,10 +14,8 @@ export const getLeafletHtml = () => `
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
     <script>
-      var map = L.map('map').setView([0, 0], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18
-      }).addTo(map);
+      var map = L.map('map').setView([10.7769, 106.7009], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
       var marker = null;
       var currentRouteControl = null;
@@ -31,15 +29,10 @@ export const getLeafletHtml = () => `
       };
 
       window.drawRoute = function(fromLat, fromLng, toLat, toLng) {
-        if (currentRouteControl) {
-          map.removeControl(currentRouteControl);
-        }
+        if (currentRouteControl) map.removeControl(currentRouteControl);
 
         currentRouteControl = L.Routing.control({
-          waypoints: [
-            L.latLng(fromLat, fromLng),
-            L.latLng(toLat, toLng)
-          ],
+          waypoints: [L.latLng(fromLat, fromLng), L.latLng(toLat, toLng)],
           show: false,
           showAlternatives: true,
           altLineOptions: {
@@ -60,7 +53,7 @@ export const getLeafletHtml = () => `
             duration: (route.summary.totalTime / 60).toFixed(0)
           }));
 
-          if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+          if (window.ReactNativeWebView?.postMessage) {
             window.ReactNativeWebView.postMessage(JSON.stringify({
               type: 'routes_found',
               routes: summaries
@@ -69,15 +62,23 @@ export const getLeafletHtml = () => `
         });
       };
 
-      window.resetMap = function() {
-        if (currentRouteControl) {
-          map.removeControl(currentRouteControl);
-          currentRouteControl = null;
-        }
-        if (lastUserLatLng) {
-          map.flyTo(lastUserLatLng, 16);
-        }
-      };
+      // Marker demo (click để gửi dữ liệu)
+      const badRoadMarker = L.marker([9.88, 105.37]).addTo(map).bindPopup("BAD ROAD");
+
+      badRoadMarker.on('click', function() {
+        window.ReactNativeWebView?.postMessage(JSON.stringify({
+          type: 'marker_click',
+          data: {
+            title: "Đoạn đường hư hỏng",
+            lat: 9.88,
+            lng: 105.37,
+            address: "An Bình, Dĩ An, Bình Dương",
+            time: "07:30:22, 20/11/2024",
+            result: "BAD ROAD",
+            image: "https://i.imgur.com/W6m7sZC.jpeg"
+          }
+        }));
+      });
     </script>
   </body>
 </html>

@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LocationObjectCoords } from "expo-location";
 import type { WebView as WebViewType } from "react-native-webview";
 import { getLeafletHtml } from "@/utils/leafletMapHtml";
+import Header from "@/components/ui/header";
 
 export default function PublicMapScreen() {
   const router = useRouter();
@@ -63,19 +64,7 @@ export default function PublicMapScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.headerWrapper}>
-        <View style={styles.header}>
-          <Image
-            source={require("@/assets/images/react-logo.png")}
-            style={styles.icon}
-          />
-          <Text style={styles.mainTitle}>Public Map</Text>
-          <Image
-            source={require("@/assets/images/img_avatar.png")}
-            style={styles.avatar}
-          />
-        </View>
-      </View>
+      <Header title="Public map"></Header>
 
       <ScrollView
         style={styles.scrollView}
@@ -138,9 +127,7 @@ export default function PublicMapScreen() {
             onPress={() => setShowNearby((prev) => !prev)}
             style={styles.roadBoxHeader}
           >
-            <Text style={styles.roadBoxTitle}>
-              Routes information:
-            </Text>
+            <Text style={styles.roadBoxTitle}>Routes information:</Text>
             <Ionicons
               name={showNearby ? "chevron-up" : "chevron-down"}
               size={18}

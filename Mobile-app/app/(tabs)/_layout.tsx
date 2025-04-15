@@ -6,7 +6,6 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import type { BottomTabBarIconProps } from "@react-navigation/bottom-tabs";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -58,9 +57,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="library/index"
+        name="history/index"
         options={{
-          title: "Library",
+          title: "History",
           tabBarIcon: ({ color }: { color: string }) => (
             <IconSymbol size={28} name="book.closed.fill" color={color} />
           ),

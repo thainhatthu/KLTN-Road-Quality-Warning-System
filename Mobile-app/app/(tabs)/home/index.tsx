@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import  Header from "@/components/ui/header";
 
 export default function HomeScreen() {
   const [showFullText, setShowFullText] = useState(false);
@@ -36,19 +37,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* Header cố định */}
-      <View style={styles.headerWrapper}>
-        <View style={styles.header}>
-          <Image
-            source={require("@/assets/images/react-logo.png")}
-            style={styles.icon}
-          />
-          <Text style={styles.mainTitle}>Home</Text>
-          <Image
-            source={require("@/assets/images/img_avatar.png")}
-            style={styles.avatar}
-          />
-        </View>
-      </View>
+      <Header title="Home"></Header>
 
       <ScrollView
         style={styles.scrollView}
