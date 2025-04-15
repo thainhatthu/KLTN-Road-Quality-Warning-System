@@ -2,56 +2,53 @@ version: "3.8"
 
 services:
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
     ports:
       - "9090:9090"
     networks:
-      - kltn_network
-    restart: always
+      - kltn_kltn_network
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:latest
     container_name: grafana
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/dashboards:/etc/grafana/dashboards
-      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
     networks:
-      - kltn_network
-    restart: always
-
-  node-exporter:
-    image: prom/node-exporter
-    container_name: node-exporter
-    ports:
-      - "9100:9100"
-    networks:
-      - kltn_network
-    restart: always
+      - kltn_kltn_network
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     ports:
-      - "8081:8080"
+      - "8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
-      - kltn_network
-    restart: always
+      - kltn_kltn_network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - kltn_kltn_network
+
+volumes:
+  prometheus_data:
+  grafana_data:
 
 networks:
-  kltn_network:
+  kltn_kltn_network:
     external: true
