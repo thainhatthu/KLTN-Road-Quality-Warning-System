@@ -6,7 +6,6 @@ import inspect
 from fastapi.responses import JSONResponse
 current_file_path = os.path.abspath(__file__)
 
-
 class RouteMap():
     def __init__(self, areas):
         self.areas=areas
