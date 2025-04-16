@@ -56,7 +56,7 @@ pipeline {
             steps {
                 sh '''
                     echo "[INFO] Building and starting all services (if not running)..."
-                    sudo docker-compose --env-file .env up -d kafka zookeeper nginx
+                    sudo docker-compose --env-file .env up -d --build kafka zookeeper nginx
                 '''
             }
         }
@@ -73,9 +73,12 @@ pipeline {
                     }
                 }
                 sh '''
+                    echo "[INFO] Removing old image: auth_service"
+                    sudo docker rmi -f $(docker images 'auth_service' -q) || true
+
                     sudo docker-compose --env-file .env stop auth_service
                     sudo docker-compose --env-file .env rm -f auth_service
-                    sudo docker-compose --env-file .env up -d auth_service
+                    sudo docker-compose --env-file .env up -d --build auth_service
                 '''
             }
         }
@@ -95,9 +98,12 @@ pipeline {
                     }
                 }
                 sh '''
+                    echo "[INFO] Removing old image: data_service"
+                    sudo docker rmi -f $(docker images 'data_service' -q) || true
+
                     sudo docker-compose --env-file .env stop data_service
                     sudo docker-compose --env-file .env rm -f data_service
-                    sudo docker-compose --env-file .env up -d data_service
+                    sudo docker-compose --env-file .env up -d --build data_service
                 '''
             }
         }
@@ -108,9 +114,12 @@ pipeline {
             }
             steps {
                 sh '''
+                    echo "[INFO] Removing old image: deeplearning_service"
+                    sudo docker rmi -f $(docker images 'deeplearning_service' -q) || true
+
                     sudo docker-compose --env-file .env stop deeplearning_service
                     sudo docker-compose --env-file .env rm -f deeplearning_service
-                    sudo docker-compose --env-file .env up -d deeplearning_service
+                    sudo docker-compose --env-file .env up -d --build deeplearning_service
                 '''
             }
         }
@@ -121,9 +130,12 @@ pipeline {
             }
             steps {
                 sh '''
+                    echo "[INFO] Removing old image: user_service"
+                    sudo docker rmi -f $(docker images 'user_service' -q) || true
+
                     sudo docker-compose --env-file .env stop user_service
                     sudo docker-compose --env-file .env rm -f user_service
-                    sudo docker-compose --env-file .env up -d user_service
+                    sudo docker-compose --env-file .env up -d --build user_service
                 '''
             }
         }
@@ -146,9 +158,12 @@ pipeline {
                     }
                 }
                 sh '''
+                    echo "[INFO] Removing old image: postgredb"
+                    sudo docker rmi -f $(docker images 'postgredb' -q) || true
+
                     sudo docker-compose --env-file .env stop postgredb adminer
                     sudo docker-compose --env-file .env rm -f postgredb adminer
-                    sudo docker-compose --env-file .env up -d postgredb adminer
+                    sudo docker-compose --env-file .env up -d --build postgredb adminer
                 '''
             }
         }
@@ -165,9 +180,12 @@ pipeline {
                     }
                 }
                 sh '''
+                    echo "[INFO] Removing old image: mongodb"
+                    sudo docker rmi -f $(docker images 'mongodb' -q) || true
+
                     sudo docker-compose --env-file .env stop mongodb
                     sudo docker-compose --env-file .env rm -f mongodb
-                    sudo docker-compose --env-file .env up -d mongodb
+                    sudo docker-compose --env-file .env up -d --build mongodb
                 '''
             }
         }
@@ -179,9 +197,12 @@ pipeline {
             steps {
                 sh '''
                     export VITE_BASE_URL="https://b9a3-42-116-6-46.ngrok-free.app"
+                    echo "[INFO] Removing old image: frontend"
+                    sudo docker rmi -f $(docker images 'frontend' -q) || true
+
                     sudo docker-compose --env-file .env stop frontend
                     sudo docker-compose --env-file .env rm -f frontend
-                    sudo docker-compose --env-file .env up -d frontend
+                    sudo docker-compose --env-file .env up -d --build frontend
                 '''
             }
         }
