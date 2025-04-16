@@ -66,7 +66,7 @@ class Mail():
         message['From'] = self.smtp_username
         message['To'] = MailTo
         message['Subject'] = 'OTP XÁC THỰC'
-        html = self._build_html('Mã xác thực OTP', 'Bạn đang yêu cầu xác thực bằng mã OTP.', OTP)
+        html = self._build_html('Mã xác thực OTP', 'Bạn đang yêu cầu xác thực tài khoản bằng mã OTP.', OTP)
         message.attach(MIMEText(html, 'html'))
         self._attach_image(message, image_path)
         try:
