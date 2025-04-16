@@ -178,7 +178,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"
+                    export VITE_BASE_URL="https://b9a3-42-116-6-46.ngrok-free.app"
                     sudo docker-compose --env-file .env stop frontend
                     sudo docker-compose --env-file .env rm -f frontend
                     sudo docker-compose --env-file .env up -d frontend
