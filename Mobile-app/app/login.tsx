@@ -64,8 +64,6 @@ export default function LoginScreen() {
     try {
       // Call the API for sign-in
       const data = await authService.signIn(formData);
-
-
       const { info, token } = data; // Extract user info and token from response
 
       if (info && token) {
@@ -88,9 +86,7 @@ export default function LoginScreen() {
         } else {
           console.error("Role is undefined");
         }
-
         router.push("/home"); // Navigate to home screen
-
       }
     } catch (err) {
       console.error(err);

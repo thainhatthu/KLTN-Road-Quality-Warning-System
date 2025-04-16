@@ -10,18 +10,53 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from "react-native";
+import authService from "@/services/auth.service";
+import { router, useLocalSearchParams } from "expo-router";
 
 export default function VerifyScreen() {
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", ""]);
   const inputs = useRef<(TextInput | null)[]>([]);
-
+  const { email, username, password } = useLocalSearchParams<{
+    email: string;
+    username: string;
+    password: string;
+  }>();
   const handleChange = (text: string, index: number) => {
     const newOtp = [...otp];
     newOtp[index] = text;
     setOtp(newOtp);
 
-    if (text && index < 3) {
+    if (text && index < otp.length - 1) {
       inputs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleConfirm = async () => {
+    const code = otp.join("");
+
+    if (code.length < 5) {
+      alert("Please enter full 5-digit code");
+      return;
+    }
+
+    if (!email) {
+      alert("Email not found");
+      return;
+    }
+
+    try {
+      await authService.verify({
+        email,
+        OTP: code,
+        username,
+        password,
+      });
+
+      alert("Verification successful!");
+      router.push("/home");
+    } catch (err) {
+      console.error("OTP verify error:", err);
+      alert("Invalid or expired OTP");
     }
   };
 
@@ -41,7 +76,7 @@ export default function VerifyScreen() {
           <Text style={styles.subtitle}>
             OTP code has been sent to your email address
           </Text>
-          <Text style={styles.emailText}>abcd@gmail.com</Text>
+          <Text style={styles.emailText}>{email}</Text>
 
           <View style={styles.otpContainer}>
             {otp.map((digit, index) => (
@@ -60,11 +95,10 @@ export default function VerifyScreen() {
           <Text style={styles.timerText}>00.30</Text>
 
           <Text style={styles.resendText}>
-            Did you get the otp code? ?{" "}
-            <Text style={styles.resendLink}>Resend</Text>
+            Didn’t get the code? <Text style={styles.resendLink}>Resend</Text>
           </Text>
 
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={handleConfirm}>
             <Text style={styles.buttonText}>Confirm</Text>
           </TouchableOpacity>
         </View>

@@ -9,10 +9,52 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from "react-native";
-import { Link,router } from "expo-router";
-
+import { Link, router } from "expo-router";
+import { useState } from "react";
+import authService from "@/services/auth.service";
 
 export default function SignUpScreen() {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const handleChange = (key: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+  const handleSignUpClick = async () => {
+    try {
+      if (!formData.username || !formData.email || !formData.password) {
+        alert("Please fill in all fields");
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        alert("Passwords do not match");
+        return;
+      }
+      const res = await authService.signUp({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      alert("Sign up successful!");
+      router.push({
+        pathname: "/verify",
+        params: {
+          email: formData.email,
+          username: formData.username,
+          password: formData.password,
+        },
+      });
+    } catch (err) {
+      console.error("Signup error:", err);
+      alert("Sign up failed");
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -36,31 +78,39 @@ export default function SignUpScreen() {
             placeholder="abcabc"
             placeholderTextColor="#888"
             style={styles.input}
+            value={formData.username}
+            onChangeText={(text) => handleChange("username", text)}
           />
-          <Text style={styles.label}>Email</Text>
+
           <TextInput
             placeholder="abc@gmail.com"
             placeholderTextColor="#888"
             style={styles.input}
+            value={formData.email}
+            onChangeText={(text) => handleChange("email", text)}
           />
 
-          <Text style={styles.label}>Password</Text>
           <TextInput
             placeholder="********"
             secureTextEntry
             placeholderTextColor="#888"
             style={styles.input}
+            value={formData.password}
+            onChangeText={(text) => handleChange("password", text)}
           />
-          <Text style={styles.label}>Re-enter Password</Text>
+
           <TextInput
             placeholder="********"
             secureTextEntry
             placeholderTextColor="#888"
             style={styles.input}
+            value={formData.confirmPassword}
+            onChangeText={(text) => handleChange("confirmPassword", text)}
           />
+
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={() => router.push("/verify")}
+            onPress={handleSignUpClick}
           >
             <Text style={styles.loginButtonText}>Confirm</Text>
           </TouchableOpacity>

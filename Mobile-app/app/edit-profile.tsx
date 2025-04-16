@@ -7,10 +7,11 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Image
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useRouter } from "expo-router";
 
 export default function EditProfileScreen() {
   const [name, setName] = useState("");
@@ -21,6 +22,7 @@ export default function EditProfileScreen() {
   const [gender, setGender] = useState("");
   const [address, setAddress] = useState("");
   const [state, setState] = useState("");
+  const router = useRouter();
 
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || dob;
@@ -35,6 +37,7 @@ export default function EditProfileScreen() {
           source={require("@/assets/images/banner-profile.png")}
           style={styles.banner}
         />
+        <Text style={styles.title}>Edit profile</Text>
       </View>
       {/* Avatar */}
       <View style={styles.avatarContainer}>
@@ -55,18 +58,22 @@ export default function EditProfileScreen() {
           value={name}
           onChangeText={setName}
           style={styles.input}
+          placeholderTextColor="#6E6D6D"
         />
+
         <TextInput
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
           style={styles.input}
+          placeholderTextColor="#6E6D6D"
         />
         <TextInput
           placeholder="Phone"
           value={phone}
           onChangeText={setPhone}
           style={styles.input}
+          placeholderTextColor="#6E6D6D"
         />
       </View>
 
@@ -86,6 +93,7 @@ export default function EditProfileScreen() {
             value={gender}
             onChangeText={setGender}
             style={[styles.input, { width: "48%" }]}
+            placeholderTextColor="#6E6D6D"
           />
         </View>
         <TextInput
@@ -93,12 +101,14 @@ export default function EditProfileScreen() {
           value={address}
           onChangeText={setAddress}
           style={styles.input}
+          placeholderTextColor="#6E6D6D"
         />
         <TextInput
           placeholder="State"
           value={state}
           onChangeText={setState}
           style={styles.input}
+          placeholderTextColor="#6E6D6D"
         />
       </View>
 
@@ -112,7 +122,10 @@ export default function EditProfileScreen() {
       )}
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.cancelButton}>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => router.push("/profile")}
+        >
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.saveButton}>
@@ -127,13 +140,8 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     paddingBottom: 40,
-  },
-  topBackground: {
-    backgroundColor: "#2D82C6",
-    height: 100,
-    width: "100%",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    alignItems: "center",
+    height: "100%",
   },
   avatarContainer: {
     alignItems: "center",
@@ -149,10 +157,19 @@ const styles = StyleSheet.create({
   editIcon: {
     position: "absolute",
     bottom: 4,
-    right: 115,
+    right: 5,
     backgroundColor: "#2D82C6",
     borderRadius: 12,
     padding: 5,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+    zIndex: 1,
+    marginLeft: 150,
+    marginTop: 60,
+    position: "absolute",
   },
   name: {
     fontSize: 18,
@@ -167,12 +184,15 @@ const styles = StyleSheet.create({
     color: "#222",
     marginTop: 24,
     marginBottom: 8,
+    justifyContent: "flex-start",
+    width: "90%",
   },
   inputBox: {
     backgroundColor: "#E6F5FF",
     padding: 12,
     borderRadius: 12,
-    height: 180,
+    height: 200,
+    width: "90%",
     justifyContent: "space-between",
   },
   input: {
@@ -193,15 +213,17 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 30,
+    marginTop: 40,
+    justifyContent: "flex-end",
+    width: "90%",
   },
   cancelButton: {
     borderColor: "#2D82C6",
     borderWidth: 1,
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     borderRadius: 10,
+    marginRight: 10,
   },
   cancelText: {
     color: "#2D82C6",
@@ -210,7 +232,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: "#2D82C6",
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     borderRadius: 10,
   },
   saveText: {

@@ -16,7 +16,7 @@ export default function Header({ title }: HeaderProps) {
           style={styles.icon}
         />
         <Text style={styles.title}>{title}</Text>
-        <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
+        <TouchableOpacity onPress={() => router.push("/profile")}>
           <Image
             source={require("@/assets/images/img_avatar.png")}
             style={styles.avatar}
