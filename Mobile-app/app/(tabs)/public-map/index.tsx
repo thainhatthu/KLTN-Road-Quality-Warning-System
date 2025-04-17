@@ -7,21 +7,19 @@ import {
   TouchableOpacity,
   Switch,
 } from "react-native";
-import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import type { LocationObjectCoords } from "expo-location";
-import type { WebView as WebViewType } from "react-native-webview";
-import { getLeafletHtml } from "@/utils/leafletMapHtml";
 import Header from "@/components/ui/header";
+import LeafletMapWebView from "@/components/LeafletMapWebView";
 
 export default function PublicMapScreen() {
   const router = useRouter();
-  const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
   const [showBadRoutes, setShowBadRoutes] = useState(true);
+  const [showNearby, setShowNearby] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -33,18 +31,8 @@ export default function PublicMapScreen() {
 
       const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc.coords);
-
-      if (webviewRef.current) {
-        const js = `
-          if (window.setUserLocation) {
-            window.setUserLocation(${loc.coords.latitude}, ${loc.coords.longitude});
-          }
-        `;
-        webviewRef.current.injectJavaScript(js);
-      }
     })();
   }, []);
-  const [showNearby, setShowNearby] = useState(true);
 
   const nearbyData = [
     {
@@ -63,8 +51,7 @@ export default function PublicMapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <Header title="Public map"></Header>
+      <Header title="Public map" />
 
       <ScrollView
         style={styles.scrollView}
@@ -83,26 +70,13 @@ export default function PublicMapScreen() {
 
         <Text style={styles.sectionTitle}>Map</Text>
 
-        {/* Bản đồ + icon expand */}
         <View style={styles.mapWrapper}>
-          <WebView
-            ref={webviewRef}
-            originWhitelist={["*"]}
-            javaScriptEnabled
-            source={{ html: getLeafletHtml() }}
-            onLoadEnd={() => {
-              if (location) {
-                const js = `
-                  if (window.setUserLocation) {
-                    window.setUserLocation(${location.latitude}, ${location.longitude});
-                  }
-                `;
-                webviewRef.current?.injectJavaScript(js);
-              }
-            }}
+          <LeafletMapWebView
+            location={location}
+            style={{ height: 300 }}
+            onMarkerClick={(data) => console.log("🟡 Marker clicked:", data)}
           />
 
-          {/* Nút expand */}
           <TouchableOpacity
             style={styles.expandButton}
             onPress={() => router.push("/full-map")}
@@ -111,7 +85,6 @@ export default function PublicMapScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* View Bad Routes Toggle */}
         <View style={styles.toggleRow}>
           <Text style={styles.toggleLabel}>View Bad Routes</Text>
           <Switch
@@ -121,7 +94,6 @@ export default function PublicMapScreen() {
           />
         </View>
 
-        {/* Nearby Damaged Roads */}
         <View style={styles.roadBox}>
           <TouchableOpacity
             onPress={() => setShowNearby((prev) => !prev)}
@@ -159,47 +131,8 @@ export default function PublicMapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F6F9FF",
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  headerWrapper: {
-    backgroundColor: "#fff",
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-    zIndex: 100,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  mainTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    tintColor: "#000",
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#ddd",
-  },
+  container: { flex: 1, backgroundColor: "#F6F9FF" },
+  scrollView: { flex: 1, paddingHorizontal: 16 },
   headerContainer: {
     backgroundColor: "#2D82C6",
     borderRadius: 12,
@@ -207,12 +140,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     height: 100,
   },
-  banner: {
-    width: "100%",
-    height: 90,
-    borderRadius: 12,
-    resizeMode: "cover",
-  },
+  banner: { width: "100%", height: 90, borderRadius: 12, resizeMode: "cover" },
   headerTitle: {
     fontSize: 20,
     fontWeight: "bold",
@@ -223,12 +151,7 @@ const styles = StyleSheet.create({
     width: "50%",
     justifyContent: "center",
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1E1E1E",
-    marginBottom: 12,
-  },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: "#1E1E1E", marginBottom: 12 },
   mapWrapper: {
     height: 300,
     borderRadius: 12,
@@ -259,11 +182,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  toggleLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-  },
+  toggleLabel: { fontSize: 14, fontWeight: "600", color: "#333" },
   roadBox: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -280,24 +199,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#eee",
   },
-  roadBoxTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-  },
-  roadScroll: {
-    maxHeight: 180,
-    paddingHorizontal: 12,
-  },
-  roadScrollItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  roadScrollText: {
-    fontSize: 13,
-    color: "#444",
-    flex: 1,
-    lineHeight: 18,
-  },
+  roadBoxTitle: { fontSize: 14, fontWeight: "600", color: "#333" },
+  roadScroll: { maxHeight: 180, paddingHorizontal: 12 },
+  roadScrollItem: { flexDirection: "row", alignItems: "flex-start", marginBottom: 10 },
+  roadScrollText: { fontSize: 13, color: "#444", flex: 1, lineHeight: 18 },
 });

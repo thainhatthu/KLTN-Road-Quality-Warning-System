@@ -18,6 +18,9 @@ import { getLeafletHtml } from "@/utils/leafletMapHtml";
 import type { WebView as WebViewType } from "react-native-webview";
 import type { LocationObjectCoords } from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
+import dataService from "@/services/data.service";
+import { API_URL } from "@/configs";
+import LeafletMapWebView from "@/components/LeafletMapWebView";
 
 type Suggestion = { display_name: string; lat: string; lon: string };
 
@@ -89,6 +92,35 @@ export default function FullMapScreen() {
     webviewRef.current?.injectJavaScript(js);
     setShowRoutesModal(true);
   };
+  useEffect(() => {
+    const fetchRoads = async () => {
+      try {
+        const res = (await dataService.getInfoRoads({ all: true })) as {
+          data: { data: string[] };
+        };
+        console.log("📍 Road data from server:", res);
+
+        if (webviewRef.current && Array.isArray(res?.data?.data)) {
+          // Parse từng chuỗi JSON thành object
+          const parsedRoads = res.data.data.map((item) => JSON.parse(item));
+
+          // Inject API_BASE cho WebView
+          const jsSetBase = `window.API_BASE = "${API_URL}";`;
+          webviewRef.current.injectJavaScript(jsSetBase);
+
+          // Inject markers sau khi đã parse thành object
+          const jsDrawMarkers = `window.displayRoadMarkers(${JSON.stringify(
+            parsedRoads
+          )});`;
+          webviewRef.current.injectJavaScript(jsDrawMarkers);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching roads:", error);
+      }
+    };
+
+    fetchRoads();
+  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -142,22 +174,10 @@ export default function FullMapScreen() {
           />
         </View>
 
-        <WebView
-          ref={webviewRef}
-          originWhitelist={["*"]}
-          javaScriptEnabled
-          source={{ html: getLeafletHtml() }}
-          onLoadEnd={handleLoadEnd}
+        <LeafletMapWebView
+          location={location}
           style={styles.map}
-          onMessage={(event) => {
-            const msg = JSON.parse(event.nativeEvent.data);
-            if (msg.type === "routes_found") {
-              setRoutesInfo(msg.routes);
-              setShowRoutesModal(true);
-            } else if (msg.type === "marker_click") {
-              setSelectedMarkerInfo(msg.data);
-            }
-          }}
+          onMarkerClick={(data) => setSelectedMarkerInfo(data)}
         />
 
         <Modal visible={!!selectedMarkerInfo} transparent animationType="slide">
@@ -203,29 +223,6 @@ export default function FullMapScreen() {
                   <Text style={{ color: "#fff" }}>Đóng</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Modal: Marker Info */}
-        <Modal visible={!!selectedMarkerInfo} transparent animationType="slide">
-          <View style={styles.routesModalWrapper}>
-            <View style={styles.routesCard}>
-              <Text style={styles.routesTitle}>
-                {selectedMarkerInfo?.title}
-              </Text>
-              <Text style={styles.routeSubText}>
-                {selectedMarkerInfo?.description}
-              </Text>
-              <Text style={styles.routeSubText}>
-                Tọa độ: {selectedMarkerInfo?.lat}, {selectedMarkerInfo?.lng}
-              </Text>
-              <TouchableOpacity
-                style={styles.closeRoutesModalBtn}
-                onPress={() => setSelectedMarkerInfo(null)}
-              >
-                <Text style={{ color: "#fff" }}>Đóng</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -379,5 +376,5 @@ const styles = StyleSheet.create({
     color: "#444",
     textAlign: "right",
     marginTop: 8,
-  }
+  },
 });

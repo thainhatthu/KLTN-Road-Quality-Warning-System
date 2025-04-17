@@ -1,5 +1,5 @@
 // Manage Auth API
-import { axiosRequest } from "../config/axios.config";
+import { axiosRequest } from "@/configs/axios.config";
 import {
   GetInfoRoadsParams,
   UploadImgFormDataType,

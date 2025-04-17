@@ -14,6 +14,8 @@ export const getLeafletHtml = () => `
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
     <script>
+      window.API_BASE = "";
+
       var map = L.map('map').setView([10.7769, 106.7009], 14);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
@@ -30,7 +32,6 @@ export const getLeafletHtml = () => `
 
       window.drawRoute = function(fromLat, fromLng, toLat, toLng) {
         if (currentRouteControl) map.removeControl(currentRouteControl);
-
         currentRouteControl = L.Routing.control({
           waypoints: [L.latLng(fromLat, fromLng), L.latLng(toLat, toLng)],
           show: false,
@@ -52,7 +53,6 @@ export const getLeafletHtml = () => `
             distance: (route.summary.totalDistance / 1000).toFixed(2),
             duration: (route.summary.totalTime / 60).toFixed(0)
           }));
-
           if (window.ReactNativeWebView?.postMessage) {
             window.ReactNativeWebView.postMessage(JSON.stringify({
               type: 'routes_found',
@@ -62,23 +62,44 @@ export const getLeafletHtml = () => `
         });
       };
 
-      // Marker demo (click để gửi dữ liệu)
-      const badRoadMarker = L.marker([9.88, 105.37]).addTo(map).bindPopup("BAD ROAD");
+      window.displayRoadMarkers = function (roads) {
+        console.log("📌 Injected markers from React Native:", roads);
+        roads.forEach((road) => {
+          const { latitude, longitude, level, filepath, created_at } = road;
+          const color =
+            level === "Good" ? "green" :
+            level === "Satisfactory" ? "blue" :
+            level === "Poor" ? "orange" :
+            level === "Very poor" ? "red" : "gray";
 
-      badRoadMarker.on('click', function() {
-        window.ReactNativeWebView?.postMessage(JSON.stringify({
-          type: 'marker_click',
-          data: {
-            title: "Đoạn đường hư hỏng",
-            lat: 9.88,
-            lng: 105.37,
-            address: "An Bình, Dĩ An, Bình Dương",
-            time: "07:30:22, 20/11/2024",
-            result: "BAD ROAD",
-            image: "https://i.imgur.com/W6m7sZC.jpeg"
-          }
-        }));
-      });
+          const icon = L.divIcon({
+            html:
+              '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 24" fill="' + color + '">' +
+              '<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 10.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 7.5 12 7.5s2.5 1.12 2.5 2.5S13.38 12.5 12 12.5z"/>' +
+              '</svg>',
+            className: "",
+            iconSize: [30, 40],
+            iconAnchor: [15, 40],
+          });
+
+
+          const marker = L.marker([latitude, longitude], { icon }).addTo(map);
+          marker.on("click", function () {
+            window.ReactNativeWebView?.postMessage(JSON.stringify({
+              type: 'marker_click',
+              data: {
+                title: "Đoạn đường hư hỏng",
+                lat: latitude,
+                lng: longitude,
+                address: road.location || "Đang cập nhật...",
+                time: created_at || "Unknown",
+                result: level,
+                image: filepath ? window.API_BASE + filepath : ""
+              }
+            }));
+          });
+        });
+      };
     </script>
   </body>
 </html>
