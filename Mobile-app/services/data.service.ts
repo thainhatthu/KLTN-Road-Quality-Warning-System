@@ -7,7 +7,7 @@ import {
 import { getAccessToken } from "../utils/auth.util";
 
 export default {
-  uploadRoad: async (formData: UploadImgFormDataType) => {
+  uploadRoad: async (formData: FormData) => {
     const url = `/datasvc/api/uploadRoad`;
     const data = await axiosRequest.post(url, formData, {
       headers: { "Content-Type": "multipart/form-data" },

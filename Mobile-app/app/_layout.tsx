@@ -34,7 +34,7 @@ export default function RootLayout() {
 
   return (
     <RecoilRoot>
-      <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={colorScheme === "light" ? DefaultTheme : DarkTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="login" options={{ title: "Login" }} />
           <Stack.Screen

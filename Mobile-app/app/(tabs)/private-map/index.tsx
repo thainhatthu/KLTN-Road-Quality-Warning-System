@@ -9,27 +9,53 @@ import {
   Modal,
   TextInput,
 } from "react-native";
-import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { LocationObjectCoords } from "expo-location";
-import type { WebView as WebViewType } from "react-native-webview";
-import { getLeafletHtml } from "@/utils/leafletMapHtml";
-
 import * as ImagePicker from "expo-image-picker";
 import Header from "@/components/ui/header";
+import LeafletMapWebView from "@/components/LeafletMapWebView";
+import dataService from "@/services/data.service";                
+import UploadImgFormDataType from "@/defination/types/data.type";
+
 
 export default function PrivateMapScreen() {
   const router = useRouter();
-  const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
   const [showBadRoutes, setShowBadRoutes] = useState(true);
-
+  const [showNearby, setShowNearby] = useState(true);
   const [uploadLat, setUploadLat] = useState("");
   const [uploadLng, setUploadLng] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [userRoads, setUserRoads] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc.coords);
+    })();
+  }, []);
+
+  const fetchUserRoads = async () => {
+    try {
+      const res = await dataService.getInfoRoads({ all: false });
+      const parsed = Array.isArray(res?.data)
+        ? res.data.map((item: string) => JSON.parse(item))
+        : [];
+      setUserRoads(parsed);
+    } catch (e) {
+      console.error("Failed to fetch user roads:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserRoads();
+  }, []);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -37,7 +63,6 @@ export default function PrivateMapScreen() {
       allowsEditing: true,
       quality: 1,
     });
-
     if (!result.canceled && result.assets.length > 0) {
       setSelectedImage(result.assets[0].uri);
     }
@@ -45,76 +70,40 @@ export default function PrivateMapScreen() {
 
   const openCamera = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      alert("Camera permission is required");
-      return;
-    }
+    if (!permission.granted) return alert("Camera permission is required");
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       quality: 1,
     });
     if (!result.canceled && result.assets.length > 0) {
-      setSelectedImage(result.assets[0].uri);
+      const imageUri = result.assets[0].uri;
+      setSelectedImage(imageUri);
+
+      if (!location) return alert("Location not available");
+
+      const formData = new FormData();
+      formData.append("file", {
+        uri: imageUri,
+        name: "photo.jpg",
+        type: "image/jpeg",
+      } as any);
+      formData.append("latitude", String(location.latitude));
+      formData.append("longitude", String(location.longitude));
+
+      try {
+        await dataService.uploadRoad(formData);
+        fetchUserRoads();
+        alert("Upload thành công!");
+      } catch (err) {
+        console.error("Upload failed:", err);
+        alert("Upload thất bại. Hãy thử lại.");
+      }
     }
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        alert("Permission denied");
-        return;
-      }
-
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc.coords);
-
-      if (webviewRef.current) {
-        const js = `
-          if (window.setUserLocation) {
-            window.setUserLocation(${loc.coords.latitude}, ${loc.coords.longitude});
-          }
-        `;
-        webviewRef.current.injectJavaScript(js);
-      }
-    })();
-  }, []);
-  const [showNearby, setShowNearby] = useState(true);
-
-  const nearbyData = [
-    {
-      address: "Đường số 10, Phường Dĩ An, Thành phố Dĩ An, Tỉnh Bình Dương",
-      status: "Very poor",
-    },
-    {
-      address: "Đường Cà Phê Xóm Vắng 2, Phường Tân Đông Hiệp",
-      status: "Poor",
-    },
-    {
-      address: "QL1K, Khu phố Đông Tân, P. Dĩ An",
-      status: "Moderate",
-    },
-    {
-      address: "Đường số 10, Phường Dĩ An, Thành phố Dĩ An, Tỉnh Bình Dương",
-      status: "Very poor",
-    },
-    {
-      address: "Đường Cà Phê Xóm Vắng 2, Phường Tân Đông Hiệp",
-      status: "Poor",
-    },
-    {
-      address: "QL1K, Khu phố Đông Tân, P. Dĩ An",
-      status: "Moderate",
-    },
-  ];
-
-  const [showUploadModal, setShowUploadModal] = useState(false);
-
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <Header title="Map management"></Header>
-
+      <Header title="Map management" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -130,26 +119,13 @@ export default function PrivateMapScreen() {
           </Text>
         </View>
         <Text style={styles.sectionTitle}>Map</Text>
-        {/* Bản đồ + icon expand */}
         <View style={styles.mapWrapper}>
-          <WebView
-            ref={webviewRef}
-            originWhitelist={["*"]}
-            javaScriptEnabled
-            source={{ html: getLeafletHtml() }}
-            onLoadEnd={() => {
-              if (location) {
-                const js = `
-                  if (window.setUserLocation) {
-                    window.setUserLocation(${location.latitude}, ${location.longitude});
-                  }
-                `;
-                webviewRef.current?.injectJavaScript(js);
-              }
-            }}
+          <LeafletMapWebView
+            location={location}
+            style={{ height: 300 }}
+            markers={userRoads}
+            onMarkerClick={(data) => console.log("🟡 Marker clicked:", data)}
           />
-
-          {/* Nút expand */}
           <TouchableOpacity
             style={styles.expandButton}
             onPress={() => router.push("/full-map")}
@@ -157,7 +133,7 @@ export default function PrivateMapScreen() {
             <Ionicons name="expand-outline" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
-        {/* View Bad Routes Toggle */}
+
         <View style={styles.toggleRow}>
           <Text style={styles.toggleLabel}>View Bad Routes</Text>
           <Switch
@@ -166,6 +142,7 @@ export default function PrivateMapScreen() {
             trackColor={{ true: "#2D82C6", false: "#ccc" }}
           />
         </View>
+
         <View
           style={{
             flexDirection: "row",
@@ -199,47 +176,12 @@ export default function PrivateMapScreen() {
             <Text style={styles.actionButtonText}>Upload</Text>
           </TouchableOpacity>
         </View>
-        {/* Nearby Damaged Roads */}
-        <View style={styles.roadBox}>
-          <TouchableOpacity
-            onPress={() => setShowNearby((prev) => !prev)}
-            style={styles.roadBoxHeader}
-          >
-            <Text style={styles.roadBoxTitle}>
-              Các đoạn đường xấu gần khu vực của bạn
-            </Text>
-            <Ionicons
-              name={showNearby ? "chevron-up" : "chevron-down"}
-              size={18}
-              color="#333"
-            />
-          </TouchableOpacity>
 
-          {showNearby && (
-            <ScrollView style={styles.roadScroll} nestedScrollEnabled>
-              {nearbyData.map((item, idx) => (
-                <View style={styles.roadScrollItem} key={idx}>
-                  <Ionicons
-                    name="ellipse"
-                    size={6}
-                    color="#2D82C6"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={styles.roadScrollText}>
-                    {item.address} - Trạng thái: {item.status}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        {/* Modal Upload */}
+        {/* Upload Modal */}
         <Modal visible={showUploadModal} transparent animationType="slide">
           <View style={styles.modalWrapper}>
             <View style={styles.modalCard}>
               <Text style={styles.modalTitle}>Upload Đoạn đường</Text>
-
               <TextInput
                 placeholder="Latitude"
                 style={styles.inputModal}
@@ -254,7 +196,6 @@ export default function PrivateMapScreen() {
                 value={uploadLng}
                 onChangeText={setUploadLng}
               />
-
               <TouchableOpacity
                 style={[styles.actionButton, { marginVertical: 12 }]}
                 onPress={pickImage}
@@ -267,7 +208,6 @@ export default function PrivateMapScreen() {
                 />
                 <Text style={styles.actionButtonText}>Choose Image</Text>
               </TouchableOpacity>
-
               {selectedImage && (
                 <Image
                   source={{ uri: selectedImage }}
@@ -279,18 +219,28 @@ export default function PrivateMapScreen() {
                   }}
                 />
               )}
-
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: "#2D82C6" }]}
-                onPress={() => {
+                onPress={async () => {
                   setShowUploadModal(false);
-                  // TODO: Submit uploadLat, uploadLng, selectedImage
-                  console.log(
-                    "Uploaded info:",
-                    uploadLat,
-                    uploadLng,
-                    selectedImage
-                  );
+                  if (!selectedImage || !uploadLat || !uploadLng)
+                    return alert("Vui lòng điền đầy đủ thông tin.");
+                  const formData = new FormData();
+                  formData.append("file", {
+                    uri: selectedImage,
+                    name: "photo.jpg",
+                    type: "image/jpeg",
+                  } as any);
+                  formData.append("latitude", uploadLat);
+                  formData.append("longitude", uploadLng);
+                  try {
+                    await dataService.uploadRoad(formData);
+                    fetchUserRoads();
+                    alert("Upload thành công!");
+                  } catch (e) {
+                    console.error(e);
+                    alert("Upload thất bại!");
+                  }
                 }}
               >
                 <Text style={styles.actionButtonText}>OK</Text>
