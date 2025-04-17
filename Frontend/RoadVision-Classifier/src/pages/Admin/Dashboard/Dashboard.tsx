@@ -2,6 +2,8 @@ import { AppLayout } from "../../../components/ADMIN/Common/AppLayout";
 import DashboardComponent from "../../../components/ADMIN/Dashboard/DashboardComponent";
 import homeheader from "../../../assets/img/ADMIN-header.png";
 import mask from "../../../assets/img/mask.png";
+import UserAndContributionCharts from "../../../components/ADMIN/Dashboard/UserChart";
+import TechnicianTaskChart from "../../../components/ADMIN/Dashboard/TechnicianChart";
 const Dashboard: React.FC = () => {
   return (
     <AppLayout>
@@ -33,7 +35,12 @@ const Dashboard: React.FC = () => {
             />
           </div>
         </div>
+        <div className="flex w-full flex-row justify-between gap-5">
         <DashboardComponent />
+        <UserAndContributionCharts />
+        <TechnicianTaskChart />
+        </div>
+
       </div>
     </AppLayout>
   );

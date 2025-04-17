@@ -1,6 +1,7 @@
 import userProfileService from "../../services/userprofile.service";
 import { ChangePasswordDataType } from "../../defination/types/profile.type";
 import { useState } from "react";
+import { message } from "antd";
 
 export default function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -25,18 +26,13 @@ export default function ChangePassword() {
       };
       console.log("update:", updatedPasswordData);
 
-      const response = await userProfileService.changePassword(
+      await userProfileService.changePassword(
         updatedPasswordData
       );
-
-      if (response.status.toString() === "Success") {
-        alert("Password updated successfully!");
-        setCurrentPassword("e");
-        setNewPassword("e");
-        setConfirmPassword("e");
-      } else {
-        alert("An error occurred while updating your password.");
-      }
+      message.success("Password updated successfully!");
+      setCurrentPassword("e");
+      setNewPassword("e");
+      setConfirmPassword("e");
     } catch (error) {
       console.error("Error updating password:", error);
     }

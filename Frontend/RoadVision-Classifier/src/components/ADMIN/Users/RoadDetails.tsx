@@ -94,14 +94,6 @@ const RoadDetails: React.FC<RoadDetailsProps> = ({
           </div>
         </div>
       </div>
-      <div className="w-full flex justify-end">
-        <button
-          onClick={onBackToUserInfo}
-          className="px-4 py-2 border-2 border-[#23038C] text-[#23038C] rounded-lg"
-        >
-          Delete Road image
-        </button>
-      </div>
     </div>
   );
 };

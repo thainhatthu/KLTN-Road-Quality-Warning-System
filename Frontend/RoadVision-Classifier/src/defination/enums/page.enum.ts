@@ -21,7 +21,7 @@ export enum AdminPageEnum {
 
 export enum TechnicianPageEnum {
   INDEX = "/",
-  DASHBOARD = "/dashboard-technician",
-  TASK_MANAGEMENT = "/task-management",
   MAP = "/map",
+  TASK_MANAGEMENT = "/task-management",
+
 }

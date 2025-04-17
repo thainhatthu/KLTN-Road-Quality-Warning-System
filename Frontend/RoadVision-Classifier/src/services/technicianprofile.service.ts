@@ -3,7 +3,7 @@ import { getAccessToken } from "../utils/auth.util";
 
 export default {
   getAllTask: async ({}) => {
-    const url = `/user/api/getTask`;
+    const url = `/datasvc/api/getTask`;
     const token = getAccessToken();
     const requestUrl = `${url}?token=${token}`;
     try {
@@ -17,7 +17,7 @@ export default {
 
   getAllRoad: async (ward_id: number) => {
     const url = `/datasvc/api/getInfoRoads`;
-    const requestUrl = `${url}?ward_id=${ward_id}`;
+    const requestUrl = `${url}?ward_id=${ward_id}&all=false&getDone=true`;
     try {
       const response = await axiosRequest.get(requestUrl);
       return response;
@@ -26,4 +26,5 @@ export default {
       throw error;
     }
   },
+  
 };

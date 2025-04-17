@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
-import { Button, Form, Input, Modal, Table } from "antd";
+import { Button, Form, Input, message, Modal, Table } from "antd";
 import { useRecoilState } from "recoil";
 import { technicianState } from "../../../atoms/admin/accountState";
 import manageAlltechnicianService from "../../../services/manageAlltechnician.service";
@@ -34,13 +34,15 @@ export default function AllTechnicians({
     setLoading(true);
     try {
       const response = await manageAlltechnicianService.getAllTechnician({});
-      const technician = response.data?.map((technician: any, index: number) => ({
-        key: index,
-        user_id: technician.user_id,
-        username: technician.username,
-        fullname: technician.fullname,
-        joindate: technician.created,
-      }));
+      const technician = response.data?.map(
+        (technician: any, index: number) => ({
+          key: index,
+          user_id: technician.user_id,
+          username: technician.username,
+          fullname: technician.fullname,
+          joindate: technician.created,
+        })
+      );
       setDataSource(technician);
       setRecoilProfile(technician);
     } catch (error) {
@@ -53,8 +55,7 @@ export default function AllTechnicians({
   useEffect(() => {
     fetchAllTechnicians();
   }, []);
-  
-  
+
   // ADD NEW TECHNICIAN
   const handleAddTechnicians = async (values: {
     user_id: number;
@@ -68,16 +69,17 @@ export default function AllTechnicians({
       const response = await manageAlltechnicianService.addNewTechnician(
         payload
       );
-      if (response.status.toString() === "Success") {
-        alert("Add technician successfully!");
+      console.log("response", response);
+      if (response) {
+        message.success("Add technician successfully!");
         fetchAllTechnicians();
         form.resetFields();
         setIsModalVisible(false);
       } else {
-        alert("Add technicians failed!");
+        message.error("Add technicians failed!");
       }
     } catch (error) {
-      console.log("Add technicians failed!");
+      message.error("Add technicians failed!");
     }
   };
 
@@ -96,10 +98,10 @@ export default function AllTechnicians({
       onOk: async () => {
         try {
           await manageAlluserService.deleteUser(username);
-          alert("Delete user successfully!");
+          message.success("Delete user successfully!");
           fetchAllTechnicians();
         } catch (error) {
-          console.log("Xóa tài khoản thất bại!");
+          message.error("Xóa tài khoản thất bại!");
         }
       },
       onCancel: () => {
@@ -110,31 +112,50 @@ export default function AllTechnicians({
 
   const columns = [
     {
-      title: "User ID",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          USER ID
+        </span>
+      ),
       dataIndex: "user_id",
       key: "user_id",
       align: "center" as "center",
     },
     {
-      title: "Username",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          USER NAME
+        </span>
+      ),
       dataIndex: "username",
       key: "username",
       align: "center" as "center",
     },
+    
     {
-      title: "Fullname",
-      dataIndex: "fullname",
-      key: "fullname",
-      align: "center" as "center",
-    },
-    {
-      title: "Join Date",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          JOIN DATE
+        </span>
+      ),
       dataIndex: "joindate",
       key: "joindate",
       align: "center" as "center",
     },
     {
-      title: "Action",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          ACTION
+        </span>
+      ),
       key: "action",
       align: "center" as "center",
       render: (_: any, record: DataType) => (
@@ -158,36 +179,35 @@ export default function AllTechnicians({
   return (
     <div className="w-full h-screen flex flex-col gap-5 justify-start items-center overflow-y-auto">
       <div className="flex flex-row w-[100%] h-44 rounded-2xl bg-[#2D82C6] justify-between relative">
-          <img
-            src={mask}
-            className="absolute top-0 left-0 w-full h-full object-cover rounded-2xl"
-          />
+        <img
+          src={mask}
+          className="absolute top-0 left-0 w-full h-full object-cover rounded-2xl"
+        />
 
-          <div className="relative z-100 w-full flex xl:flex-row justify-between">
-            {/* content */}
-            <div className="flex flex-col p-10 justify-between">
-              <div>
-                <p className="text-4xl font-bold text-white">
-                  All Technicians management
-                </p>
-                <p className="text-white">
-                  Let's take a look at the overall statistics.
-                </p>
-              </div>
-              <div className="flex flex-row gap-4"></div>
+        <div className="relative z-100 w-full flex xl:flex-row justify-between">
+          {/* content */}
+          <div className="flex flex-col p-10 justify-between">
+            <div>
+              <p className="text-4xl font-bold text-white">
+                All Technicians management
+              </p>
+              <p className="text-white">
+                Let's take a look at the overall statistics.
+              </p>
             </div>
-            {/* image */}
-            <img
-              src={homeheader}
-              className="xl:h-full xl:block hidden mr-10 "
-            />
+            <div className="flex flex-row gap-4"></div>
           </div>
+          {/* image */}
+          <img src={homeheader} className="xl:h-full xl:block hidden mr-10 " />
         </div>
+      </div>
       <div className="w-full p-5 bg-white rounded-lg shadow-md">
         <div className="flex flex-row justify-between items-center mb-4">
           <div className="flex flex-row items-center gap-2">
-            <MdEngineering color="#3B82F6"  size={30} />
-            <h1 className="text-2xl text-blue-500 font-bold">All Technicians</h1>
+            <MdEngineering color="#3B82F6" size={30} />
+            <h1 className="text-2xl text-blue-500 font-bold">
+              All Technicians
+            </h1>
           </div>
           <button
             className="bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg"
@@ -200,18 +220,18 @@ export default function AllTechnicians({
           <p className="text-center">Loading...</p>
         ) : (
           <Table
-          dataSource={dataSource}
-          columns={columns}
-          loading={loading}
-          rowClassName="cursor-pointer"
-          onRow={(record) => ({
-            onClick: () => handleRowClick(record), // Trigger the onRow click
-          })}
-          pagination={{ pageSize: 10 }}
-        />
+            dataSource={dataSource}
+            columns={columns}
+            loading={loading}
+            rowClassName="cursor-pointer"
+            onRow={(record) => ({
+              onClick: () => handleRowClick(record), // Trigger the onRow click
+            })}
+            pagination={{ pageSize: 10 }}
+          />
         )}
         <Modal
-          title="Add New User"
+          title="Add New Technician"
           visible={isModalVisible}
           onCancel={handleCancelModal}
           footer={null}
@@ -235,7 +255,7 @@ export default function AllTechnicians({
               name="email"
               label="Email"
               rules={[
-                { required: false, message: "Please input email!" },
+                { required: true, message: "Please input email!" },
                 { type: "email", message: "Invalid email format!" },
               ]}
             >

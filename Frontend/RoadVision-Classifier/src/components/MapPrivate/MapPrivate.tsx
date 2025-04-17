@@ -8,7 +8,15 @@ import { useRecoilValue } from "recoil";
 import { accountState } from "../../atoms/authState";
 import { checkObjectAtLeastOneField } from "../../utils/check.util";
 import { generateImageDomain } from "../../utils/genrate.util";
+import { message } from "antd";
 
+import { Upload, Button } from "antd";
+import {
+  UploadOutlined,
+  CloseOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 const MapPrivate: React.FC = () => {
   const userRecoilStateValue = useRecoilValue(accountState);
 
@@ -23,6 +31,8 @@ const MapPrivate: React.FC = () => {
   });
 
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showUploadWithLocationModal, setShowUploadWithLocationModal] =
+    useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -52,7 +62,7 @@ const MapPrivate: React.FC = () => {
           console.error("Error accessing camera:", error);
         });
     } else {
-      alert("Camera is not supported on this device.");
+      message.error("Camera is not supported on this device.");
     }
   };
 
@@ -161,18 +171,18 @@ const MapPrivate: React.FC = () => {
                 window.location.reload();
               } catch (error) {
                 console.error("Error uploading image:", error);
-                alert("An error occurred during the upload. Please try again.");
+                message.error("An error occurred during the upload. Please try again.");
               }
             },
             (error) => {
               console.error("Error getting location:", error);
-              alert(
+              message.error(
                 "Could not get current location. Please enable location services."
               );
             }
           );
         } else {
-          alert("Geolocation is not supported by this browser.");
+          message.error("Geolocation is not supported by this browser.");
         }
         setIsCameraActive(false);
         handleCloseCamera();
@@ -236,6 +246,55 @@ const MapPrivate: React.FC = () => {
     fileInput.click();
   };
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (info: any) => {
+    const file = info.file.originFileObj;
+    if (file) {
+      setSelectedFile(file);
+      alert("Image selected successfully!");
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert("Please choose an image first.");
+      return;
+    }
+
+    if (!latitude || !longitude) {
+      alert("Please enter valid latitude and longitude.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("latitude", latitude.toString());
+    formData.append("longitude", longitude.toString());
+
+    try {
+      await dataService.uploadRoad(
+        formData as unknown as UploadImgFormDataType
+      );
+      alert("Image uploaded successfully!");
+      closeUploadWithLocationModal();
+      handleAddMarker(latitude, longitude, {
+        filepath:
+          "https://images4.alphacoders.com/115/thumb-1920-115716.jpg",
+      });
+      window.location.reload();
+    } catch (error: any) {
+      console.error(
+        "Error uploading image:",
+        error.response?.data || error.message
+      );
+      alert(
+        `An error occurred during the upload. Please try again.\nDetails: ${
+          error.response?.data?.message || "Unknown Error"
+        }`
+      );
+    }
+  };
+
   const openUploadModal = () => {
     setShowUploadModal(true);
   };
@@ -258,6 +317,16 @@ const MapPrivate: React.FC = () => {
 
   const closeDeleteModal = () => {
     setShowDeleteModal(false);
+  };
+
+  const openUploadWithLocationModal = () => {
+    setShowUploadWithLocationModal(true);
+  };
+
+  const closeUploadWithLocationModal = () => {
+    setShowUploadWithLocationModal(false);
+    setLatitude(0);
+    setLongitude(0);
   };
 
   const handleCloseCamera = () => {
@@ -342,7 +411,7 @@ const MapPrivate: React.FC = () => {
     try {
       await dataService.deleteRoad({
         id_road: imageData.id,
-        all: false
+        all: false,
       });
       setRoadsData((prevRoads) =>
         prevRoads.filter((road) => road.id !== imageData.id)
@@ -412,49 +481,73 @@ const MapPrivate: React.FC = () => {
                 className="image"
               />
               <div className="iconContainer">
-                <button className="iconButton" onClick={openEditModal}>
-                  ✎ Edit Coordinates
+                <button className="iconButtonEdit" onClick={openEditModal}>
+                  <EditOutlined /> Edit Coordinates
                 </button>
-                <button className="iconButton" onClick={openDeleteModal}>
-                  🗑 Delete Image
+                <button className="iconButtonTrash" onClick={openDeleteModal}>
+                  <DeleteOutlined />
                 </button>
               </div>
             </div>
-            <p>
-              {" "}
-              <strong>Status: </strong> {imageData.level}
-            </p>
-            <p>
-              {" "}
-              <strong>Address: </strong>
-              {imageData.location}
-            </p>
-            <p>
-              <strong>Location: </strong> <br />{" "}
-              <li>
-                Lat: {imageData.latitude}
+            <div className="imageInfo">
+              <p>
+                <strong>Status: </strong> {imageData.level}
+              </p>
+              <p>
+                <strong>Address: </strong>
+                {imageData.location}
+              </p>
+              <p>
+                <strong>Location: </strong>
                 <br />
-              </li>
-              <li>Long: {imageData.longitude} </li>
-            </p>
-            <p>
-              <strong>Time: </strong>
-              {new Date(imageData.created_at).toLocaleString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              })}
-            </p>
-            {/* <p>Road ID: {imageData.id}</p> */}
+                <li>
+                  Lat: {imageData.latitude}
+                  <br />
+                </li>
+                <li>Long: {imageData.longitude}</li>
+              </p>
+              <p>
+                <strong>Time: </strong>
+                {new Date(imageData.created_at).toLocaleString("vi-VN", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
+              </p>
+            </div>
           </div>
         )}
-        <button className="uploadButton" onClick={openUploadModal}>
-          Upload Image
-        </button>
+
+        <span>
+          _______________________________________________________________
+        </span>
+
+        <div className="buttonContainer flex flex-col">
+          <button className="uploadButton" onClick={openUploadModal}>
+            Upload current image
+          </button>
+          <span
+            style={{
+              alignSelf: "center",
+              fontSize: "16px",
+              padding: "25px",
+              fontWeight: "bold",
+            }}
+          >
+            Or
+          </span>{" "}
+          <button
+            className="modalButtonLibrary"
+            onClick={openUploadWithLocationModal}
+          >
+            Upload with location
+          </button>
+        </div>
       </div>
+
       <div ref={mapRef} className="map" />
 
       {/* Upload Modal */}
@@ -552,6 +645,44 @@ const MapPrivate: React.FC = () => {
             height="480"
             style={{ display: "none" }}
           />
+        </div>
+      )}
+
+      {/* Upload with location Modal */}
+      {showUploadWithLocationModal && (
+        <div className="modalUpload">
+          <div className="modal-content">
+            {/* Nút đóng modal */}
+            <button
+              className="close-button"
+              onClick={closeUploadWithLocationModal}
+            >
+              <CloseOutlined />
+            </button>
+            <h2>Upload Image with Location</h2>
+            <div className="modal-body">
+              <label>
+                Latitude:
+                <input
+                  type="number"
+                  value={latitude}
+                  onChange={(e) => setLatitude(parseFloat(e.target.value))}
+                />
+              </label>
+              <label>
+                Longitude:
+                <input
+                  type="number"
+                  value={longitude}
+                  onChange={(e) => setLongitude(parseFloat(e.target.value))}
+                />
+              </label>
+              <Upload beforeUpload={() => false} onChange={handleFileChange}>
+                <Button icon={<UploadOutlined />}>Choose image</Button>
+              </Upload>
+              <button onClick={handleUpload}>Upload</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
