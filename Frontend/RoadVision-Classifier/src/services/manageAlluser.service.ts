@@ -49,7 +49,7 @@ export default {
     },
     getAllRoadInfo: async (user_id: number) => {
         const url = `/datasvc/api/getInfoRoads`;
-        const requestUrl = `${url}?user_id=${user_id}`;
+        const requestUrl = `${url}?user_id=${user_id}&all=true&getDone=false`;
         try {
             const allRoadInfo = await axiosRequest.get(requestUrl);
             return allRoadInfo;

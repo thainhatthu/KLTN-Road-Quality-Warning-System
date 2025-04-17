@@ -7,8 +7,8 @@ import MyLibrary from "../pages/User/MyHistory/MyHistory";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import UsersManagement from "../pages/Admin/Users/UsersManagement";
 import TechniciansManagement from "../pages/Admin/Technicians/TechniciansManagement";
-import DashboardTechnician from "../pages/Technician/Dashboard/Dashboard";
 import TaskManagement from "../pages/Technician/TaskManagement/TaskManagement";
+import MapComponent from "../components/TECHNICIAN/Users/MapComponent";
 export const routesConfig = [
   // Routes for user role
   {
@@ -34,7 +34,7 @@ export const routesConfig = [
   {
     role: "technical",
     routes: [
-      { path: TechnicianPageEnum.DASHBOARD, element: {DashboardTechnician} },
+      { path: TechnicianPageEnum.MAP, element: {MapComponent} },
       { path: TechnicianPageEnum.TASK_MANAGEMENT, element: {TaskManagement} },
     ],
   },

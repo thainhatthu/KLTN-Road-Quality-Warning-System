@@ -31,6 +31,9 @@ const useNavigateTo = () => {
   const navigateVerify = () => {
     navigateTo(PageEnum.VERIFY, { replace: true });
   };
+  const navigateMap = () => {
+    navigateTo(PageEnum.PUBLIC_MAP, { replace: true });
+  };
   
 //---------- ADMIN ------------
   const navigateToDashboard = () => {
@@ -44,7 +47,7 @@ const useNavigateTo = () => {
   }
 //---------- TECHNICIAN ------------
 const navigateToDashboardTechnician = () => {
-  navigateTo(TechnicianPageEnum.DASHBOARD, { replace: true });
+  navigateTo(TechnicianPageEnum.MAP, { replace: true });
 }
 const navigateToTaskManagement = () => {
   navigateTo(TechnicianPageEnum.TASK_MANAGEMENT, { replace: true });
@@ -62,7 +65,8 @@ const navigateToTaskManagement = () => {
     navigateToUser,
     navigateToTechnician,
     navigateToDashboardTechnician,
-    navigateToTaskManagement
+    navigateToTaskManagement,
+    navigateMap,
   };
 };
 

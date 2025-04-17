@@ -104,7 +104,7 @@ export default function UserInfo({
           const extractedRoads = roads.map((road) => ({
             key: road.id,
             road_id: road.id,
-            road_image: `${api_url}${road.filepath}`,
+            road_image: `${api_url}/${road.filepath}`,
             road_type: road.level,
             road_time: format(new Date(road.created_at), "dd/MM/yyyy HH:mm:ss"),
             road_location: road.location,

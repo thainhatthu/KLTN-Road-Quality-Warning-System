@@ -40,7 +40,6 @@ const Sider: React.FC = () => {
       </div>
       <nav className="flex-1 px-4 py-6 space-y-4">
         <NavLink to="/map" icon={FaMap} text="Map" />
-        {/* <NavLink to="/dashboard-technician" icon={FaHome} text="Dashboard" /> */}
         <NavLink to="/task-management" icon={FaTasks} text="Tasks Management" />
       </nav>
     </aside>

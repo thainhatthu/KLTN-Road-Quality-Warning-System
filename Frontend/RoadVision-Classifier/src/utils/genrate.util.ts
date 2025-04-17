@@ -1,4 +1,4 @@
-const api_url = import.meta.env.VITE_BASE_URL;
+const api_url = "https://exotic-strong-viper.ngrok-free.app";
 export const generateImageDomain = (path: string) => {
-  return `${api_url}${path}`;
+  return `${api_url}/${path}`;
 };

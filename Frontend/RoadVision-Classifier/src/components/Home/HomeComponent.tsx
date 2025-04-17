@@ -1,14 +1,19 @@
 import homeheader from "../../assets/img/home-header.png";
 import mask from "../../assets/img/mask.png";
+import useNavigateTo from "../../hooks/useNavigateTo";
 import Slider from "./Slider";
 
 interface HomeComponentProps {
   onAboutUsClick: () => void;
   onLearnMoreClick: () => void;
 }
-const HomeComponent: React.FC<HomeComponentProps> = (
-  { onAboutUsClick , onLearnMoreClick }
-) => {
+const HomeComponent: React.FC<HomeComponentProps> = ({
+  onAboutUsClick,
+  onLearnMoreClick,
+}) => {
+  const {
+    navigateMap,
+  } = useNavigateTo();
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] flex flex-col gap-5 justify-start items-center overflow-y-auto">
       {/* HEADER */}
@@ -80,7 +85,10 @@ const HomeComponent: React.FC<HomeComponentProps> = (
               </p>
             </div>
             <div className="w-full flex justify-end">
-              <button className="w-32 bg-[#3749A6] text-white font-semibold p-3 rounded-full hover:ring-4 hover:ring-blue-300">
+              <button
+                className="w-32 bg-[#3749A6] text-white font-semibold p-3 rounded-full hover:ring-4 hover:ring-blue-300"
+                onClick={navigateMap}
+              >
                 Get started
               </button>
             </div>

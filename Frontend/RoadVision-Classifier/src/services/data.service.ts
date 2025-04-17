@@ -31,6 +31,22 @@ export default {
     return data;
   },
 
+  deleteRoadforAdmin: async (id_road: number) => {
+    const url = "/datasvc/api/deleteRoad";
+    const token = getAccessToken();
+    const urlRequest = `${url}?id_road=${id_road}`;
+    console.log("urlRequest", urlRequest);
+    const response = await axiosRequest.delete(urlRequest, {
+      headers: {
+        accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });    
+    console.log("response status", response);
+    return response;
+  },
+  
+
   getRouteMap: async () => {
     try {
       const url = "/datasvc/api/getRouteMap";
@@ -60,7 +76,6 @@ export default {
     const requestUrl = `${url}?token=${token}`;
     try {
       const validWard = await axiosRequest.get(requestUrl);
-      console.log("validWard", validWard);
       return validWard;
     } catch (error) {}
   },

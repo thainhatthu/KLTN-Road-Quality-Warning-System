@@ -1,9 +1,9 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaHome, FaUser } from "react-icons/fa";
-import { MdEngineering } from "react-icons/md";
+import { FaUser } from "react-icons/fa";
+import { MdEngineering, MdDashboard } from "react-icons/md";
 import PropTypes from "prop-types";
-
+import logo from "../../../assets/img/logo.png";
 const Sider: React.FC = () => {
   const location = useLocation();
 
@@ -34,13 +34,25 @@ const Sider: React.FC = () => {
   };
 
   return (
-    <aside className="h-screen bg-white text-gray-800 w-55 flex flex-col">
-      <div className="flex flex-col items-center justify-center py-6">
-        <h2 className="text-2xl font-bold text-[#23038C]">ADMIN</h2>
-        <h1 className="text-2xl font-bold text-[#23038C]">RoadVision</h1>
+    <aside className="h-screen bg-white text-gray-800 w-55 flex flex-col justify-between">
+      {/* Header */}
+      <div className="relative flex flex-col items-center justify-start py-0">
+        {/* Logo */}
+        <img
+          className="absolute top-0 w-32 h-32 -translate-y-4"
+          src={logo}
+          alt="Logo"
+        />
+
+        {/* ADMIN Text */}
+        <h2 className="relative text-2xl font-bold text-[#002C6F] mt-[70px] z-10">
+          ADMIN
+        </h2>
       </div>
+
+      {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-4">
-        <NavLink to="/dashboard" icon={FaHome} text="Dashboard" />
+        <NavLink to="/dashboard" icon={MdDashboard} text="Dashboard" />
         <NavLink to="/user-management" icon={FaUser} text="Users" />
         <NavLink
           to="/technician-management"
