@@ -14,10 +14,10 @@ scrape_configs:
     static_configs:
       - targets: ['cadvisor:8080']
 
-  - job_name: 'backend-services'
-    static_configs:
-      - targets:
-          - auth_service:8000
-          - user_service:8080
-          - data_service:8080
-          - deeplearning_service:8000
+  # - job_name: 'backend-services'
+  #   static_configs:
+  #     - targets:
+  #         - auth_service:8000
+  #         - user_service:8080
+  #         - data_service:8080
+  #         - deeplearning_service:8000
