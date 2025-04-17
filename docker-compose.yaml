@@ -146,7 +146,7 @@ services:
       - POSTGRESQL_PORT=$POSTGRESQL_PORT
     restart: always
     volumes:
-      - ./models/:/app/models/
+      - ./Backend/deeplearning_service/services/models/:/app/models/
     networks:
       - kltn_network
 
