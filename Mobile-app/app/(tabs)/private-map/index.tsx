@@ -16,10 +16,9 @@ import { useEffect, useState } from "react";
 import type { LocationObjectCoords } from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import Header from "@/components/ui/header";
-import LeafletMapWebView from "@/components/LeafletMapWebView";
-import dataService from "@/services/data.service";                
+import PrivateMapWebView from "@/components/PrivateMapWebView"; // thay vì LeafletMapWebView
+import dataService from "@/services/data.service";
 import UploadImgFormDataType from "@/defination/types/data.type";
-
 
 export default function PrivateMapScreen() {
   const router = useRouter();
@@ -43,7 +42,10 @@ export default function PrivateMapScreen() {
 
   const fetchUserRoads = async () => {
     try {
-      const res = await dataService.getInfoRoads({ all: false });
+      const res = await dataService.getInfoRoads({
+        all: false
+      });
+      if (!res) return;
       const parsed = Array.isArray(res?.data)
         ? res.data.map((item: string) => JSON.parse(item))
         : [];
@@ -120,15 +122,15 @@ export default function PrivateMapScreen() {
         </View>
         <Text style={styles.sectionTitle}>Map</Text>
         <View style={styles.mapWrapper}>
-          <LeafletMapWebView
+          <PrivateMapWebView
             location={location}
             style={{ height: 300 }}
-            markers={userRoads}
             onMarkerClick={(data) => console.log("🟡 Marker clicked:", data)}
           />
+
           <TouchableOpacity
             style={styles.expandButton}
-            onPress={() => router.push("/full-map")}
+            onPress={() => router.push("/full-map-private")}
           >
             <Ionicons name="expand-outline" size={22} color="#fff" />
           </TouchableOpacity>

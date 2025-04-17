@@ -79,7 +79,7 @@ export default function PublicMapScreen() {
 
           <TouchableOpacity
             style={styles.expandButton}
-            onPress={() => router.push("/full-map")}
+            onPress={() => router.push("/full-map-public")}
           >
             <Ionicons name="expand-outline" size={22} color="#fff" />
           </TouchableOpacity>

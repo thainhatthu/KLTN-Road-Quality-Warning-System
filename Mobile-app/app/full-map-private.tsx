@@ -21,6 +21,8 @@ import { Ionicons } from "@expo/vector-icons";
 import dataService from "@/services/data.service";
 import { API_URL } from "@/configs";
 import LeafletMapWebView from "@/components/LeafletMapWebView";
+import { getStoredUserInfo } from "@/utils/auth.util";
+import PrivateMapWebView from "@/components/PrivateMapWebView";
 
 type Suggestion = { display_name: string; lat: string; lon: string };
 
@@ -95,27 +97,27 @@ export default function FullMapScreen() {
   useEffect(() => {
     const fetchRoads = async () => {
       try {
-        const res = (await dataService.getInfoRoads({ all: true })) as {
-          data: { data: string[] };
-        };
-        console.log("📍 Road data from server:", res);
+        const user = await getStoredUserInfo();
+        if (!user?.id) return;
 
-        if (webviewRef.current && Array.isArray(res?.data?.data)) {
-          // Parse từng chuỗi JSON thành object
-          const parsedRoads = res.data.data.map((item) => JSON.parse(item));
+        const res = await dataService.getInfoRoads({
+          user_id: user.id,
+          all: false,
+        });
 
-          // Inject API_BASE cho WebView
+        if (webviewRef.current && Array.isArray(res?.data)) {
+          const parsedRoads = res.data.map((item: string) => JSON.parse(item));
+
           const jsSetBase = `window.API_BASE = "${API_URL}";`;
           webviewRef.current.injectJavaScript(jsSetBase);
 
-          // Inject markers sau khi đã parse thành object
           const jsDrawMarkers = `window.displayRoadMarkers(${JSON.stringify(
             parsedRoads
           )});`;
           webviewRef.current.injectJavaScript(jsDrawMarkers);
         }
       } catch (error) {
-        console.error("❌ Error fetching roads:", error);
+        console.error("❌ Error fetching user roads:", error);
       }
     };
 
@@ -174,7 +176,7 @@ export default function FullMapScreen() {
           />
         </View>
 
-        <LeafletMapWebView
+        <PrivateMapWebView
           location={location}
           style={styles.map}
           onMarkerClick={(data) => setSelectedMarkerInfo(data)}

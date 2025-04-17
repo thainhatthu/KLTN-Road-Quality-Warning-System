@@ -17,7 +17,6 @@ import { accountState } from "@/atoms/authState";
 export default function ProfileScreen() {
   const router = useRouter();
   const user = useRecoilValue(accountState);
-  console.log("👤 Logged-in user:", user?.username);
 
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -27,7 +26,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await userProfileService.getProfile();
+        const res = await userProfileService.getProfile({});
         console.log("✅ PROFILE RECEIVED:", res);
         setProfile(res); // profile.fullname, profile.email, ...
       } catch (err) {

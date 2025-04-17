@@ -14,7 +14,7 @@ type ApiResponse<T> = {
 };
 
 export default {
-  getProfile: async () => {
+  getProfile: async (p0: {}) => {
     const url = `/user/api/getProfile`;
     const token = await getAccessToken();
     const requestUrl = `${url}?token=${token}`;
