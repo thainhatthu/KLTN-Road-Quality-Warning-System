@@ -1,114 +1,104 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-import os
 
 class Mail():
 
-    def __init__(self, smtp_host='smtp.gmail.com', smtp_port=587, smtp_username='eqmonitoring.14@gmail.com', smtp_password='hevl wiar rwaw tnby'):
+    def __init__(self, smtp_host='smtp.gmail.com', smtp_port=587,
+                 smtp_username='eqmonitoring.14@gmail.com',
+                 smtp_password='hevl wiar rwaw tnby'):
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
         self.smtp_username = smtp_username
         self.smtp_password = smtp_password
-        self.server = smtplib.SMTP(smtp_host, smtp_port)
 
-    def _build_html(self, message_title, message_body, code_or_content, cid='logo_image'):
+        # Thay bằng URL logo thực tế của bạn (ảnh host công khai)
+        self.logo_url = 'https://i.postimg.cc/0jQQ6zzv/logo.png'
+
+    def _build_html(self, title, message, content):
         return f"""
         <html>
         <head><meta charset="UTF-8"></head>
-        <body style="margin: 0; padding: 0; background-color: #f0f8ff;">
-          <table width="600" cellspacing="0" cellpadding="0" align="center" style="padding: 20px; border-radius: 20px; background-color: #C6E7FF; font-family: 'Segoe UI', sans-serif;">
+        <body style="margin:0;padding:0;background:#f0f8ff;font-family:'Segoe UI',sans-serif;">
+        <center>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
-              <td align="center" style="background-color: #ffffff; padding: 20px 0; border-top-left-radius: 20px; border-top-right-radius: 20px;">
-                <img src="cid:{cid}" alt="Road Vision Logo" height="64" style="display: block;" />
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding: 10px 30px 0 30px;">
-                <h2 style="color: #1f4e79; margin: 0;">{message_title}</h2>
-              </td>
-            </tr>
-            <tr>
-              <td align="left" style="padding: 15px 30px;">
-                <p style="font-size: 15px; color: #333;">{message_body}</p>
-                <p style="font-size: 18px; color: #FF414D; font-weight: bold; margin-top: 15px;">{code_or_content}</p>
-                <p style="margin-top: 20px;">Trân trọng,<br>Đội ngũ Road Vision</p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding: 0 30px 30px 30px;">
-                <table width="100%" style="background-color: #002e76; border-radius: 12px;">
-                  <tr>
-                    <td align="center" style="padding: 15px; font-size: 12px; color: #ffffff;">
-                      <p style="margin: 0;">Được gửi từ <strong>Road Vision – Hệ thống cảnh báo chất lượng đường bộ</strong></p>
-                      <p style="margin: 5px 0 0 0;">&copy; 2025 Road Vision</p>
+                <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background:#C6E7FF;border-radius:20px;padding:20px 10px;">
+                    <tr>
+                    <td align="center" style="background:#ffffff;border-top-left-radius:20px;border-top-right-radius:20px;padding:20px 0;">
+                        <img src="{self.logo_url}" alt="Road Vision Logo"
+                            style="max-height:90px;width:auto;display:block;" />
                     </td>
-                  </tr>
+                    </tr>
+
+                    <tr>
+                    <td align="center" style="background:#eff4ff;border-bottom-left-radius:20px;border-bottom-right-radius:20px;box-shadow:0 5px 10px rgba(0,0,0,0.08);padding:20px;">
+                        <h2 style="color:#1f4e79;margin:10px 0 15px;">{title}</h2>
+                        <p style="font-size:14px;color:#333;margin:0 0 15px;">{message}</p>
+                        <p style="font-size:16px;color:#FF414D;font-weight:bold;margin:0 0 20px;">{content}</p>
+
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background:#002e76;border-radius:12px;">
+                        <tr>
+                            <td align="center" style="padding:12px 10px;color:#fff;font-size:12px;">
+                            <p style="margin:0;">Được gửi từ <strong>Road Vision – Hệ thống cảnh báo chất lượng đường bộ</strong></p>
+                            <p style="margin:5px 0 0;">&copy; 2025 Road Vision</p>
+                            </td>
+                        </tr>
+                        </table>
+                    </td>
+                    </tr>
+
                 </table>
-              </td>
+                </td>
             </tr>
-          </table>
+            </table>
+        </center>
         </body>
         </html>
         """
 
-    def _attach_image(self, message, image_path, cid='logo_image'):
-        if os.path.exists(image_path):
-            with open(image_path, 'rb') as img_file:
-                mime_image = MIMEImage(img_file.read())
-                mime_image.add_header('Content-ID', f'<{cid}>')
-                mime_image.add_header('Content-Disposition', 'inline', filename=os.path.basename(image_path))
-                message.attach(mime_image)
+    def _send(self, MailTo, subject, title, message, content):
+        email = MIMEMultipart('alternative')  # Chỉ chứa HTML, không đính kèm ảnh
+        email['From'] = self.smtp_username
+        email['To'] = MailTo
+        email['Subject'] = subject
 
-    def sendOTP(self, MailTo, OTP, image_path='assets/logo.png'):
-        message = MIMEMultipart('related')
-        message['From'] = self.smtp_username
-        message['To'] = MailTo
-        message['Subject'] = 'OTP XÁC THỰC'
-        html = self._build_html('Mã xác thực OTP', 'Bạn đang yêu cầu xác thực tài khoản bằng mã OTP.', OTP)
-        message.attach(MIMEText(html, 'html'))
-        self._attach_image(message, image_path)
+        html = self._build_html(title, message, content)
+        email.attach(MIMEText(html, 'html'))
+
         try:
-            self.server.starttls()
-            self.server.login(self.smtp_username, self.smtp_password)
-            self.server.send_message(message)
-            self.server.quit()
+            server = smtplib.SMTP(self.smtp_host, self.smtp_port)
+            server.starttls()
+            server.login(self.smtp_username, self.smtp_password)
+            server.send_message(email)
+            server.quit()
         except Exception as ex:
-            print('Error sending OTP mail: ', str(ex))
+            print('Error sending email:', str(ex))
 
-    def sendNewPass(self, MailTo, newPassword, image_path='assets/logo.png'):
-        message = MIMEMultipart('related')
-        message['From'] = self.smtp_username
-        message['To'] = MailTo
-        message['Subject'] = 'MẬT KHẨU MỚI'
-        html = self._build_html('Mật khẩu mới', 'Bạn vừa yêu cầu đặt lại mật khẩu.', newPassword)
-        message.attach(MIMEText(html, 'html'))
-        self._attach_image(message, image_path)
-        try:
-            self.server.starttls()
-            self.server.login(self.smtp_username, self.smtp_password)
-            self.server.send_message(message)
-            self.server.quit()
-        except Exception as ex:
-            print('Error sending new password mail: ', str(ex))
+    def sendOTP(self, MailTo, OTP):
+        self._send(
+            MailTo,
+            'OTP VERIFICATION',
+            'OTP Verification Code',
+            'You have requested to verify your account. Your OTP code is:',
+            OTP
+        )
 
-    def sendNotification(self, MailTo, Content, image_path='assets/logo.png'):
-        message = MIMEMultipart('related')
-        message['From'] = self.smtp_username
-        message['To'] = MailTo
-        message['Subject'] = 'THÔNG BÁO!'
-        html = self._build_html(
-            'Bạn có một lời nhắc từ hệ thống!',
-            'Hệ thống <strong>Road Vision</strong> đã phát hiện một vấn đề tiềm ẩn về chất lượng mặt đường. Bạn vui lòng kiểm tra khu vực dưới đây để đảm bảo an toàn và kịp thời xử lý:',
+    def sendNewPass(self, MailTo, newPassword):
+        self._send(
+            MailTo,
+            'NEW PASSWORD',
+            'Your New Password',
+            'You have just requested a password reset. Your new password is:',
+            newPassword
+        )
+
+    def sendNotification(self, MailTo, Content):
+        self._send(
+            MailTo,
+            'ALERT NOTIFICATION!',
+            'New Road Quality Alert!',
+            '<strong>Road Vision</strong> detected a road issue. Check the area below:',
             Content
         )
-        message.attach(MIMEText(html, 'html'))
-        self._attach_image(message, image_path)
-        try:
-            self.server.starttls()
-            self.server.login(self.smtp_username, self.smtp_password)
-            self.server.send_message(message)
-            self.server.quit()
-        except Exception as ex:
-            print('Error sending notification mail: ', str(ex))
