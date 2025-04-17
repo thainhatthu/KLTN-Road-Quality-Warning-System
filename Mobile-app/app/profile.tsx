@@ -9,15 +9,52 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Modal, TextInput } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import userProfileService from "@/services/userprofile.service";
+import { useRecoilValue } from "recoil";
+import { accountState } from "@/atoms/authState";
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const user = useRecoilValue(accountState);
+  console.log("👤 Logged-in user:", user?.username);
 
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profile, setProfile] = useState<any>(null);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await userProfileService.getProfile();
+        console.log("✅ PROFILE RECEIVED:", res);
+        setProfile(res); // profile.fullname, profile.email, ...
+      } catch (err) {
+        console.error("❌ Failed to fetch profile:", err);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const res = await userProfileService.getProfile({});
+        setProfile(res);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  if (loading) return <Text style={{ marginTop: 20 }}>Loading...</Text>;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -39,9 +76,10 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.name}>User name</Text>
+      <Text style={styles.name}>{user?.username?? "User name"}</Text>
       <Text style={styles.contributionText}>
-        Has contributed 100 pics from 15/5/2022
+        Has contributed {profile?.contribution ?? 0} pics from{" "}
+        {profile?.created?.slice(0, 10) ?? "N/A"}
       </Text>
       <View style={styles.rowButtonContainer}>
         <TouchableOpacity
@@ -70,15 +108,24 @@ export default function ProfileScreen() {
         <View style={styles.infoBox1}>
           <View style={styles.infoRow1}>
             <Ionicons name="information-circle-outline" size={16} />
-            <Text style={styles.infoLabel}> Full name:</Text>
+            <Text style={styles.infoLabel}>
+              {" "}
+              Full name: {profile?.fullname ?? "N/A"}
+            </Text>
           </View>
           <View style={styles.infoRow1}>
             <Ionicons name="mail-outline" size={16} />
-            <Text style={styles.infoLabel}> Email:</Text>
+            <Text style={styles.infoLabel}>
+              {" "}
+              Email: {profile?.email ?? "N/A"}
+            </Text>
           </View>
           <View style={styles.infoRow1}>
             <Ionicons name="call-outline" size={16} />
-            <Text style={styles.infoLabel}> Phone:</Text>
+            <Text style={styles.infoLabel}>
+              {" "}
+              Phone: {profile?.phonenumber ?? "N/A"}
+            </Text>
           </View>
         </View>
       </View>
@@ -91,20 +138,31 @@ export default function ProfileScreen() {
           <View style={[styles.rowBetween]}>
             <View style={styles.infoRow2}>
               <Ionicons name="calendar-outline" size={16} />
-              <Text style={styles.infoLabel}> Date:</Text>
+              <Text style={styles.infoLabel}>
+                {" "}
+                Date: {profile?.birthday ?? "N/A"}
+              </Text>
             </View>
           </View>
           <View style={styles.infoRow2}>
             <Ionicons name="male-female-outline" size={16} />
-            <Text style={styles.infoLabel}> Gender:</Text>
+            <Text style={styles.infoLabel}>
+              {" "}
+              Gender: {profile?.gender ?? "N/A"}
+            </Text>
           </View>
           <View style={styles.infoRow2}>
             <Ionicons name="location-outline" size={16} />
-            <Text style={styles.infoLabel}> Address:</Text>
+            <Text style={styles.infoLabel}>
+              {" "}
+              Address: {profile?.location ?? "N/A"}
+            </Text>
           </View>
           <View style={styles.infoRow2}>
             <Ionicons name="flag-outline" size={16} />
-            <Text style={styles.infoLabel}> Country:</Text>
+            <Text style={styles.infoLabel}>
+              Country: {profile?.state ?? "N/A"}
+            </Text>
           </View>
         </View>
       </View>

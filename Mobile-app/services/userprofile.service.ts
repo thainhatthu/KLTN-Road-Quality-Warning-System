@@ -1,31 +1,41 @@
-import { axiosRequest } from "./config/axios.config";
+import { axiosRequest } from "@/configs/axios.config";
 import {
   EditProfileDataType,
   ChangePasswordDataType,
   UploadAvatarType,
 } from "../defination/types/profile.type";
+import { API_URL } from "@/configs";
 import { getAccessToken } from "../utils/auth.util";
-const api_url = import.meta.env.VITE_BASE_URL;
+
+type ApiResponse<T> = {
+  status: string;
+  message: string;
+  data: T;
+};
 
 export default {
-  getProfile: async ({}) => {
+  getProfile: async () => {
     const url = `/user/api/getProfile`;
-    const token = getAccessToken();
+    const token = await getAccessToken();
     const requestUrl = `${url}?token=${token}`;
     try {
       const response = await axiosRequest.get(requestUrl);
-      return response;
+      if (typeof response.data === "string") {
+        console.warn("⚠️ Received HTML instead of JSON:", response.data);
+        throw new Error("Received HTML instead of expected JSON. Check ngrok or backend.");
+      }
+      const responseData = response.data as ApiResponse<any>;
+      return responseData.data;
     } catch (error) {
       console.error("Error fetching profile:", error);
       throw error;
     }
   },
-  
   getAvatar: async (username: string) => {
     const url = `/user/api/getAvatar`;
-    return `${api_url}${url}?username=${username}`; 
+    return `${API_URL}${url}?username=${username}`;
   },
-  
+
   uploadAvatar: async (formData: UploadAvatarType) => {
     const url = `/user/api/uploadAvatar`;
     const token = getAccessToken();
@@ -33,7 +43,7 @@ export default {
     try {
       const data = await axiosRequest.post(requestUrl, formData, {
         headers: {
-          "accept": "application/json",
+          accept: "application/json",
           "Content-Type": "multipart/form-data",
         },
       });
@@ -43,7 +53,7 @@ export default {
       throw error;
     }
   },
-  
+
   editProfile: async (formData: EditProfileDataType) => {
     const url = `/user/api/editProfile`;
     const token = getAccessToken();

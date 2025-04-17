@@ -53,7 +53,6 @@ export default function LoginScreen() {
   const handleSignInClick = async () => {
     setError(null);
 
-    // Validate input data using zod schema
     const parseResult = signInSchema.safeParse(formData);
     if (!parseResult.success) {
       const errorMessage = parseResult.error.errors[0].message;
@@ -62,36 +61,27 @@ export default function LoginScreen() {
     }
 
     try {
-      // Call the API for sign-in
       const data = await authService.signIn(formData);
-      const { info, token } = data; // Extract user info and token from response
+      const { info, token } = data;
 
       if (info && token) {
         const user_avatar = `${API_URL}/user/api/getAvatar?username=${info.username}`;
-        info.avatar = user_avatar;
-        saveAccessToken(token); // Save token for future API calls
-        setStoredUserInfo(info); // Save user info to local storage
-        setAccountState(info);
+        const fullInfo = { ...info, avatar: user_avatar };
 
-        if (data.info.role) {
-          // localStorage.setItem("userRole", data.info.role);
-          // saveUserRole(data.info.role); Cookie
-          // if (data.info.role === "user") {
-          //   navigateHome();
-          // } else if (data.info.role === "admin") {
-          //   navigateToDashboard();
-          // } else if (data.info.role === "technical") {
-          //   navigateToDashboardTechnician();
-          // }
-        } else {
-          console.error("Role is undefined");
-        }
-        router.push("/home"); // Navigate to home screen
+        saveAccessToken(token);
+        setStoredUserInfo(fullInfo); 
+        setAccountState(fullInfo);
+
+        router.push("/home"); 
+      } else {
+        console.error("Missing info or token");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Login failed:", err);
+      setError("Invalid username or password.");
     }
   };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
