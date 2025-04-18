@@ -43,7 +43,7 @@ export default function PrivateMapScreen() {
   const fetchUserRoads = async () => {
     try {
       const res = await dataService.getInfoRoads({
-        all: false
+        all: false,
       });
       if (!res) return;
       const parsed = Array.isArray(res?.data)
@@ -62,6 +62,7 @@ export default function PrivateMapScreen() {
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: false,
       allowsEditing: true,
       quality: 1,
     });
@@ -221,32 +222,50 @@ export default function PrivateMapScreen() {
                   }}
                 />
               )}
-              <TouchableOpacity
+                            <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: "#2D82C6" }]}
                 onPress={async () => {
                   setShowUploadModal(false);
                   if (!selectedImage || !uploadLat || !uploadLng)
                     return alert("Vui lòng điền đầy đủ thông tin.");
+
+                  const fileName = selectedImage.split("/").pop();
+                  const latNum = parseFloat(uploadLat);
+                  const lngNum = parseFloat(uploadLng);
+
+                  if (isNaN(latNum) || isNaN(lngNum)) {
+                    alert("Tọa độ không hợp lệ");
+                    return;
+                  }
+
                   const formData = new FormData();
                   formData.append("file", {
-                    uri: selectedImage,
-                    name: "photo.jpg",
+                    uri: selectedImage.startsWith("file://")
+                      ? selectedImage
+                      : `file://${selectedImage}`,
+                    name: fileName || "photo.jpg",
                     type: "image/jpeg",
                   } as any);
-                  formData.append("latitude", uploadLat);
-                  formData.append("longitude", uploadLng);
+                  formData.append("latitude", latNum.toString());
+                  formData.append("longitude", lngNum.toString());
+
+                  console.log("selectedImage:", selectedImage);
+                  console.log("lats:", latNum, "lngs:", lngNum);
+                  console.log("formData:", formData);
+
                   try {
                     await dataService.uploadRoad(formData);
                     fetchUserRoads();
                     alert("Upload thành công!");
-                  } catch (e) {
-                    console.error(e);
+                  } catch (err) {
+                    console.error("❌ Upload failed:", err);
                     alert("Upload thất bại!");
                   }
                 }}
               >
                 <Text style={styles.actionButtonText}>OK</Text>
               </TouchableOpacity>
+
             </View>
           </View>
         </Modal>

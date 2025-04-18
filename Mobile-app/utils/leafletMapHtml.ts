@@ -88,6 +88,7 @@ export const getLeafletHtml = () => `
             window.ReactNativeWebView?.postMessage(JSON.stringify({
               type: 'marker_click',
               data: {
+                id: road.id,
                 title: "Đoạn đường hư hỏng",
                 lat: latitude,
                 lng: longitude,
