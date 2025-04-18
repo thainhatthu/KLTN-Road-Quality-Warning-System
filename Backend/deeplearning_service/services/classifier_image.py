@@ -45,7 +45,7 @@ class ImageTransform():
 
 def classifier_road(img):
     model=restevit_road_cls(num_class=4)
-    checkpoint = torch.load('models/ResEViT_multiclass_full.pth',map_location=torch.device("cpu"))
+    checkpoint = torch.load('models/ResEViT_multiclass.pth',map_location=torch.device("cpu"))
     model.load_state_dict(checkpoint)
     img=ImageTransform(224)(img)
     model.eval()
