@@ -35,7 +35,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'POSTGRES_USER_DEV', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         env.POSTGRESQL_USER = USERNAME
                         env.POSTGRESQL_PASSWORD = PASSWORD
-                        env.POSTGRESQL_HOST = "192.168.1.61"
+                        env.POSTGRESQL_HOST = "192.168.120.179"
                         env.POSTGRESQL_PORT = "5432"
                     }
                 }
