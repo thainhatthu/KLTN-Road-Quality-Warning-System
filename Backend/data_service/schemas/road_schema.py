@@ -23,6 +23,7 @@ class RoadSchema(BaseModel):
     location_part: list = Field([], description="Address raw")
     update_at: datetime = Field(None, description="Update at")
     status: str = Field(None, description="Status of road")
+    weight: int =Field(None, description="Weight of road")
     
     @root_validator(pre=True)
     def resolve_user_id(cls, values):
@@ -69,6 +70,10 @@ class RoadSchema(BaseModel):
     
     def reformat(self):
         self.filepath = f"/datasvc/api/getImage?imagePath={self.filepath}"
+        if self.level=='Good': self.weight=0
+        elif self.level=='Satisfactory': self.weight=1
+        elif self.level=='Poor': self.weight=2
+        elif self.level=='Very poor': self.weight=3
         attributes_to_remove = ['file', 'location_part', 'username',]
         for attr in attributes_to_remove:
             if hasattr(self, attr):

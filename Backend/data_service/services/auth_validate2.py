@@ -1,13 +1,7 @@
 import requests
 from fastapi import HTTPException, status
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
-
-
-API_AUTHORIZATION_URL = f"http://{os.getenv('SERVER_AUTH')}/auth/api/authorization"
-print(API_AUTHORIZATION_URL)
+API_AUTHORIZATION_URL = "http://192.168.120.179/auth/api/authorization"
 
 def validate_token(token: str):
     headers = {"Authorization": f"Bearer {token}"}
