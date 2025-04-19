@@ -11,8 +11,8 @@ type Props = {
   style?: any;
   onMarkerClick?: (data: any) => void;
   markers?: any[];
-  webviewRef?: React.RefObject<WebViewType>; // ✅ thêm prop để nhận ref
-  onLoadEnd?: () => void; // ✅ thêm prop để cho phép xử lý bên ngoài nếu cần
+  webviewRef?: React.RefObject<WebViewType>;
+  onLoadEnd?: () => void;
 };
 
 export default function PrivateMapWebView({
@@ -27,6 +27,15 @@ export default function PrivateMapWebView({
   const webviewRef = externalRef ?? internalRef;
   const [isLoaded, setIsLoaded] = useState(false);
   const [pendingLocation, setPendingLocation] = useState<typeof location>(null);
+  const [webviewKey, setWebviewKey] = useState(0);
+
+  useEffect(() => {
+    if (!isLoaded || !webviewRef.current || !markers) return;
+    webviewRef.current.injectJavaScript(`
+    window.API_BASE = "${API_URL}";
+    window.displayRoadMarkers(${JSON.stringify(markers)});
+  `);
+  }, [markers, isLoaded]);
 
   useEffect(() => {
     if (isLoaded && location && webviewRef.current) {
@@ -55,7 +64,7 @@ export default function PrivateMapWebView({
       console.error("❌ Error fetching and injecting markers:", err);
     }
 
-    onLoadEnd?.(); // ✅ gọi callback ngoài nếu có
+    onLoadEnd?.();
   };
 
   const fetchAllRoads = async () => {

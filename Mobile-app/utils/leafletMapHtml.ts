@@ -15,13 +15,19 @@ export const getLeafletHtml = () => `
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
     <script>
       window.API_BASE = "";
-
       var map = L.map('map').setView([10.7769, 106.7009], 14);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
       var marker = null;
       var currentRouteControl = null;
       var lastUserLatLng = null;
+      window.markersLayer = L.layerGroup().addTo(map); // ✅ chứa các marker
+
+      window.clearMarkers = function () {
+        if (window.markersLayer) {
+          window.markersLayer.clearLayers();
+        }
+      };
 
       window.setUserLocation = function(lat, lng) {
         lastUserLatLng = [lat, lng];
@@ -64,6 +70,10 @@ export const getLeafletHtml = () => `
 
       window.displayRoadMarkers = function (roads) {
         console.log("📌 Injected markers from React Native:", roads);
+        if (!window.markersLayer) {
+          window.markersLayer = L.layerGroup().addTo(map);
+        }
+
         roads.forEach((road) => {
           const { latitude, longitude, level, filepath, created_at } = road;
           const color =
@@ -82,8 +92,7 @@ export const getLeafletHtml = () => `
             iconAnchor: [15, 40],
           });
 
-
-          const marker = L.marker([latitude, longitude], { icon }).addTo(map);
+          const marker = L.marker([latitude, longitude], { icon }).addTo(window.markersLayer);
           marker.on("click", function () {
             window.ReactNativeWebView?.postMessage(JSON.stringify({
               type: 'marker_click',

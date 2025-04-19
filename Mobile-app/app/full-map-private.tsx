@@ -51,6 +51,7 @@ export default function FullMapScreen() {
     image: string;
   }>(null);
   const [editMode, setEditMode] = useState(false);
+  const [webviewKey, setWebviewKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -74,57 +75,121 @@ export default function FullMapScreen() {
     webviewRef.current?.injectJavaScript(js);
   };
 
-  useEffect(() => {
-    const fetchRoads = async () => {
-      try {
-        const user = await getStoredUserInfo();
-        if (!user?.id) return;
+  const fetchRoads = async () => {
+    try {
+      const user = await getStoredUserInfo();
+      if (!user?.id) return;
 
-        const res = await dataService.getInfoRoads({ user_id: user.id, all: false });
-        if (webviewRef.current && Array.isArray(res?.data)) {
-          const parsedRoads = res.data.map((item: string) => JSON.parse(item));
-          webviewRef.current.injectJavaScript(`window.API_BASE = "${API_URL}";`);
-          webviewRef.current.injectJavaScript(`window.displayRoadMarkers(${JSON.stringify(parsedRoads)});`);
-        }
-      } catch (error) {
-        console.error("❌ Error fetching user roads:", error);
+      const res = await dataService.getInfoRoads({
+        user_id: user.id,
+        all: false,
+      });
+      if (webviewRef.current && Array.isArray(res?.data)) {
+        const parsedRoads = res.data.map((item: string) => JSON.parse(item));
+        webviewRef.current.injectJavaScript(`
+          if (window.clearMarkers) window.clearMarkers();
+          window.API_BASE = "${API_URL}";
+          window.displayRoadMarkers(${JSON.stringify(parsedRoads)});
+        `);
       }
-    };
+    } catch (error) {
+      console.error("❌ Error fetching user roads:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchRoads();
   }, []);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <View style={styles.container}>
-        <PrivateMapWebView location={location} style={styles.map} onMarkerClick={(data) => setSelectedMarkerInfo(data)} />
+        <PrivateMapWebView
+          key={webviewKey}
+          location={location}
+          style={styles.map}
+          onMarkerClick={(data) => setSelectedMarkerInfo(data)}
+        />
 
         <Modal visible={!!selectedMarkerInfo} transparent animationType="slide">
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+          >
             <View style={styles.routesModalWrapper}>
               <View style={styles.detailCard}>
-                <ScrollView contentContainerStyle={styles.detailSection} keyboardShouldPersistTaps="handled">
+                <ScrollView
+                  contentContainerStyle={styles.detailSection}
+                  keyboardShouldPersistTaps="handled"
+                >
                   {selectedMarkerInfo?.image && (
                     <View>
-                      <Image source={{ uri: selectedMarkerInfo.image }} style={styles.detailImage} resizeMode="cover" />
+                      <Image
+                        source={{ uri: selectedMarkerInfo.image }}
+                        style={styles.detailImage}
+                        resizeMode="cover"
+                      />
                       <View style={styles.imageActionButtons}>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditMode(true)}>
-                          <Ionicons name="create-outline" size={22} color="#fff" />
+                        <TouchableOpacity
+                          style={styles.editIcon}
+                          onPress={() => setEditMode(true)}
+                        >
+                          <Ionicons
+                            name="create-outline"
+                            size={22}
+                            color="#fff"
+                          />
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.deleteIcon}
                           onPress={async () => {
                             try {
-                              await dataService.deleteRoad({ id_road: selectedMarkerInfo!.id, all: false });
+                              await dataService.deleteRoad({
+                                id_road: selectedMarkerInfo!.id,
+                                all: false,
+                              });
                               alert("Đã xoá đoạn đường!");
                               setSelectedMarkerInfo(null);
+                              setWebviewKey((prev) => prev + 1);
+                              
+                              setSelectedMarkerInfo(null);
+
+                              const user = await getStoredUserInfo();
+                              if (!user?.id) return;
+
+                              const res = await dataService.getInfoRoads({
+                                user_id: user.id,
+                                all: false,
+                              });
+                              if (
+                                webviewRef.current &&
+                                Array.isArray(res?.data)
+                              ) {
+                                const parsedRoads = res.data.map(
+                                  (item: string) => JSON.parse(item)
+                                );
+                                webviewRef.current.injectJavaScript(`
+                                  window.clearMarkers && window.clearMarkers();
+                                  window.API_BASE = "${API_URL}";
+                                  window.displayRoadMarkers(${JSON.stringify(
+                                    parsedRoads
+                                  )});
+                                `);
+                              }
                             } catch (err) {
                               console.error("❌ Delete error:", err);
                               alert("Xoá thất bại!");
                             }
                           }}
                         >
-                          <Ionicons name="trash-outline" size={22} color="#fff" />
+                          <Ionicons
+                            name="trash-outline"
+                            size={22}
+                            color="#fff"
+                          />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -132,18 +197,28 @@ export default function FullMapScreen() {
 
                   <Text style={styles.sectionTitle}>Location</Text>
                   <View style={styles.rowBetween}>
-                    <Text style={styles.tagBlue}>Lat: {selectedMarkerInfo?.lat}</Text>
-                    <Text style={styles.tagDarkBlue}>Long: {selectedMarkerInfo?.lng}</Text>
+                    <Text style={styles.tagBlue}>
+                      Lat: {selectedMarkerInfo?.lat}
+                    </Text>
+                    <Text style={styles.tagDarkBlue}>
+                      Long: {selectedMarkerInfo?.lng}
+                    </Text>
                   </View>
                   <Text style={styles.sectionTitle}>Address:</Text>
                   <View style={styles.addressBox}>
-                    <Text style={styles.addressText}>{selectedMarkerInfo?.address}</Text>
+                    <Text style={styles.addressText}>
+                      {selectedMarkerInfo?.address}
+                    </Text>
                   </View>
                   <View style={styles.rowBetween}>
                     <View style={styles.resultTag}>
-                      <Text style={styles.resultText}>📍 {selectedMarkerInfo?.result}</Text>
+                      <Text style={styles.resultText}>
+                        📍 {selectedMarkerInfo?.result}
+                      </Text>
                     </View>
-                    <Text style={styles.timeText}>📍 {selectedMarkerInfo?.time}</Text>
+                    <Text style={styles.timeText}>
+                      📍 {selectedMarkerInfo?.time}
+                    </Text>
                   </View>
 
                   {editMode && (
@@ -155,7 +230,9 @@ export default function FullMapScreen() {
                         keyboardType="numeric"
                         value={String(selectedMarkerInfo?.lat)}
                         onChangeText={(text) =>
-                          setSelectedMarkerInfo((prev) => (prev ? { ...prev, lat: parseFloat(text) } : prev))
+                          setSelectedMarkerInfo((prev) =>
+                            prev ? { ...prev, lat: parseFloat(text) } : prev
+                          )
                         }
                       />
                       <TextInput
@@ -164,18 +241,23 @@ export default function FullMapScreen() {
                         keyboardType="numeric"
                         value={String(selectedMarkerInfo?.lng)}
                         onChangeText={(text) =>
-                          setSelectedMarkerInfo((prev) => (prev ? { ...prev, lng: parseFloat(text) } : prev))
+                          setSelectedMarkerInfo((prev) =>
+                            prev ? { ...prev, lng: parseFloat(text) } : prev
+                          )
                         }
                       />
                       <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: "#2D82C6", marginTop: 10 }]}
+                        style={[
+                          styles.actionButton,
+                          { backgroundColor: "#2D82C6", marginTop: 10 },
+                        ]}
                         onPress={async () => {
                           console.log("📌 Update Params:", {
                             id: selectedMarkerInfo!.id,
                             lat: selectedMarkerInfo!.lat,
                             lng: selectedMarkerInfo!.lng,
                           });
-                          
+
                           try {
                             await dataService.updateLocationRoad(
                               selectedMarkerInfo!.id,
@@ -327,5 +409,5 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     backgroundColor: "#fff",
-  } 
+  },
 });

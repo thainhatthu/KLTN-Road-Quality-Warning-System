@@ -12,13 +12,15 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LocationObjectCoords } from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import Header from "@/components/ui/header";
-import PrivateMapWebView from "@/components/PrivateMapWebView"; // thay vì LeafletMapWebView
+import PrivateMapWebView from "@/components/PrivateMapWebView"; 
 import dataService from "@/services/data.service";
-import UploadImgFormDataType from "@/defination/types/data.type";
+import type { WebView as WebViewType } from "react-native-webview";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 export default function PrivateMapScreen() {
   const router = useRouter();
@@ -30,6 +32,8 @@ export default function PrivateMapScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [userRoads, setUserRoads] = useState<any[]>([]);
+  const webviewRef = useRef<WebViewType>(null); // thêm dòng này đầu file
+  const [webviewKey, setWebviewKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -58,7 +62,13 @@ export default function PrivateMapScreen() {
   useEffect(() => {
     fetchUserRoads();
   }, []);
-
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserRoads();
+      setWebviewKey((prev) => prev + 1);
+    }, [])
+  );
+  
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -124,11 +134,12 @@ export default function PrivateMapScreen() {
         <Text style={styles.sectionTitle}>Map</Text>
         <View style={styles.mapWrapper}>
           <PrivateMapWebView
+            key={webviewKey}
             location={location}
             style={{ height: 300 }}
             onMarkerClick={(data) => console.log("🟡 Marker clicked:", data)}
+            webviewRef={webviewRef}
           />
-
           <TouchableOpacity
             style={styles.expandButton}
             onPress={() => router.push("/full-map-private")}
@@ -222,7 +233,7 @@ export default function PrivateMapScreen() {
                   }}
                 />
               )}
-                            <TouchableOpacity
+              <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: "#2D82C6" }]}
                 onPress={async () => {
                   setShowUploadModal(false);
@@ -248,14 +259,10 @@ export default function PrivateMapScreen() {
                   } as any);
                   formData.append("latitude", latNum.toString());
                   formData.append("longitude", lngNum.toString());
-
-                  console.log("selectedImage:", selectedImage);
-                  console.log("lats:", latNum, "lngs:", lngNum);
-                  console.log("formData:", formData);
-
                   try {
                     await dataService.uploadRoad(formData);
-                    fetchUserRoads();
+                    setWebviewKey((prev) => prev + 1); 
+
                     alert("Upload thành công!");
                   } catch (err) {
                     console.error("❌ Upload failed:", err);
@@ -265,7 +272,6 @@ export default function PrivateMapScreen() {
               >
                 <Text style={styles.actionButtonText}>OK</Text>
               </TouchableOpacity>
-
             </View>
           </View>
         </Modal>
