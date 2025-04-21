@@ -21,7 +21,7 @@ export const getLeafletHtml = () => `
       var marker = null;
       var currentRouteControl = null;
       var lastUserLatLng = null;
-      window.markersLayer = L.layerGroup().addTo(map); // ✅ chứa các marker
+      window.markersLayer = L.layerGroup().addTo(map);
 
       window.clearMarkers = function () {
         if (window.markersLayer) {
@@ -110,6 +110,34 @@ export const getLeafletHtml = () => `
           });
         });
       };
+
+      window.displayBadRoutes = function (routes) {
+        console.log("🛣️ Displaying bad routes:", routes);
+
+        if (!window.badRouteLayer) {
+          window.badRouteLayer = L.layerGroup().addTo(map);
+        } else {
+          window.badRouteLayer.clearLayers();
+        }
+
+        routes.forEach((segment) => {
+          const latlngs = segment.map(([lat, lng]) => [lat, lng]);
+           console.log("🟩 RENDERING POLYLINE:", latlngs);
+
+          L.polyline(latlngs, { color: "red", weight: 5 }).addTo(window.badRouteLayer);
+        });
+    };
+
+
+
+      window.clearBadRoutes = function () {
+        if (window.badRouteLayer) {
+          window.badRouteLayer.clearLayers();
+        }
+      };
+      console.log("📦 routes from RN:", routes);
+      alert("📦 Got routes: " + JSON.stringify(routes));
+
     </script>
   </body>
 </html>

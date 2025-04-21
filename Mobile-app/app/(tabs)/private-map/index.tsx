@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LocationObjectCoords } from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import Header from "@/components/ui/header";
-import PrivateMapWebView from "@/components/PrivateMapWebView"; 
+import PrivateMapWebView from "@/components/PrivateMapWebView";
 import dataService from "@/services/data.service";
 import type { WebView as WebViewType } from "react-native-webview";
 import { useFocusEffect } from "@react-navigation/native";
@@ -68,7 +68,7 @@ export default function PrivateMapScreen() {
       setWebviewKey((prev) => prev + 1);
     }, [])
   );
-  
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -261,7 +261,7 @@ export default function PrivateMapScreen() {
                   formData.append("longitude", lngNum.toString());
                   try {
                     await dataService.uploadRoad(formData);
-                    setWebviewKey((prev) => prev + 1); 
+                    setWebviewKey((prev) => prev + 1);
 
                     alert("Upload thành công!");
                   } catch (err) {

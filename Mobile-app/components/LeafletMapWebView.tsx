@@ -10,6 +10,7 @@ type Props = {
   style?: any;
   onMarkerClick?: (data: any) => void;
   markers?: any[];
+  badRoutes?: any[];
 };
 
 export default function LeafletMapWebView({
@@ -17,19 +18,42 @@ export default function LeafletMapWebView({
   style,
   onMarkerClick,
   markers,
+  badRoutes,
 }: Props) {
   const webviewRef = useRef<WebViewType>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [pendingLocation, setPendingLocation] = useState<typeof location>(null);
 
   useEffect(() => {
-    if (isLoaded && location && webviewRef.current) {
-      const js = `window.setUserLocation(${location.latitude}, ${location.longitude});`;
-      webviewRef.current.injectJavaScript(js);
+    if (!isLoaded || !webviewRef.current) return;
+  
+    if (badRoutes && badRoutes.length > 0) {
+      console.log("🔴 Sending badRoutes to WebView:", badRoutes);
+      webviewRef.current.injectJavaScript(
+        `window.displayBadRoutes(${JSON.stringify(badRoutes)});`
+      );
     } else {
-      setPendingLocation(location);
+      // Nếu tắt Switch => xóa đường cũ đi
+      console.log("🧹 Clearing bad routes");
+      webviewRef.current.injectJavaScript(`window.clearBadRoutes();`);
     }
-  }, [location, isLoaded]);
+  }, [badRoutes, isLoaded]);
+  
+  
+
+  useEffect(() => {
+    if (isLoaded && badRoutes && webviewRef.current) {
+      if (badRoutes.length > 0) {
+        webviewRef.current.injectJavaScript(
+          `window.displayBadRoutes(${JSON.stringify(badRoutes)});`
+        );
+      } else {
+        webviewRef.current.injectJavaScript(`window.clearBadRoutes();`);
+      }
+    }
+  }, [badRoutes, isLoaded]);
+  
+  
 
   const handleLoadEnd = async () => {
     setIsLoaded(true);
@@ -45,6 +69,12 @@ export default function LeafletMapWebView({
       webviewRef.current?.injectJavaScript(
         `window.displayRoadMarkers(${JSON.stringify(roadsToInject)});`
       );
+
+      if (badRoutes && badRoutes.length > 0) {
+        webviewRef.current?.injectJavaScript(
+          `window.displayBadRoutes(${JSON.stringify(badRoutes)});`
+        );
+      }
     } catch (err) {
       console.error("❌ Error fetching and injecting markers:", err);
     }
@@ -72,7 +102,10 @@ export default function LeafletMapWebView({
             onMarkerClick(msg.data);
           }
         } catch (e) {
-          console.warn("📛 Invalid message from WebView:", event.nativeEvent.data);
+          console.warn(
+            "📛 Invalid message from WebView:",
+            event.nativeEvent.data
+          );
         }
       }}
     />

@@ -50,6 +50,31 @@ export default function FullMapScreen() {
     result: string;
     image: string;
   }>(null);
+  const [badRoutes, setBadRoutes] = useState<number[][][]>([]);
+  useEffect(() => {
+    const fetchBadRoutes = async () => {
+      try {
+        const res = await dataService.getRouteMap();
+        const parsed = Array.isArray(res)
+          ? res.map((route) =>
+              route.map((point: string) => {
+                const [lat, lng] = point
+                  .replace("(", "")
+                  .replace(")", "")
+                  .split(",")
+                  .map((v) => parseFloat(v.trim()));
+                return [lat, lng];
+              })
+            )
+          : [];
+        setBadRoutes(parsed);
+      } catch (error) {
+        console.error("❌ Error fetching bad routes:", error);
+      }
+    };
+
+    fetchBadRoutes();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -100,14 +125,11 @@ export default function FullMapScreen() {
         };
 
         if (webviewRef.current && Array.isArray(res?.data?.data)) {
-          // Parse từng chuỗi JSON thành object
           const parsedRoads = res.data.data.map((item) => JSON.parse(item));
 
           // Inject API_BASE cho WebView
           const jsSetBase = `window.API_BASE = "${API_URL}";`;
           webviewRef.current.injectJavaScript(jsSetBase);
-
-          // Inject markers sau khi đã parse thành object
           const jsDrawMarkers = `window.displayRoadMarkers(${JSON.stringify(
             parsedRoads
           )});`;
@@ -176,6 +198,7 @@ export default function FullMapScreen() {
         <LeafletMapWebView
           location={location}
           style={styles.map}
+          badRoutes={badRoutes}
           onMarkerClick={(data) => setSelectedMarkerInfo(data)}
         />
 
