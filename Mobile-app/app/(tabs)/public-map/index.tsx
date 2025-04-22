@@ -60,16 +60,13 @@ export default function PublicMapScreen() {
         console.log("🧭 Parsed bad routes:", parsed); 
         setBadRoutes(parsed);
       } catch (error) {
-        console.error("Lỗi khi tải dữ liệu route map:", error);
+        console.error("Error when load map data:", error);
       }
     } else {
       setBadRoutes([]); 
       console.log("🧹 Clearing bad routes");
     }
   };
-  
-  
-  
 
   return (
     <View style={styles.container}>

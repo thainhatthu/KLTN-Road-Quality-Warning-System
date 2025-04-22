@@ -75,7 +75,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.name}>{user?.username?? "User name"}</Text>
+      <Text style={styles.name}>{user?.username ?? "User name"}</Text>
       <Text style={styles.contributionText}>
         Has contributed {profile?.contribution ?? 0} pics from{" "}
         {profile?.created?.slice(0, 10) ?? "N/A"}

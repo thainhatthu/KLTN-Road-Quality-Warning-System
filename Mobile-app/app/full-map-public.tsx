@@ -11,10 +11,8 @@ import {
   Modal,
   Image,
 } from "react-native";
-import { WebView } from "react-native-webview";
 import { useEffect, useRef, useState } from "react";
 import * as Location from "expo-location";
-import { getLeafletHtml } from "@/utils/leafletMapHtml";
 import type { WebView as WebViewType } from "react-native-webview";
 import type { LocationObjectCoords } from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,15 +25,23 @@ type Suggestion = { display_name: string; lat: string; lon: string };
 export default function FullMapScreen() {
   const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
-  const [from, setFrom] = useState({
+  const [from, setFrom] = useState<{
+    input: string;
+    coord: { lat: number; lng: number } | null;
+    suggestions: Suggestion[];
+  }>({
     input: "",
     coord: null,
-    suggestions: [] as Suggestion[],
+    suggestions: [],
   });
-  const [to, setTo] = useState({
+  const [to, setTo] = useState<{
+    input: string;
+    coord: { lat: number; lng: number } | null;
+    suggestions: Suggestion[];
+  }>({
     input: "",
     coord: null,
-    suggestions: [] as Suggestion[],
+    suggestions: [],
   });
   const [routesInfo, setRoutesInfo] = useState<
     { distance: string; duration: string }[]
@@ -120,7 +126,7 @@ export default function FullMapScreen() {
   useEffect(() => {
     const fetchRoads = async () => {
       try {
-        const res = (await dataService.getInfoRoads({ all: true })) as {
+        const res = (await dataService.getInfoRoads({ all: false })) as {
           data: { data: string[] };
         };
 
@@ -152,7 +158,8 @@ export default function FullMapScreen() {
         <View style={styles.inputContainer}>
           <View style={styles.inputRow}>
             <TextInput
-              placeholder="Vị trí của bạn"
+              placeholder="Current location..."
+              placeholderTextColor="#888"
               value={from.input}
               onChangeText={(text) => {
                 setFrom((prev) => ({ ...prev, input: text }));
@@ -172,7 +179,7 @@ export default function FullMapScreen() {
           />
           <View style={styles.inputRow}>
             <TextInput
-              placeholder="Tới đâu..."
+              placeholder="To..."
               value={to.input}
               onChangeText={(text) => {
                 setTo((prev) => ({ ...prev, input: text }));
@@ -242,7 +249,7 @@ export default function FullMapScreen() {
                   style={styles.closeRoutesModalBtn}
                   onPress={() => setSelectedMarkerInfo(null)}
                 >
-                  <Text style={{ color: "#fff" }}>Đóng</Text>
+                  <Text style={{ color: "#fff" }}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>

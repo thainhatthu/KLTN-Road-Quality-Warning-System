@@ -33,7 +33,6 @@ export default function LeafletMapWebView({
         `window.displayBadRoutes(${JSON.stringify(badRoutes)});`
       );
     } else {
-      // Nếu tắt Switch => xóa đường cũ đi
       console.log("🧹 Clearing bad routes");
       webviewRef.current.injectJavaScript(`window.clearBadRoutes();`);
     }
@@ -81,7 +80,7 @@ export default function LeafletMapWebView({
   };
 
   const fetchAllRoads = async () => {
-    const res = await dataService.getInfoRoads({ all: true });
+    const res = await dataService.getInfoRoads({ all: false });
     return Array.isArray((res as any)?.data?.data)
       ? (res as any).data.data.map((item: string) => JSON.parse(item))
       : [];

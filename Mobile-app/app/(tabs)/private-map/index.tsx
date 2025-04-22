@@ -32,7 +32,7 @@ export default function PrivateMapScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [userRoads, setUserRoads] = useState<any[]>([]);
-  const webviewRef = useRef<WebViewType>(null); // thêm dòng này đầu file
+  const webviewRef = useRef<WebViewType>(null); 
   const [webviewKey, setWebviewKey] = useState(0);
 
   useEffect(() => {
@@ -106,10 +106,10 @@ export default function PrivateMapScreen() {
       try {
         await dataService.uploadRoad(formData);
         fetchUserRoads();
-        alert("Upload thành công!");
+        alert("Upload success!");
       } catch (err) {
         console.error("Upload failed:", err);
-        alert("Upload thất bại. Hãy thử lại.");
+        alert("Upload fail. Try again!");
       }
     }
   };
@@ -146,15 +146,6 @@ export default function PrivateMapScreen() {
           >
             <Ionicons name="expand-outline" size={22} color="#fff" />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>View Bad Routes</Text>
-          <Switch
-            value={showBadRoutes}
-            onValueChange={setShowBadRoutes}
-            trackColor={{ true: "#2D82C6", false: "#ccc" }}
-          />
         </View>
 
         <View
@@ -195,7 +186,7 @@ export default function PrivateMapScreen() {
         <Modal visible={showUploadModal} transparent animationType="slide">
           <View style={styles.modalWrapper}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Upload Đoạn đường</Text>
+              <Text style={styles.modalTitle}>Fill location</Text>
               <TextInput
                 placeholder="Latitude"
                 style={styles.inputModal}
@@ -238,14 +229,14 @@ export default function PrivateMapScreen() {
                 onPress={async () => {
                   setShowUploadModal(false);
                   if (!selectedImage || !uploadLat || !uploadLng)
-                    return alert("Vui lòng điền đầy đủ thông tin.");
+                    return alert("Please fill enough information");
 
                   const fileName = selectedImage.split("/").pop();
                   const latNum = parseFloat(uploadLat);
                   const lngNum = parseFloat(uploadLng);
 
                   if (isNaN(latNum) || isNaN(lngNum)) {
-                    alert("Tọa độ không hợp lệ");
+                    alert("Invalid latitude or longitude");
                     return;
                   }
 
@@ -263,10 +254,10 @@ export default function PrivateMapScreen() {
                     await dataService.uploadRoad(formData);
                     setWebviewKey((prev) => prev + 1);
 
-                    alert("Upload thành công!");
+                    alert("Upload successful!");
                   } catch (err) {
                     console.error("❌ Upload failed:", err);
-                    alert("Upload thất bại!");
+                    alert("Upload failed!");
                   }
                 }}
               >
