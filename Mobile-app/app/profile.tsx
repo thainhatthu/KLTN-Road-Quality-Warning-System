@@ -5,14 +5,16 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  TextInput,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Modal, TextInput } from "react-native";
 import React, { useEffect, useState } from "react";
 import userProfileService from "@/services/userprofile.service";
 import { useRecoilValue } from "recoil";
 import { accountState } from "@/atoms/authState";
+import authService from "@/services/auth.service";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -23,19 +25,6 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profile, setProfile] = useState<any>(null);
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await userProfileService.getProfile({});
-        console.log("✅ PROFILE RECEIVED:", res);
-        setProfile(res); // profile.fullname, profile.email, ...
-      } catch (err) {
-        console.error("❌ Failed to fetch profile:", err);
-      }
-    };
-    fetchProfile();
-  }, []);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +34,7 @@ export default function ProfileScreen() {
         const res = await userProfileService.getProfile({});
         setProfile(res);
       } catch (err) {
-        console.error("Failed to fetch profile:", err);
+        console.error("❌ Failed to fetch profile:", err);
       } finally {
         setLoading(false);
       }
@@ -56,7 +45,7 @@ export default function ProfileScreen() {
   if (loading) return <Text style={{ marginTop: 20 }}>Loading...</Text>;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { flexGrow: 1 }]}>
       <View style={styles.headerContainer}>
         <Image
           source={require("@/assets/images/banner-profile.png")}
@@ -64,7 +53,7 @@ export default function ProfileScreen() {
         />
         <Text style={styles.title}>Profile</Text>
       </View>
-      {/* Avatar */}
+
       <View style={styles.avatarContainer}>
         <Image
           source={require("@/assets/images/img_avatar.png")}
@@ -80,6 +69,7 @@ export default function ProfileScreen() {
         Has contributed {profile?.contribution ?? 0} pics from{" "}
         {profile?.created?.slice(0, 10) ?? "N/A"}
       </Text>
+
       <View style={styles.rowButtonContainer}>
         <TouchableOpacity
           style={[styles.editButton, { marginRight: 10 }]}
@@ -100,10 +90,8 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Personalization Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Personalization</Text>
-
         <View style={styles.infoBox1}>
           <View style={styles.infoRow1}>
             <Ionicons name="information-circle-outline" size={16} />
@@ -129,19 +117,15 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Other Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Other</Text>
-
         <View style={styles.infoBox2}>
-          <View style={[styles.rowBetween]}>
-            <View style={styles.infoRow2}>
-              <Ionicons name="calendar-outline" size={16} />
-              <Text style={styles.infoLabel}>
-                {" "}
-                Date: {profile?.birthday ?? "N/A"}
-              </Text>
-            </View>
+          <View style={styles.infoRow2}>
+            <Ionicons name="calendar-outline" size={16} />
+            <Text style={styles.infoLabel}>
+              {" "}
+              Date: {profile?.birthday ?? "N/A"}
+            </Text>
           </View>
           <View style={styles.infoRow2}>
             <Ionicons name="male-female-outline" size={16} />
@@ -160,21 +144,37 @@ export default function ProfileScreen() {
           <View style={styles.infoRow2}>
             <Ionicons name="flag-outline" size={16} />
             <Text style={styles.infoLabel}>
+              {" "}
               Country: {profile?.state ?? "N/A"}
             </Text>
           </View>
         </View>
+        
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={async () => {
+            try {
+              await authService.logout();
+              router.replace("/login");
+            } catch (err) {
+              console.error("❌ Logout failed:", err);
+            }
+          }}
+        >
+          <Ionicons name="log-out-outline" size={18} color="#fff" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
       </View>
+
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={showChangePasswordModal}
         onRequestClose={() => setShowChangePasswordModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Change Password</Text>
-
             <TextInput
               placeholder="Current Password"
               secureTextEntry
@@ -196,7 +196,6 @@ export default function ProfileScreen() {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
             />
-
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -204,13 +203,9 @@ export default function ProfileScreen() {
               >
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.saveButton}
-                onPress={() => {
-                  // TODO: add validation & API call
-                  setShowChangePasswordModal(false);
-                }}
+                onPress={() => setShowChangePasswordModal(false)}
               >
                 <Text style={styles.saveText}>Save</Text>
               </TouchableOpacity>
@@ -225,7 +220,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
-    paddingBottom: 40,
+    paddingBottom: 80,
     alignItems: "center",
     height: "100%",
   },
@@ -418,5 +413,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     marginTop: 10,
+  },
+  logoutButton: {
+    marginTop: 10,
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#D9534F",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  
+  logoutText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 6,
   },
 });
