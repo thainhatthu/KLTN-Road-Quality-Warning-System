@@ -20,25 +20,19 @@ import { API_URL } from "@/configs";
 import { LoginDataType } from "@/defination/types/auth.type";
 import { saveAccessToken, setStoredUserInfo } from "@/utils/auth.util";
 
-// Input validation schema using zod
 const signInSchema = z.object({
   username: z.string().min(6, ERROR_MESSAGES.auth.username),
   password: z.string().min(6, ERROR_MESSAGES.auth.password),
 });
 
-// Type for the sign-in data inferred from the schema
 type SignInData = z.infer<typeof signInSchema>;
 export default function LoginScreen() {
-  // State for form input data
   const [formData, setFormData] = useState<SignInData>({
     username: "",
     password: "",
   });
 
-  // State for error messages
   const [error, setError] = useState<string | null>(null);
-
-  // Recoil state for user information
   const [, setAccountState] = useRecoilState(accountState);
   // Handle input field changes
   const handleChange = (fieldName: keyof typeof formData, value: string) => {
@@ -49,7 +43,6 @@ export default function LoginScreen() {
   };
 
   const [rememberMe, setRememberMe] = useState(false);
-  // Handle sign-in button click
   const handleSignInClick = async () => {
     setError(null);
 

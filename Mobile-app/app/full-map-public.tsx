@@ -19,7 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import dataService from "@/services/data.service";
 import { API_URL } from "@/configs";
 import LeafletMapWebView from "@/components/LeafletMapWebView";
-
+import { useBadRoutesStore } from "@/stores/badRoutesStore";
 type Suggestion = { display_name: string; lat: string; lon: string };
 
 export default function FullMapScreen() {
@@ -56,7 +56,9 @@ export default function FullMapScreen() {
     result: string;
     image: string;
   }>(null);
-  const [badRoutes, setBadRoutes] = useState<number[][][]>([]);
+
+  const showBadRoutes = useBadRoutesStore((s) => s.badRoutes);
+  const badRoutes = useBadRoutesStore((s) => s.badRoutes);
   useEffect(() => {
     const fetchBadRoutes = async () => {
       try {
@@ -73,7 +75,8 @@ export default function FullMapScreen() {
               })
             )
           : [];
-        setBadRoutes(parsed);
+        // Process the parsed data here if needed
+        console.log("Parsed bad routes:", parsed);
       } catch (error) {
         console.error("❌ Error fetching bad routes:", error);
       }
@@ -118,11 +121,19 @@ export default function FullMapScreen() {
   };
 
   const handleRoute = () => {
-    if (!from.coord || !to.coord) return;
-    const js = `window.drawRoute(${from.coord.lat}, ${from.coord.lng}, ${to.coord.lat}, ${to.coord.lng});`;
+    if (!to.coord) return;
+
+    const fromCoord =
+      from.coord ??
+      (location ? { lat: location.latitude, lng: location.longitude } : null);
+
+    if (!fromCoord) return;
+
+    const js = `window.drawRoute(${fromCoord.lat}, ${fromCoord.lng}, ${to.coord.lat}, ${to.coord.lng});`;
     webviewRef.current?.injectJavaScript(js);
     setShowRoutesModal(true);
   };
+
   useEffect(() => {
     const fetchRoads = async () => {
       try {
@@ -159,8 +170,8 @@ export default function FullMapScreen() {
           <View style={styles.inputRow}>
             <TextInput
               placeholder="Current location..."
+              value={from.input || "Current location"}
               placeholderTextColor="#888"
-              value={from.input}
               onChangeText={(text) => {
                 setFrom((prev) => ({ ...prev, input: text }));
                 fetchSuggestions(text, "from");
@@ -205,8 +216,9 @@ export default function FullMapScreen() {
         <LeafletMapWebView
           location={location}
           style={styles.map}
-          badRoutes={badRoutes}
           onMarkerClick={(data) => setSelectedMarkerInfo(data)}
+          webviewRef={webviewRef}
+          badRoutes={showBadRoutes ? badRoutes : []}
         />
 
         <Modal visible={!!selectedMarkerInfo} transparent animationType="slide">
