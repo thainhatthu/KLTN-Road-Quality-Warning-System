@@ -12,16 +12,13 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { WebView } from "react-native-webview";
 import { useEffect, useRef, useState } from "react";
 import * as Location from "expo-location";
-import { getLeafletHtml } from "@/utils/leafletMapHtml";
 import type { WebView as WebViewType } from "react-native-webview";
 import type { LocationObjectCoords } from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import dataService from "@/services/data.service";
 import { API_URL } from "@/configs";
-import LeafletMapWebView from "@/components/LeafletMapWebView";
 import { getStoredUserInfo } from "@/utils/auth.util";
 import PrivateMapWebView from "@/components/PrivateMapWebView";
 
@@ -30,15 +27,23 @@ type Suggestion = { display_name: string; lat: string; lon: string };
 export default function FullMapScreen() {
   const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
-  const [from, setFrom] = useState({
+  const [from, setFrom] = useState<{
+    input: string;
+    coord: { lat: number; lng: number } | null;
+    suggestions: Suggestion[];
+  }>({
     input: "",
     coord: null,
-    suggestions: [] as Suggestion[],
+    suggestions: [],
   });
-  const [to, setTo] = useState({
+  const [to, setTo] = useState<{
+    input: string;
+    coord: { lat: number; lng: number } | null;
+    suggestions: Suggestion[];
+  }>({
     input: "",
     coord: null,
-    suggestions: [] as Suggestion[],
+    suggestions: [],
   });
   const [selectedMarkerInfo, setSelectedMarkerInfo] = useState<null | {
     id: number;
@@ -151,7 +156,7 @@ export default function FullMapScreen() {
                                 id_road: selectedMarkerInfo!.id,
                                 all: false,
                               });
-                              alert("Đã xoá đoạn đường!");
+                              alert("Deleted!");
                               setSelectedMarkerInfo(null);
                               setWebviewKey((prev) => prev + 1);
                               
@@ -181,7 +186,7 @@ export default function FullMapScreen() {
                               }
                             } catch (err) {
                               console.error("❌ Delete error:", err);
-                              alert("Xoá thất bại!");
+                              alert("Delete failed!");
                             }
                           }}
                         >
@@ -264,15 +269,15 @@ export default function FullMapScreen() {
                               selectedMarkerInfo!.lat,
                               selectedMarkerInfo!.lng
                             );
-                            alert("Cập nhật thành công!");
+                            alert("Update successful!");
                             setEditMode(false);
                           } catch (err) {
                             console.error("❌ Update error:", err);
-                            alert("Cập nhật thất bại!");
+                            alert("Update failed!");
                           }
                         }}
                       >
-                        <Text style={styles.actionButtonText}>Lưu</Text>
+                        <Text style={styles.actionButtonText}>Save</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -284,7 +289,7 @@ export default function FullMapScreen() {
                       setSelectedMarkerInfo(null);
                     }}
                   >
-                    <Text style={{ color: "#fff" }}>Đóng</Text>
+                    <Text style={{ color: "#fff" }}>Close</Text>
                   </TouchableOpacity>
                 </ScrollView>
               </View>

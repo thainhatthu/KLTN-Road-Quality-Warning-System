@@ -11,31 +11,37 @@ import {
   Modal,
   Image,
 } from "react-native";
-import { WebView } from "react-native-webview";
 import { useEffect, useRef, useState } from "react";
 import * as Location from "expo-location";
-import { getLeafletHtml } from "@/utils/leafletMapHtml";
 import type { WebView as WebViewType } from "react-native-webview";
 import type { LocationObjectCoords } from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import dataService from "@/services/data.service";
 import { API_URL } from "@/configs";
 import LeafletMapWebView from "@/components/LeafletMapWebView";
-
+import { useBadRoutesStore } from "@/stores/badRoutesStore";
 type Suggestion = { display_name: string; lat: string; lon: string };
 
 export default function FullMapScreen() {
   const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
-  const [from, setFrom] = useState({
+  const [from, setFrom] = useState<{
+    input: string;
+    coord: { lat: number; lng: number } | null;
+    suggestions: Suggestion[];
+  }>({
     input: "",
     coord: null,
-    suggestions: [] as Suggestion[],
+    suggestions: [],
   });
-  const [to, setTo] = useState({
+  const [to, setTo] = useState<{
+    input: string;
+    coord: { lat: number; lng: number } | null;
+    suggestions: Suggestion[];
+  }>({
     input: "",
     coord: null,
-    suggestions: [] as Suggestion[],
+    suggestions: [],
   });
   const [routesInfo, setRoutesInfo] = useState<
     { distance: string; duration: string }[]
@@ -50,7 +56,9 @@ export default function FullMapScreen() {
     result: string;
     image: string;
   }>(null);
-  const [badRoutes, setBadRoutes] = useState<number[][][]>([]);
+
+  const showBadRoutes = useBadRoutesStore((s) => s.badRoutes);
+  const badRoutes = useBadRoutesStore((s) => s.badRoutes);
   useEffect(() => {
     const fetchBadRoutes = async () => {
       try {
@@ -67,7 +75,8 @@ export default function FullMapScreen() {
               })
             )
           : [];
-        setBadRoutes(parsed);
+        // Process the parsed data here if needed
+        console.log("Parsed bad routes:", parsed);
       } catch (error) {
         console.error("❌ Error fetching bad routes:", error);
       }
@@ -112,15 +121,23 @@ export default function FullMapScreen() {
   };
 
   const handleRoute = () => {
-    if (!from.coord || !to.coord) return;
-    const js = `window.drawRoute(${from.coord.lat}, ${from.coord.lng}, ${to.coord.lat}, ${to.coord.lng});`;
+    if (!to.coord) return;
+
+    const fromCoord =
+      from.coord ??
+      (location ? { lat: location.latitude, lng: location.longitude } : null);
+
+    if (!fromCoord) return;
+
+    const js = `window.drawRoute(${fromCoord.lat}, ${fromCoord.lng}, ${to.coord.lat}, ${to.coord.lng});`;
     webviewRef.current?.injectJavaScript(js);
     setShowRoutesModal(true);
   };
+
   useEffect(() => {
     const fetchRoads = async () => {
       try {
-        const res = (await dataService.getInfoRoads({ all: true })) as {
+        const res = (await dataService.getInfoRoads({ all: false })) as {
           data: { data: string[] };
         };
 
@@ -152,8 +169,9 @@ export default function FullMapScreen() {
         <View style={styles.inputContainer}>
           <View style={styles.inputRow}>
             <TextInput
-              placeholder="Vị trí của bạn"
-              value={from.input}
+              placeholder="Current location..."
+              value={from.input || "Current location"}
+              placeholderTextColor="#888"
               onChangeText={(text) => {
                 setFrom((prev) => ({ ...prev, input: text }));
                 fetchSuggestions(text, "from");
@@ -172,7 +190,7 @@ export default function FullMapScreen() {
           />
           <View style={styles.inputRow}>
             <TextInput
-              placeholder="Tới đâu..."
+              placeholder="To..."
               value={to.input}
               onChangeText={(text) => {
                 setTo((prev) => ({ ...prev, input: text }));
@@ -198,8 +216,9 @@ export default function FullMapScreen() {
         <LeafletMapWebView
           location={location}
           style={styles.map}
-          badRoutes={badRoutes}
           onMarkerClick={(data) => setSelectedMarkerInfo(data)}
+          webviewRef={webviewRef}
+          badRoutes={showBadRoutes ? badRoutes : []}
         />
 
         <Modal visible={!!selectedMarkerInfo} transparent animationType="slide">
@@ -242,7 +261,7 @@ export default function FullMapScreen() {
                   style={styles.closeRoutesModalBtn}
                   onPress={() => setSelectedMarkerInfo(null)}
                 >
-                  <Text style={{ color: "#fff" }}>Đóng</Text>
+                  <Text style={{ color: "#fff" }}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>

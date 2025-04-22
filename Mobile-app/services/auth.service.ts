@@ -1,6 +1,7 @@
 // Manage Auth API
 import { axiosRequest } from "@/configs/axios.config";
 import { ForgotFormDataType, LoginDataType, LoginFormDataType, VerifyFormDataType } from "../defination/types/auth.type";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type ApiResponse<T> = {
   status: string;
@@ -31,10 +32,20 @@ export default {
     return data;
   },
 
-  // changePass: async (formData: ForgotFormDataType) => {
-  //   const url = `/auth/api/changePassword`;
-  //   const data: LoginDataType = await axiosRequest.post(url, formData);
-  //   return data;
-  // },
+  changePass: async (formData: ForgotFormDataType) => {
+    const url = `/auth/api/changePassword`;
+    const response = await axiosRequest.post<ApiResponse<LoginDataType>>(url, formData);
+    const data: LoginDataType = response.data?.data;
+    return data;
+  },
 
+  logout: async () => {
+    try {
+      await AsyncStorage.clear();
+      console.log("Logout successful");
+    } catch (error) {
+      console.error("Error when logout:", error);
+      throw error;
+    }
+  }
 };

@@ -16,21 +16,18 @@ import type { LocationObjectCoords } from "expo-location";
 import Header from "@/components/ui/header";
 import LeafletMapWebView from "@/components/LeafletMapWebView";
 import dataService from "@/services/data.service";
-
+import { useBadRoutesStore } from "@/stores/badRoutesStore"; 
 export default function PublicMapScreen() {
   const router = useRouter();
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
   const [showBadRoutes, setShowBadRoutes] = useState(true);
   const [showNearby, setShowNearby] = useState(true);
-  const [badRoutes, setBadRoutes] = useState<any[]>([]);
+  const { badRoutes, setBadRoutes } = useBadRoutesStore();
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        alert("Permission denied");
-        return;
-      }
+      if (status !== "granted") return;
       const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc.coords);
     })();
@@ -58,19 +55,15 @@ export default function PublicMapScreen() {
           : [];
   
         console.log("🧭 Parsed bad routes:", parsed); 
-        setBadRoutes(parsed);
+        setBadRoutes(parsed); // ✅ ghi vào global store
       } catch (error) {
-        console.error("Lỗi khi tải dữ liệu route map:", error);
+        console.error("Error loading bad routes:", error);
       }
     } else {
-      setBadRoutes([]); 
+      setBadRoutes([]); // ✅ clear global store
       console.log("🧹 Clearing bad routes");
     }
   };
-  
-  
-  
-
   return (
     <View style={styles.container}>
       <Header title="Public map" />

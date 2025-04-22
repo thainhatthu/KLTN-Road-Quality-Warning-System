@@ -1,3 +1,4 @@
+// Mobile-app/components/LeafletMapWebView.tsx
 import { useEffect, useRef, useState } from "react";
 import { WebView } from "react-native-webview";
 import type { WebView as WebViewType } from "react-native-webview";
@@ -11,6 +12,7 @@ type Props = {
   onMarkerClick?: (data: any) => void;
   markers?: any[];
   badRoutes?: any[];
+  webviewRef?: React.RefObject<WebViewType>;
 };
 
 export default function LeafletMapWebView({
@@ -19,41 +21,43 @@ export default function LeafletMapWebView({
   onMarkerClick,
   markers,
   badRoutes,
+  webviewRef: externalRef,
 }: Props) {
-  const webviewRef = useRef<WebViewType>(null);
+  const internalRef = useRef<WebViewType>(null);
+  const webviewRef = externalRef ?? internalRef;
   const [isLoaded, setIsLoaded] = useState(false);
   const [pendingLocation, setPendingLocation] = useState<typeof location>(null);
 
   useEffect(() => {
+    if (!isLoaded || !webviewRef.current || !markers) return;
+    webviewRef.current.injectJavaScript(`
+      window.API_BASE = "${API_URL}";
+      window.displayRoadMarkers(${JSON.stringify(markers)});
+    `);
+  }, [markers, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded && location && webviewRef.current) {
+      const js = `window.setUserLocation(${location.latitude}, ${location.longitude});`;
+      webviewRef.current.injectJavaScript(js);
+    } else {
+      setPendingLocation(location);
+    }
+  }, [location, isLoaded]);
+
+  useEffect(() => {
     if (!isLoaded || !webviewRef.current) return;
-  
+
     if (badRoutes && badRoutes.length > 0) {
       console.log("🔴 Sending badRoutes to WebView:", badRoutes);
       webviewRef.current.injectJavaScript(
         `window.displayBadRoutes(${JSON.stringify(badRoutes)});`
       );
     } else {
-      // Nếu tắt Switch => xóa đường cũ đi
       console.log("🧹 Clearing bad routes");
       webviewRef.current.injectJavaScript(`window.clearBadRoutes();`);
     }
   }, [badRoutes, isLoaded]);
-  
-  
-
-  useEffect(() => {
-    if (isLoaded && badRoutes && webviewRef.current) {
-      if (badRoutes.length > 0) {
-        webviewRef.current.injectJavaScript(
-          `window.displayBadRoutes(${JSON.stringify(badRoutes)});`
-        );
-      } else {
-        webviewRef.current.injectJavaScript(`window.clearBadRoutes();`);
-      }
-    }
-  }, [badRoutes, isLoaded]);
-  
-  
 
   const handleLoadEnd = async () => {
     setIsLoaded(true);
@@ -81,7 +85,7 @@ export default function LeafletMapWebView({
   };
 
   const fetchAllRoads = async () => {
-    const res = await dataService.getInfoRoads({ all: true });
+    const res = await dataService.getInfoRoads({ all: false });
     return Array.isArray((res as any)?.data?.data)
       ? (res as any).data.data.map((item: string) => JSON.parse(item))
       : [];
@@ -102,10 +106,7 @@ export default function LeafletMapWebView({
             onMarkerClick(msg.data);
           }
         } catch (e) {
-          console.warn(
-            "📛 Invalid message from WebView:",
-            event.nativeEvent.data
-          );
+          console.warn("📛 Invalid message from WebView:", event.nativeEvent.data);
         }
       }}
     />
