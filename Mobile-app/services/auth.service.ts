@@ -31,10 +31,11 @@ export default {
     return data;
   },
 
-  // changePass: async (formData: ForgotFormDataType) => {
-  //   const url = `/auth/api/changePassword`;
-  //   const data: LoginDataType = await axiosRequest.post(url, formData);
-  //   return data;
-  // },
+  changePass: async (formData: ForgotFormDataType) => {
+    const url = `/auth/api/changePassword`;
+    const response = await axiosRequest.post<ApiResponse<LoginDataType>>(url, formData);
+    const data: LoginDataType = response.data?.data;
+    return data;
+  },
 
 };
