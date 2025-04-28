@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 import dataService from "../../services/data.service";
 import { accountState } from "../../atoms/authState";
-const api_url = "https://exotic-strong-viper.ngrok-free.app";
+const api_url = "https://b9a3-42-116-6-46.ngrok-free.app";
 
 interface DataType {
   time: string;
