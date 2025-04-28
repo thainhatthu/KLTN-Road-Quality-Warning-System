@@ -7,7 +7,7 @@ const { Option } = Select;
 import { AiOutlineEdit, AiOutlinePlus } from "react-icons/ai";
 import manageStatisticInfoService from "../../../services/manageStatisticInfo.service";
 import manageAlltechnicianService from "../../../services/manageAlltechnician.service";
-const api_url = "https://exotic-strong-viper.ngrok-free.app";
+const api_url = "https://b9a3-42-116-6-46.ngrok-free.app";
 
 interface TaskManagementComponentProps {
   road: any;
