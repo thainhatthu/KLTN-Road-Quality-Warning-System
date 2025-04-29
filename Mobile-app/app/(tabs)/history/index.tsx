@@ -1,19 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
   Image,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  TextInput,
 } from "react-native";
-import  Header from "@/components/ui/header";
+import { API_URL } from "@/configs";
+import { getStoredUserInfo } from "@/utils/auth.util";
+import Header from "@/components/ui/header";
+import dataService from "@/services/data.service";
+import moment from "moment";
 
 export default function HomeScreen() {
+  const [history, setHistory] = useState<
+    {
+      id: number;
+      level: string;
+      created_at: string;
+      location: string;
+      latitude: number;
+      longitude: number;
+      image: string;
+    }[]
+  >([]);
+
+  const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const user = await getStoredUserInfo();
+        if (!user?.id) return;
+
+        const res = (await dataService.getInfoRoads({
+          user_id: user.id,
+          all: true,
+        })) as {
+          data: { data: string[] };
+        };
+
+        const parsedHistory = res.data.data.map((item) => {
+          const parsedItem = JSON.parse(item);
+          const imageURL = `${API_URL}${parsedItem.filepath}`;
+          return { ...parsedItem, image: imageURL };
+        });
+
+        setHistory(parsedHistory);
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu lịch sử:", error);
+      }
+    };
+
+    fetchHistory();
+
+    const intervalId = setInterval(fetchHistory, 5000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const filteredHistory = history.filter((item) =>
+    item.location.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   return (
     <View style={styles.container}>
-      <Header title="History"></Header>
+      <Header title="History" />
 
       <ScrollView
         style={styles.scrollView}
@@ -25,11 +77,62 @@ export default function HomeScreen() {
             source={require("@/assets/images/road-classifier-banner.png")}
             style={styles.banner}
           />
-          <Text style={styles.headerTitle}>
-            See your upload history!
-          </Text>
+          <Text style={styles.headerTitle}>See your upload history!</Text>
         </View>
-       
+
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by location..."
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholderTextColor="#888"
+        />
+
+        {filteredHistory.map((item) => (
+          <View key={item.id} style={styles.card}>
+            <Image source={{ uri: item.image }} style={styles.cardImage} />
+            <View style={styles.cardInfo}>
+              <Text style={styles.label}>
+                📍 <Text style={styles.value}>Address:</Text> {item.location}
+              </Text>
+
+              <View style={styles.latLngGroup}>
+                <Text style={styles.label}>
+                  📌 <Text style={styles.value}>Latitude:</Text> {item.latitude}
+                </Text>
+                <Text style={[styles.label, { paddingLeft: 20, marginTop: -3 }]}>
+                  <Text style={styles.value}>Longitude:</Text> {item.longitude}
+                </Text>
+              </View>
+
+              <Text style={styles.label}>
+                🛣️ <Text style={styles.value}>Status:</Text>{" "}
+                <Text
+                  style={{
+                    color:
+                      item.level === "Good"
+                        ? "#4CAF50"
+                        : item.level === "Poor"
+                        ? "#FF9800"
+                        : item.level === "Very poor"
+                        ? "#F44336"
+                        : "#999",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {item.level}
+                </Text>
+              </Text>
+
+              <Text style={{ fontSize: 12, color: "#888", marginTop: 3 }}>
+                Time Uploaded:{" "}
+                <Text style={{ fontWeight: "bold" }}>
+                  {moment(item.created_at).format("DD/MM/YYYY HH:mm")}
+                </Text>
+              </Text>
+            </View>
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
@@ -44,44 +147,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-  headerWrapper: {
-    backgroundColor: "#ffff",
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-    zIndex: 100,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  mainTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#000000",
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    tintColor: "#000000",
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#ddd",
-  },
   headerContainer: {
     backgroundColor: "#2D82C6",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 16,
     height: 100,
   },
   banner: {
@@ -99,5 +169,54 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     width: "50%",
     justifyContent: "center",
+  },
+  searchInput: {
+    height: 40,
+    borderColor: "#DDD",
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    backgroundColor: "#fff",
+    fontSize: 14,
+  },
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    marginTop: 12,
+    padding: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  cardImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: "#DDD",
+  },
+  cardInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  label: {
+    fontSize: 12,
+    color: "#444",
+    marginBottom: 6,
+  },
+  value: {
+    fontWeight: "bold",
+    color: "#222",
+  },
+  latLngGroup: {
+    flexDirection: "column",
   },
 });

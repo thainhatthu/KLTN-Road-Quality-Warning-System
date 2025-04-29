@@ -49,7 +49,7 @@ export const getDefaultHomePage = (): string => {
   if (role === "admin") {
     return AdminPageEnum.DASHBOARD;
   } else if (role === "technical") {
-    return TechnicianPageEnum.DASHBOARD;
+    return TechnicianPageEnum.MAP;
   } else if (role === "user") {
     return PageEnum.HOME;
   }

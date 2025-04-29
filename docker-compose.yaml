@@ -5,19 +5,31 @@ services:
     image: postgres:14.6-alpine3.16
     container_name: postgredb
     environment:
-      # Environment variables are loaded from the .env file
-      POSTGRES_USER: ${POSTGRESQL_USER}  # Database user (from .env)
-      POSTGRES_PASSWORD: ${POSTGRESQL_PASSWORD}  # Database password (from .env)
-      POSTGRES_DB: ${POSTGRESQL_DB}  # Database name (from .env)
-      LANG:  en_US.utf8
-      POSTGRES_HOST_AUTH_METHOD: trust   # Authentication method
-      POSTGRES_INITDB_ARGS: --auth=md5  # Initialize DB with MD5 auth
-      ALLOW_EMPTY_PASSWORD: yes
+      POSTGRES_USER: ${POSTGRESQL_USER}
+      POSTGRES_PASSWORD: ${POSTGRESQL_PASSWORD}
+      POSTGRES_DB: ${POSTGRESQL_DB}
+      LANG: en_US.utf8
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_INITDB_ARGS: --auth=md5
+      ALLOW_EMPTY_PASSWORD: "yes"
     ports:
       - 5432:5432  
     volumes:
       - ./postgres-data/:/var/lib/postgresql/data  
-      - ./Database/PostgrerSQL/init_db:/docker-entrypoint-initdb.d/
+      - ./Database/PostgreSQL/init_db:/docker-entrypoint-initdb.d/
+    networks:
+      - kltn_network
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - "15432:8080"
+    depends_on:
+      - postgredb
+    networks:
+      - kltn_network
 
   mongodb:
     image: mongo
@@ -31,7 +43,9 @@ services:
       MONGO_INITDB_DATABASE: ${POSTGRESQL_DB}
     volumes:
       - ./mongodb:/data/db
-      
+    networks:
+      - kltn_network
+
   zookeeper:
     image: "bitnami/zookeeper:latest"
     container_name: zookeeper
@@ -40,9 +54,11 @@ services:
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     restart: always
+    networks:
+      - kltn_network
 
   kafka:
-    image: "bitnami/kafka:latest"
+    image: "bitnami/kafka:2.8.1"
     container_name: kafka
     user: root
     ports:
@@ -53,10 +69,11 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
-
     depends_on:
       - zookeeper
     restart: always
+    networks:
+      - kltn_network
 
   auth_service:
     build:
@@ -72,6 +89,9 @@ services:
       - SECRET_KEY=$SECRET_KEY
       - SECURITY_ALGORITHM=$SECURITY_ALGORITHM
     restart: always
+    networks:
+      - kltn_network
+
   user_service:
     build:
       context: ./Backend/user_service
@@ -87,6 +107,9 @@ services:
     restart: always
     volumes:
       - ./image/avata/:/app/avatar
+    networks:
+      - kltn_network
+
   data_service:
     build:
       context: ./Backend/data_service
@@ -107,6 +130,8 @@ services:
     restart: always
     volumes:
       - ./image/road:/app/roadImages/
+    networks:
+      - kltn_network
 
   deeplearning_service:
     build:
@@ -122,6 +147,9 @@ services:
     restart: always
     volumes:
       - ./models/:/app/models/
+    networks:
+      - kltn_network
+
   frontend:
     build :
       context: ./Frontend/RoadVision-Classifier
@@ -130,6 +158,9 @@ services:
     restart: always
     environment:
       - VITE_BASE_URL=$WEB_URL
+    networks:
+      - kltn_network
+
   nginx:
     image: nginx:1.16.0-alpine
     container_name: nginx
@@ -138,3 +169,9 @@ services:
     ports:
       - "80:80"
     restart: always
+    networks:
+      - kltn_network
+
+networks:
+  kltn_network:
+    driver: bridge

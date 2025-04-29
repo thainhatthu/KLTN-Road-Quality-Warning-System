@@ -1,32 +1,29 @@
 pipeline {
     agent { label 'server' }
+
     parameters {
         choice(
-        name: 'RUN_STAGE',
-        choices: ['None','Authen', 'Data','Deeplearning','User','Frontend',"Postgresql",'Mongodb'], // Thay các giá trị tùy chọn bằng các giá trị bạn muốn
-        description: 'Chọn một giai đoạn để chạy'
-    )
+            name: 'RUN_STAGE',
+            choices: ['None','Authen', 'Data','Deeplearning','User','Frontend','Postgresql','Mongodb'],
+            description: 'Chọn một giai đoạn để chạy'
+        )
     }
+
     environment {
-        REPO_GIT="https://github.com/N3Twork-nc/RoadVision-Classifier.git"
-        POSTGRESQL_DB='roadvision_classifier'
+        REPO_GIT = "https://github.com/thainhatthu/KLTN-Road-Quality-Warning-System.git"
+        POSTGRESQL_DB = 'roadvision_classifier'
     }
+
     triggers {
-        pollSCM('* * * * *')  // Kiểm tra thay đổi mỗi phút (thay đổi tần suất nếu cần)
+        pollSCM('* * * * *')
     }
+
     stages {
         stage('Clone Git Repository') {
             steps {
-                // Clone the Git repository with authentication
-                git url: "${REPO_GIT}", 
-                    branch: 'deployment', 
-                    credentialsId: 'github'
+                git url: "${REPO_GIT}", branch: 'deployment', credentialsId: 'github'
                 script {
-                    echo "checkout directory changed"
-                    // Lấy danh sách các thư mục đã thay đổi
                     def changedDirs = sh(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim().split('\n')
-
-                    // Gán giá trị biến môi trường cho các thư mục thay đổi
                     env.FRONTEND_CHANGED = changedDirs.any { it.startsWith('Frontend/RoadVision-Classifier') } ? 'true' : 'false'
                     env.AUTHEN_SERVICE_CHANGED = changedDirs.any { it.startsWith('Backend/auth_service') } ? 'true' : 'false'
                     env.DATA_SERVICE_CHANGED = changedDirs.any { it.startsWith('Backend/data_service') } ? 'true' : 'false'
@@ -34,173 +31,185 @@ pipeline {
                     env.USER_SERVICE_CHANGED = changedDirs.any { it.startsWith('Backend/user_service') } ? 'true' : 'false'
                     env.POSTGRES_CHANGED = changedDirs.any { it.startsWith('Database/PostgreSQL') } ? 'true' : 'false'
                     env.MONGODB_CHANGED = changedDirs.any { it.startsWith('Database/MongoDB') } ? 'true' : 'false'
-                    
+
                     withCredentials([usernamePassword(credentialsId: 'POSTGRES_USER_DEV', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        script {
-                            env.POSTGRESQL_USER=USERNAME
-                            env.POSTGRESQL_PASSWORD=PASSWORD
-                            env.POSTGRESQL_HOST="192.168.1.14"
-                            env.POSTGRESQL_PORT="5432"
-                        }
+                        env.POSTGRESQL_USER = USERNAME
+                        env.POSTGRESQL_PASSWORD = PASSWORD
+                        env.POSTGRESQL_HOST = "192.168.120.179"
+                        env.POSTGRESQL_PORT = "5432"
                     }
                 }
             }
         }
+
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    // Xác thực Docker với Docker Hub sử dụng credentials
                     withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                     }
                 }
             }
         }
+
+        stage('Start all containers (initialization)') {
+            steps {
+                sh '''
+                    echo "[INFO] Building and starting all services (if not running)..."
+                    sudo docker-compose --env-file .env up -d --build kafka zookeeper nginx
+                '''
+            }
+        }
+
         stage('Deploy authentication service') {
             when {
-                expression { return  env.AUTHEN_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Authen'}
+                expression { return env.AUTHEN_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Authen' }
             }
             steps {
                 withCredentials([string(credentialsId: 'secretjwt', variable: 'SECRET_TOKEN')]) {
                     script {
                         env.SECRET_KEY = SECRET_TOKEN
-                        env.SECURITY_ALGORITHM='HS256'
+                        env.SECURITY_ALGORITHM = 'HS256'
                     }
                 }
-                // Build and push the Docker image
-                dir('Backend/auth_service') {
-                    sh 'docker build -t caothi/auth_service:latest .'
-                    sh 'docker push caothi/auth_service:latest'
-                }
-                // Deploy the Docker compose
-                dir('Deployment/auth_service') {
-                    sh 'docker compose  down'
-                    sh 'docker compose up -d'
-                }
+                sh '''
+                    echo "[INFO] Removing old image: auth_service"
+                    sudo docker rmi -f $(docker images 'auth_service' -q) || true
+
+                    sudo docker-compose --env-file .env stop auth_service
+                    sudo docker-compose --env-file .env rm -f auth_service
+                    sudo docker-compose --env-file .env up -d --build auth_service
+                '''
             }
         }
+
         stage('Deploy data service') {
             when {
-                expression { return  env.DATA_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Data'}
+                expression { return env.DATA_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Data' }
             }
-            steps {    
+            steps {
                 withCredentials([usernamePassword(credentialsId: 'MONGODB_USER', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     script {
-                       env.MONGODB_USER=USERNAME
-                       env.MONGODB_PASSWORD=PASSWORD
-                       env.MONGODB_DB='roadvision_classifier'
-                       env.MONGODB_PORT='27017'
-                       env.MONGODB_HOST='mongodb'
+                        env.MONGODB_USER = USERNAME
+                        env.MONGODB_PASSWORD = PASSWORD
+                        env.MONGODB_DB = 'roadvision_classifier'
+                        env.MONGODB_PORT = '27017'
+                        env.MONGODB_HOST = 'mongodb'
                     }
-                }            
-                // Build and push the Docker image
-                dir('Backend/data_service') {
-                    sh 'docker build -t caothi/data_service:latest .'
-                    sh 'docker push caothi/data_service:latest'
                 }
-                // Deploy the Docker compose
-                dir('Deployment/data_service') {
-                    sh 'docker compose  down'
-                    sh 'docker compose up -d'
-                }
+                sh '''
+                    echo "[INFO] Removing old image: data_service"
+                    sudo docker rmi -f $(docker images 'data_service' -q) || true
+
+                    sudo docker-compose --env-file .env stop data_service
+                    sudo docker-compose --env-file .env rm -f data_service
+                    sudo docker-compose --env-file .env up -d --build data_service
+                '''
             }
         }
+
         stage('Deploy deeplearning service') {
             when {
-                expression { return  env.DEEPLEARNING_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Deeplearning'}
+                expression { return env.DEEPLEARNING_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'Deeplearning' }
             }
-            steps {                
-                // Build and push the Docker image
-                dir('Backend/deeplearning_service') {
-                    sh 'docker build -t caothi/deeplearning_service:latest .'
-                    sh 'docker push caothi/deeplearning_service:latest'
-                }
-                // Deploy the Docker compose
-                dir('Deployment/deeplearning_service') {
-                    sh 'docker compose  down'
-                    sh 'docker compose up -d'
-                }
+            steps {
+                sh '''
+                    echo "[INFO] Removing old image: deeplearning_service"
+                    sudo docker rmi -f $(docker images 'deeplearning_service' -q) || true
+
+                    sudo docker-compose --env-file .env stop deeplearning_service
+                    sudo docker-compose --env-file .env rm -f deeplearning_service
+                    sudo docker-compose --env-file .env up -d --build deeplearning_service
+                '''
             }
         }
+
         stage('Deploy user service') {
             when {
-                expression { return  env.USER_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'User'}
+                expression { return env.USER_SERVICE_CHANGED == 'true' || params.RUN_STAGE == 'User' }
             }
-            steps {                
-                // Build and push the Docker image
-                dir('Backend/user_service') {
-                    sh 'docker build -t caothi/user_service:latest .'
-                    sh 'docker push caothi/user_service:latest'
-                }
-                // Deploy the Docker compose
-                dir('Deployment/user_service') {
-                    sh 'docker compose  down'
-                    sh 'docker compose up -d'
-                }
+            steps {
+                sh '''
+                    echo "[INFO] Removing old image: user_service"
+                    sudo docker rmi -f $(docker images 'user_service' -q) || true
+
+                    sudo docker-compose --env-file .env stop user_service
+                    sudo docker-compose --env-file .env rm -f user_service
+                    sudo docker-compose --env-file .env up -d --build user_service
+                '''
             }
         }
+
         stage('Deploy Postgresql') {
             when {
-                expression { return  env.POSTGRES_CHANGED == 'true' || params.RUN_STAGE == 'Postgresql'}
+                expression { return env.POSTGRES_CHANGED == 'true' || params.RUN_STAGE == 'Postgresql' }
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'POSTGRES_USER', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                   script {
+                    script {
                         env.POSTGRES_USER = USERNAME
                         env.POSTGRES_PASSWORD = PASSWORD
                     }
                 }
                 withCredentials([usernamePassword(credentialsId: 'POSTGRES_USER_DEV', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     script {
-                       env.POSTGRES_USER_DEV=USERNAME
-                       env.POSTGRES_PASSWORD_DEV=PASSWORD
+                        env.POSTGRES_USER_DEV = USERNAME
+                        env.POSTGRES_PASSWORD_DEV = PASSWORD
                     }
                 }
-                dir('Database/PostgreSQL') {
-                    sh 'docker compose down'
-                    sh 'docker compose up -d'
-                }
+                sh '''
+                    echo "[INFO] Removing old image: postgredb"
+                    sudo docker rmi -f $(docker images 'postgredb' -q) || true
+
+                    sudo docker-compose --env-file .env stop postgredb adminer
+                    sudo docker-compose --env-file .env rm -f postgredb adminer
+                    sudo docker-compose --env-file .env up -d --build postgredb adminer
+                '''
             }
         }
+
         stage('Deploy Mongodb') {
             when {
-                expression { return  env.MONGODB_CHANGED == 'true' ||params.RUN_STAGE == 'Mongodb'}
+                expression { return env.MONGODB_CHANGED == 'true' || params.RUN_STAGE == 'Mongodb' }
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'MONGODB_USER', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                     script {
-                       env.MONGODB_USERNAME=USERNAME
-                       env.MONGODB_PASSWORD=PASSWORD
+                        env.MONGODB_USERNAME = USERNAME
+                        env.MONGODB_PASSWORD = PASSWORD
                     }
                 }
-                dir('Database/MongoDB') {
-                    sh 'docker compose down'
-                    sh 'docker compose up -d'
-                }
+                sh '''
+                    echo "[INFO] Removing old image: mongodb"
+                    sudo docker rmi -f $(docker images 'mongodb' -q) || true
+
+                    sudo docker-compose --env-file .env stop mongodb
+                    sudo docker-compose --env-file .env rm -f mongodb
+                    sudo docker-compose --env-file .env up -d --build mongodb
+                '''
             }
         }
+
         stage('Deploy frontend') {
             when {
-                expression { return  env.FRONTEND_CHANGED  == 'true' || params.RUN_STAGE == 'Frontend'}
+                expression { return env.FRONTEND_CHANGED == 'true' || params.RUN_STAGE == 'Frontend' }
             }
             steps {
-                // Build and push the Docker image
-                dir('Frontend/RoadVision-Classifier') {
-                    sh 'docker build -t caothi/frontend_roadvision_classifier:latest .'
-                    sh 'docker push caothi/frontend_roadvision_classifier:latest'
-                }
-                // Deploy the Docker compose
-                dir('Deployment/frontend') {
-                    sh 'export VITE_BASE_URL="https://exotic-strong-viper.ngrok-free.app"'
-                    sh 'docker compose  down'
-                    sh 'docker compose up -d'
-                }
+                sh '''
+                    export VITE_BASE_URL="https://b9a3-42-116-6-46.ngrok-free.app"
+                    echo "[INFO] Removing old image: frontend"
+                    sudo docker rmi -f $(docker images 'frontend' -q) || true
+
+                    sudo docker-compose --env-file .env stop frontend
+                    sudo docker-compose --env-file .env rm -f frontend
+                    sudo docker-compose --env-file .env up -d --build frontend
+                '''
             }
         }
+
         stage('Restart Nginx') {
             steps {
-                // Restart Nginx
-                sh 'cd /home/$USER/nginx && docker compose restart'
+                sh 'sudo docker-compose restart nginx'
             }
         }
     }

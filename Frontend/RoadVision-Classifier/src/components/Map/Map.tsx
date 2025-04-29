@@ -10,6 +10,7 @@ import dataService from "../../services/data.service";
 import "leaflet";
 import onButton from "../../assets/img/onButton.png";
 import offButton from "../../assets/img/offButton.png";
+import { message } from "antd";
 
 declare module "leaflet" {
   namespace Control {
@@ -36,7 +37,7 @@ const Map: React.FC = () => {
   const [endMarker, setEndMarker] = useState<L.Marker | null>(null);
   const [path, setPath] = useState<[number, number][][]>([]);
   const [isBadRoutesVisible, setIsBadRoutesVisible] = useState(false);
-  const api_url = import.meta.env.VITE_BASE_URL;
+  const api_url = "https://b9a3-42-116-6-46.ngrok-free.app";
   const handleToggleBadRoutes = () => {
     if (routingControl) {
       routingControl.remove();
@@ -125,6 +126,7 @@ const Map: React.FC = () => {
                 iconAnchor: [15, 30],
               });
               const fullImageUrl = `${api_url}/${filepath}`;
+              console.log("fullImageUrl:", fullImageUrl);
               try {
                 const marker = L.marker([latitude, longitude], {
                   icon: customIcon,
@@ -175,7 +177,7 @@ const Map: React.FC = () => {
             .openPopup();
         }
       } else {
-        alert("Không tìm thấy vị trí.");
+        message.error("Không tìm thấy vị trí.");
       }
     });
   };
@@ -299,10 +301,10 @@ const Map: React.FC = () => {
 
         setPath(sortedRoutes);
       } else {
-        alert("Dữ liệu không hợp lệ. Đảm bảo đúng định dạng mảng tọa độ.");
+        message.error("Dữ liệu không hợp lệ. Đảm bảo đúng định dạng mảng tọa độ.");
       }
     } catch (error) {
-      alert("Lỗi khi phân tích JSON. Vui lòng nhập đúng định dạng.");
+      message.error("Lỗi khi phân tích JSON. Vui lòng nhập đúng định dạng.");
     }
   };
 

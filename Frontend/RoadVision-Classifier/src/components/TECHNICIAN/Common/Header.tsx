@@ -4,19 +4,10 @@ import type { MenuProps } from "antd";
 import { Dropdown, Space } from "antd";
 import search from "../../../assets/img/search.png";
 import notification from "../../../assets/img/notification.png";
-import { Link } from "react-router-dom";
 import { handleLogOut } from "../../../utils/auth.util";
 
 const Header: React.FC = () => {
     const items: MenuProps["items"] = [
-    {
-      label: (
-        <Link className="text-base p-1" to="/profile">
-          Profile
-        </Link>
-      ),
-      key: "0",
-    },
     {
       label: (
         <div onClick={handleLogOut} className="text-base p-1">

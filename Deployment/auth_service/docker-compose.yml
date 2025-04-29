@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   auth_service:
-    image: caothi/auth_service:latest
+    image: 21521490/auth_service:latest
     container_name: auth_service
     environment:
       - POSTGRESQL_HOST=$POSTGRESQL_HOST

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   data_service:
-    image: caothi/data_service:latest
+    image: 21521490/data_service:latest
     container_name: data_service
     environment:
       - POSTGRESQL_HOST=$POSTGRESQL_HOST

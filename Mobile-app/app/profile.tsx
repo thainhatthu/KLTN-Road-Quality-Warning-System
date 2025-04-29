@@ -16,6 +16,22 @@ import { useRecoilValue } from "recoil";
 import { accountState } from "@/atoms/authState";
 import authService from "@/services/auth.service";
 
+const AlertModal = ({ visible, message, onClose }: { visible: boolean; message: string; onClose: () => void }) => {
+  return (
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.alertBox}>
+          <Text style={styles.alertMessage}>{message}</Text>
+          <TouchableOpacity onPress={onClose} style={styles.alertButton}>
+            <Text style={styles.alertButtonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+
 export default function ProfileScreen() {
   const router = useRouter();
   const user = useRecoilValue(accountState);
@@ -26,6 +42,9 @@ export default function ProfileScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -81,8 +100,13 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           style={styles.changeButton}
-          onPress={() => setShowChangePasswordModal(true)}
-        >
+          onPress={() => {
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setShowChangePasswordModal(true);
+          }}
+                  >
           <Ionicons name="lock-closed-outline" size={16} color="#fff" />
           <Text style={[styles.editText, { marginLeft: 6 }]}>
             Change Password
@@ -203,16 +227,58 @@ export default function ProfileScreen() {
               >
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.saveButton}
-                onPress={() => setShowChangePasswordModal(false)}
-              >
+                onPress={async () => {
+                  if (newPassword.length < 6 || confirmPassword.length < 6) {
+                    setAlertMessage("Password must be at least 6 characters long.");
+                    setAlertVisible(true);
+                    return;
+                  }
+                  if (newPassword !== confirmPassword) {
+                    setAlertMessage("New password and confirm password do not match.");
+                    setAlertVisible(true);
+                    return;
+                  }
+                
+                  try {
+                    const updatedPasswordData = {
+                      email: user?.email ?? "",
+                      current_password: currentPassword,
+                      new_password: newPassword,
+                      confirm_password: confirmPassword,
+                    };
+                
+                    const res = await authService.changePass(updatedPasswordData);
+                
+                    setAlertMessage("Password updated successfully!");
+                    setAlertVisible(true);
+                    setCurrentPassword("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setShowChangePasswordModal(false);
+                  } catch (error) {
+                    console.error("❌ Error updating password:", error);
+                    setAlertMessage("Failed to update password. Please try again.");
+                    setAlertVisible(true);
+                  }
+                }}
+                              >
                 <Text style={styles.saveText}>Save</Text>
               </TouchableOpacity>
+
             </View>
           </View>
         </View>
       </Modal>
+
+      <AlertModal
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
+
     </ScrollView>
   );
 }
@@ -290,7 +356,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
-    marginLeft: 6, // giữ khoảng cách nếu có icon
+    marginLeft: 6,
   },
   contributionText: {
     fontSize: 16,
@@ -431,4 +497,31 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 6,
   },
+
+  alertBox: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "80%",
+    elevation: 6,
+  },
+  alertMessage: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  alertButton: {
+    backgroundColor: "#2D82C6",
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  alertButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },  
 });

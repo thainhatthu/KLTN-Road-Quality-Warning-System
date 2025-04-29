@@ -22,13 +22,16 @@ const processData = (apiData: any) => {
     return acc;
   }, {});
 
-  const categories = Object.keys(total || {});
+  // Make sure we include all categories from "Total" even if they don't appear in "Done"
+  const categories = Object.keys(total || {}).concat(Object.keys(done || []));
+  const uniqueCategories = Array.from(new Set(categories)); // Remove duplicates
 
-  return categories.flatMap((category) => [
+  return uniqueCategories.flatMap((category) => [
     { category, type: "Total", value: total[category] || 0 },
     { category, type: "Done", value: done[category] || 0 },
   ]);
 };
+
 
 const DashboardComponent: React.FC = () => {
   const [data, setData] = useState<ChartData[]>([]);
@@ -94,7 +97,7 @@ const DashboardComponent: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full p-4 bg-white rounded-lg shadow-md">
+    <div className="w-[30%] h-full p-4 bg-white rounded-lg shadow-md">
       <h3 className="text-xl font-bold text-[#23038C] mb-4">Road Status Overview</h3>
       <div className="mb-4 flex gap-4 items-center">
         <Select
@@ -118,7 +121,7 @@ const DashboardComponent: React.FC = () => {
       </div>
 
       {/* Biểu đồ của ECharts */}
-      <ReactECharts option={option} style={{ height: "400px", width: "50%" }} />
+      <ReactECharts option={option} style={{ height: "400px", width: "100%" }} />
     </div>
   );
 };

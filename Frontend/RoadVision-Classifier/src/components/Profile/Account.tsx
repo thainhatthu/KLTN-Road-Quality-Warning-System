@@ -95,7 +95,7 @@ export default function Account() {
         <div className="w-[30%]">
           <div className="text-left font-normal font-sm text-gray-700 text-sm">Contribution</div>
           <div className="text-left text-black font-medium text-base">
-            {profileData.gender || "N/A"}
+            {profileData.contribution || "N/A"}
           </div>
         </div>
         <div className="w-[30%]">

@@ -10,7 +10,7 @@ import { setStoredUserInfo } from "../../../utils/local-storage.util";
 import { saveAccessToken, saveUserRole } from "../../../utils/auth.util";
 import { ERROR_MESSAGES } from "../../../defination/consts/messages.const";
 
-const api_url =  import.meta.env.VITE_BASE_URL;
+const api_url =  "https://b9a3-42-116-6-46.ngrok-free.app";
 // Input validation schema using zod
 const signInSchema = z.object({
   username: z.string().min(6, ERROR_MESSAGES.auth.username),
@@ -71,6 +71,7 @@ const SignInBlock = () => {
 
       if (info && token) {
         const user_avatar = `${api_url}/user/api/getAvatar?username=${info.username}`;
+        console.log("user_avatar", user_avatar);
         info.avatar = user_avatar; 
         console.log(info);
         saveAccessToken(token); // Save token for future API calls

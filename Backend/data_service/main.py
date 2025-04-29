@@ -11,7 +11,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load the environment variables
 dotenv.load_dotenv()
 
 if __name__ == '__main__':

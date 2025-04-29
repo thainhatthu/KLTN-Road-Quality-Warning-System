@@ -23,7 +23,7 @@ export default {
   
   getAvatar: async (username: string) => {
     const url = `/user/api/getAvatar`;
-    return `${api_url}${url}?username=${username}`; 
+    return `${api_url}/${url}?username=${username}`; 
   },
   
   uploadAvatar: async (formData: UploadAvatarType) => {

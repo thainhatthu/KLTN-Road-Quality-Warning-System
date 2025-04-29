@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   deeplearning_service:
-    image: caothi/deeplearning_service:latest
+    image: 21521490/deeplearning_service:latest
     container_name: deeplearning_service
     environment:
       - POSTGRESQL_HOST=$POSTGRESQL_HOST

@@ -5,7 +5,7 @@ version: '3.8'  # Specify the Docker Compose version
 services:
   # PostgreSQL database service
   postgredb:
-    image: caothi/postgresql:1.0.9
+    image: 21521490/postgresql:1.0.9
     container_name: postgredb
     environment:
       # Environment variables are loaded from the .env file
@@ -17,7 +17,7 @@ services:
       LANG:  en_US.utf8
       POSTGRES_HOST_AUTH_METHOD: trust   # Authentication method
       POSTGRES_INITDB_ARGS: --auth=md5  # Initialize DB with MD5 auth
-      ALLOW_EMPTY_PASSWORD: yes
+      ALLOW_EMPTY_PASSWORD: "yes"
     ports:
       - 5432:5432  
     volumes:
@@ -38,9 +38,7 @@ services:
       - postgredb  # Ensure PgBouncer starts before Adminer
     networks:
       - app_network
-
+ 
 networks:
   app_network:
-    external: true
-
-
+    external: true 
