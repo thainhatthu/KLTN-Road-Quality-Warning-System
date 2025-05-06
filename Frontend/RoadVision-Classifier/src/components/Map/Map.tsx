@@ -1,4 +1,3 @@
-// MapWithOSRMIntegration.tsx (hiển thị mức độ nguy hiểm các tuyến đường + marker Start/End + phân biệt tuyến)
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -36,6 +35,7 @@ const Map: React.FC = () => {
   const [defaultRouting, setDefaultRouting] =
     useState<L.Routing.Control | null>(null);
   const [routeSteps, setRouteSteps] = useState<any[][]>([]);
+
   useEffect(() => {
     if (!mapRef.current) return;
     const map = L.map(mapRef.current).setView([10.762622, 106.660172], 14);
@@ -59,6 +59,50 @@ const Map: React.FC = () => {
         .bindPopup("Vị trí hiện tại của bạn")
         .openPopup();
     });
+
+    (async () => {
+      try {
+        const roads = await dataService.getInfoRoads({ all: false });
+        if (Array.isArray(roads)) {
+          roads.forEach((roadStr: string) => {
+            const road = JSON.parse(roadStr);
+            const { latitude, longitude, filepath, level } = road;
+            const levelColorMap: Record<string, string> = {
+              Good: "green",
+              Poor: "yellow",
+              "Very poor": "red",
+              Satisfactory: "blue",
+            };
+
+            const markerColor =
+              levelColorMap[level as keyof typeof levelColorMap] || "gray";
+
+            const customIcon = L.divIcon({
+              className: "",
+              html: `
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="${markerColor}">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 7 13 7 13s7-8.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+                  </svg>
+                `,
+              iconSize: [30, 30],
+              iconAnchor: [15, 30],
+            });
+            const fullImageUrl = `https://b9a3-42-116-6-46.ngrok-free.app/${filepath}`;
+            L.marker([latitude, longitude], { icon: customIcon }).addTo(map)
+              .bindPopup(`
+                    <div>
+                      <p><b>Road status:</b> ${level}</p>
+                      <p><b>Lat:</b> ${latitude}</p>
+                      <p><b>Long:</b> ${longitude}</p>
+                      <img src="${fullImageUrl}" alt="Ảnh đường" style="width: 100px; height: auto;" />
+                    </div>
+                  `);
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi khi lấy info roads:", err);
+      }
+    })();
   }, []);
 
   const searchForLocation = (location: string) => {
@@ -71,7 +115,7 @@ const Map: React.FC = () => {
           .addTo(leafletMap.current!)
           .bindPopup(location)
           .openPopup();
-      } else message.error("Không tìm thấy vị trí.");
+      } else message.error("Can't find location");
     });
   };
 
@@ -95,10 +139,22 @@ const Map: React.FC = () => {
     if (!isBadRoutesVisible) {
       try {
         const response = await dataService.getRouteMap();
-        const parsed = response.flat().map((p: string) => {
+        const rawGroups = response;
+
+        if (!Array.isArray(rawGroups)) {
+          console.error(
+            "Bad route API return invalid datas:",
+            rawGroups
+          );
+          message.error("Dữ liệu đoạn đường hư hỏng không hợp lệ");
+          return;
+        }
+
+        const parsed = rawGroups.flat().map((p: string) => {
           const [lat, lng] = p.replace(/[()]/g, "").split(",").map(Number);
           return [lat, lng];
         });
+
         const clusters: [number, number][][] = [];
         const used = new Array(parsed.length).fill(false);
         const maxDist = 0.0004;
@@ -119,7 +175,7 @@ const Map: React.FC = () => {
               }
             }
           }
-          clusters.push(group);
+          clusters.push(group as [number, number][]);
         }
         clusters.forEach((group) => {
           if (group.length >= minClusterSize) {
@@ -137,7 +193,7 @@ const Map: React.FC = () => {
               leafletMap.current!
             );
             (poly as any)._badRouteLayer = true;
-            poly.bindPopup("Đoạn đường hư hỏng").openPopup();
+            poly.bindPopup("Damage route").openPopup();
           }
         });
       } catch (err) {
@@ -176,17 +232,21 @@ const Map: React.FC = () => {
         const badRaw = badRes;
 
         if (!Array.isArray(badRaw)) {
-          console.error("Bad route API trả về dữ liệu không phải mảng:", badRaw);
+          console.error(
+            "Bad route API trả về dữ liệu không phải mảng:",
+            badRaw
+          );
           message.error("Dữ liệu đoạn đường hư hỏng không hợp lệ");
           return;
         }
-        
+
         const badGroups: [number, number][][] = badRaw.map((group: string[]) =>
-          group.map((pt: string) =>
-            pt.replace(/[()]/g, "").split(",").map(Number) as [number, number]
+          group.map(
+            (pt: string) =>
+              pt.replace(/[()]/g, "").split(",").map(Number) as [number, number]
           )
         );
-        
+
         leafletMap.current?.eachLayer((l) => {
           if (l instanceof L.Polyline) leafletMap.current?.removeLayer(l);
         });
@@ -223,7 +283,7 @@ const Map: React.FC = () => {
             opacity: 0.8,
           })
             .bindPopup(
-              `Tuyến ${idx + 1}: ${count > 0 ? "Nguy hiểm ⚠️" : "An toàn ✅"}`
+              `Route ${idx + 1}: ${count > 0 ? "Dangerously ⚠️" : "Safety ✅"}`
             )
             .addTo(leafletMap.current!);
           leafletMap.current!.fitBounds(poly.getBounds());
@@ -281,7 +341,7 @@ const Map: React.FC = () => {
             setSearchLocation(e.target.value);
             fetchSuggestions(e.target.value);
           }}
-          placeholder="Nhập vị trí cần tìm"
+          placeholder="Enter location..."
         />
         <ul>
           {suggestions.map((sug, idx) => (
@@ -309,32 +369,32 @@ const Map: React.FC = () => {
           value={endLocation}
           onChange={(e) => setEndLocation(e.target.value)}
         />
-        <button onClick={findRoute}>Tìm đường</button>
+        <button onClick={findRoute}>Find route</button>
         {routeInfo.length > 0 && (
           <div className="route-info">
-            <h3>Thông tin các tuyến đường</h3>
+            <h3>Routes information</h3>
             <ul>
               {routeInfo.map((route, index) => (
                 <li key={index}>
                   <p>
                     <strong>
-                      Tuyến {route.index}:{" "}
+                      Route {route.index}:{" "}
                       {route.dangerCount > 0 ? (
-                        <span style={{ color: "red" }}>Nguy hiểm ⚠️</span>
+                        <span style={{ color: "red" }}>Dangerously ⚠️</span>
                       ) : (
-                        <span style={{ color: "green" }}>An toàn ✅</span>
+                        <span style={{ color: "green" }}>Safety ✅</span>
                       )}
                     </strong>
                   </p>
-                  <p>Khoảng cách: {route.distance} km</p>
-                  <p>Thời gian dự kiến: {route.time} phút</p>
-                  <p>Số đoạn hư đi qua: {route.dangerCount}</p>
+                  <p>Distance: {route.distance} km</p>
+                  <p>Expected time: {route.time} min</p>
+                  <p>Number of damage routes: {route.dangerCount}</p>
                 </li>
               ))}
             </ul>
             <p>
-              ✅ Gợi ý: Nên đi tuyến {routeInfo[0].index} (
-              {routeInfo[0].dangerCount > 0 ? "nguy hiểm" : "an toàn"},{" "}
+              ✅ Suggestion: Prioritize the route {routeInfo[0].index} (
+              {routeInfo[0].dangerCount > 0 ? "dangerously" : "safety"},{" "}
               {routeInfo[0].distance} km, {routeInfo[0].time} phút)
             </p>
           </div>
