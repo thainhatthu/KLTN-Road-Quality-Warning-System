@@ -3,7 +3,6 @@ import { DownOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Dropdown, Space } from "antd";
 import admin_avt from "../../../assets/img/ADMIN.png";
-import notification from "../../../assets/img/notification.png";
 import { handleLogOut } from "../../../utils/auth.util";
 const Header: React.FC = () => {
   const items: MenuProps["items"] = [
@@ -22,10 +21,6 @@ const Header: React.FC = () => {
       <div className="flex items-center space-x-4 w-96 px-4 py-2"></div>
 
       <div className="flex items-center space-x-4">
-        {/* notification */}
-        <button className="bg-white rounded-3xl w-10 h-10 p-2">
-          <img src={notification} alt="" />
-        </button>
         {/* account */}
         <button className="flex items-center justify-center bg-[#3749A6] rounded-full px-3 py-2">
           <Dropdown
