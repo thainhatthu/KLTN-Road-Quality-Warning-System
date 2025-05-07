@@ -5,13 +5,22 @@ import "leaflet-routing-machine";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-control-geocoder";
-import "./map.css"; // Import CSS file
+import "./map.css";
 import dataService from "../../services/data.service";
-import "leaflet";
 import onButton from "../../assets/img/onButton.png";
 import offButton from "../../assets/img/offButton.png";
 import { message } from "antd";
-
+import {
+  MapPin,
+  Flag,
+  Repeat2,
+  Search,
+  Route,
+  AlertCircle,
+  Clock,
+  Ruler,
+  Sparkles,
+} from "lucide-react";
 declare module "leaflet" {
   namespace Control {
     class CustomGeocoder {
@@ -24,454 +33,413 @@ declare module "leaflet" {
 const Map: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<L.Map | null>(null);
-  const [isRouteInputVisible, setIsRouteInputVisible] = useState(false);
-  const [searchLocation, setSearchLocation] = useState("");
+  const [isBadRoutesVisible, setIsBadRoutesVisible] = useState(false);
   const [startLocation, setStartLocation] = useState("");
   const [endLocation, setEndLocation] = useState("");
-  const [routingControl, setRoutingControl] =
-    useState<L.Routing.Control | null>(null);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [, setRoadsData] = useState<any[]>([]);
   const [routeInfo, setRouteInfo] = useState<any[]>([]);
   const [startMarker, setStartMarker] = useState<L.Marker | null>(null);
   const [endMarker, setEndMarker] = useState<L.Marker | null>(null);
-  const [path, setPath] = useState<[number, number][][]>([]);
-  const [isBadRoutesVisible, setIsBadRoutesVisible] = useState(false);
-  const api_url = "https://b9a3-42-116-6-46.ngrok-free.app";
-  const handleToggleBadRoutes = () => {
-    if (routingControl) {
-      routingControl.remove();
-      setRoutingControl(null);
-    }
-    setIsBadRoutesVisible((prev) => !prev);
-  };
+  const [defaultRouting, setDefaultRouting] =
+    useState<L.Routing.Control | null>(null);
+  const [, setRouteSteps] = useState<any[][]>([]);
+  const [selectedRouteIndex, ] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     if (!mapRef.current) return;
-
-    const map = L.map(mapRef.current, {
-      center: [10.762622, 106.660172],
-      zoom: 14,
-    });
-
+    const map = L.map(mapRef.current).setView([10.762622, 106.660172], 14);
     leafletMap.current = map;
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        const currentLocation = L.latLng(latitude, longitude);
-        map.setView(currentLocation, 14);
-        const currentLocationIcon = L.divIcon({
-          className: "current-location-icon",
-          html: `
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="pink">
-              <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="blue" />
-              <circle cx="12" cy="12" r="4" fill="white" />
-            </svg>
-          `,
-          iconSize: [35, 35],
-          iconAnchor: [15, 30],
-        });
-
-        L.marker(currentLocation, { icon: currentLocationIcon })
-          .addTo(map)
-          .bindPopup("Vị trí hiện tại của bạn")
-          .openPopup();
+    navigator.geolocation?.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      const currentLocation = L.latLng(latitude, longitude);
+      map.setView(currentLocation, 14);
+      const icon = L.divIcon({
+        className: "current-location-icon",
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="pink"><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="blue" /><circle cx="12" cy="12" r="4" fill="white" /></svg>`,
+        iconSize: [35, 35],
+        iconAnchor: [15, 30],
       });
-    }
-    const fetchRoadsData = async () => {
+      L.marker(currentLocation, { icon })
+        .addTo(map)
+        .bindPopup("Vị trí hiện tại của bạn")
+        .openPopup();
+    });
+
+    (async () => {
       try {
-        const data = await dataService.getInfoRoads({
-          all: false
-        });
+        const roads = await dataService.getInfoRoads({ all: false });
+        if (Array.isArray(roads)) {
+          roads.forEach((roadStr: string) => {
+            const road = JSON.parse(roadStr);
+            const { latitude, longitude, filepath, level } = road;
+            const levelColorMap: Record<string, string> = {
+              Good: "green",
+              Poor: "yellow",
+              "Very poor": "red",
+              Satisfactory: "blue",
+            };
 
-        if (Array.isArray(data)) {
-          if (data.length > 0) {
-            const roads = data.map((item: string) => JSON.parse(item));
-            console.log("Dữ liệu đường:", roads);
+            const markerColor =
+              levelColorMap[level as keyof typeof levelColorMap] || "gray";
 
-            setRoadsData(roads);
-
-            roads.forEach(async (road: any) => {
-              const { latitude, longitude, filepath, level } = road;
-              let markerColor;
-              switch (road.level) {
-                case "Good":
-                  markerColor = "green";
-                  break;
-                case "Poor":
-                  markerColor = "yellow";
-                  break;
-                case "Very poor":
-                  markerColor = "red";
-                  break;
-                case "Satisfactory":
-                  markerColor = "blue";
-                  break;
-                default:
-                  markerColor = "gray";
-              }
-              const customIcon = L.divIcon({
-                className: "",
-                html: `
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="${markerColor}">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 7 13 7 13s7-8.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
-                </svg>
-              `,
-                iconSize: [30, 30],
-                iconAnchor: [15, 30],
-              });
-              const fullImageUrl = `${api_url}/${filepath}`;
-              console.log("fullImageUrl:", fullImageUrl);
-              try {
-                const marker = L.marker([latitude, longitude], {
-                  icon: customIcon,
-                }).addTo(leafletMap.current!);
-                marker.bindPopup(`
-                  <div>
-                    <p><b>Road status:</b> ${level}</p>
-                    <p><b>Lat:</b> ${latitude}</p>
-                    <p><b>Long:</b> ${longitude}</p>
-                    <img src="${fullImageUrl}" alt="Ảnh đường" style="width: 100px; height: auto;" />
-                  </div>
-                `);
-              } catch (error) {
-                console.error(
-                  `Lỗi khi lấy thông tin tên đường tại tọa độ (${latitude}, ${longitude}):`,
-                  error
-                );
-              }
+            const customIcon = L.divIcon({
+              className: "",
+              html: `
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="${markerColor}">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 7 13 7 13s7-8.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+                  </svg>
+                `,
+              iconSize: [30, 30],
+              iconAnchor: [15, 30],
             });
-          } else {
-            console.error("Dữ liệu không hợp lệ, mảng rỗng:", data);
-          }
-        } else {
-          console.error("Dữ liệu không phải mảng:", data);
+            const fullImageUrl = `https://b9a3-42-116-6-46.ngrok-free.app/${filepath}`;
+            L.marker([latitude, longitude], { icon: customIcon }).addTo(map)
+              .bindPopup(`
+                    <div>
+                      <p><b>Road status:</b> ${level}</p>
+                      <p><b>Lat:</b> ${latitude}</p>
+                      <p><b>Long:</b> ${longitude}</p>
+                      <img src="${fullImageUrl}" alt="Ảnh đường" style="width: 100px; height: auto;" />
+                    </div>
+                  `);
+          });
         }
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu đường:", error);
+      } catch (err) {
+        console.error("Lỗi khi lấy info roads:", err);
       }
-    };
-
-    fetchRoadsData();
-
-    return () => {
-      map.remove();
-    };
+    })();
   }, []);
 
-  const searchForLocation = (location: string) => {
-    const geocoder = (L.Control as any).Geocoder.nominatim();
-    geocoder.geocode(location, (results: any) => {
-      if (results.length > 0) {
-        const { center } = results[0];
-        if (leafletMap.current) {
-          leafletMap.current.setView(center, 14);
-          L.marker(center)
-            .addTo(leafletMap.current!)
-            .bindPopup(location)
-            .openPopup();
-        }
-      } else {
-        message.error("Không tìm thấy vị trí.");
+  const toggleBadRoutes = async () => {
+    if (!leafletMap.current) return;
+    leafletMap.current.eachLayer((layer) => {
+      if (
+        (layer instanceof L.Polyline || layer instanceof L.Circle) &&
+        (layer as any)._badRouteLayer
+      ) {
+        leafletMap.current?.removeLayer(layer);
       }
     });
-  };
 
-  const fetchSuggestions = (query: string) => {
-    if (!query) {
-      setSuggestions([]);
-      return;
-    }
+    if (!isBadRoutesVisible) {
+      try {
+        const response = await dataService.getRouteMap();
+        const rawGroups = response;
 
-    const geocoder = (L.Control as any).Geocoder.nominatim();
-    geocoder.geocode(query, (results: any[]) => {
-      setSuggestions(results);
-    });
-  };
+        if (!Array.isArray(rawGroups)) {
+          console.error("Bad route API return invalid datas:", rawGroups);
+          message.error("Data bad route is invalid");
+          return;
+        }
 
-  const findRoute = () => {
-    if (!startLocation || !endLocation) return;
-
-    if (routingControl) {
-      routingControl.remove();
-    }
-
-    const geocoder = (L.Control as any).Geocoder.nominatim();
-
-    geocoder.geocode(startLocation, (resultsStart: any[]) => {
-      if (resultsStart.length === 0) return;
-
-      const startCoords = resultsStart[0].center;
-
-      geocoder.geocode(endLocation, (resultsEnd: any[]) => {
-        if (resultsEnd.length === 0) return;
-
-        const endCoords = resultsEnd[0].center;
-
-        startMarker?.remove();
-        endMarker?.remove();
-
-        const start = L.marker([startCoords.lat, startCoords.lng])
-          .addTo(leafletMap.current!)
-          .bindPopup("Start")
-          .openPopup();
-        setStartMarker(start);
-
-        const end = L.marker([endCoords.lat, endCoords.lng])
-          .addTo(leafletMap.current!)
-          .bindPopup("End")
-          .openPopup();
-        setEndMarker(end);
-
-        const router = L.Routing.osrmv1({
-          serviceUrl: "https://router.project-osrm.org/route/v1",
-          profile: "car",
+        const parsed = rawGroups.flat().map((p: string) => {
+          const [lat, lng] = p.replace(/[()]/g, "").split(",").map(Number);
+          return [lat, lng];
         });
 
-        const newRoutingControl = L.Routing.control({
-          waypoints: [
-            L.latLng(startCoords.lat, startCoords.lng),
-            L.latLng(endCoords.lat, endCoords.lng),
-          ],
-          router: router,
-          routeWhileDragging: true,
-          showAlternatives: true,
-          altLineOptions: {
-            extendToWaypoints: true,
-            missingRouteTolerance: 1,
-            styles: [
-              { color: "blue", opacity: 0.7, weight: 5 },
-              { color: "green", opacity: 0.5, weight: 3 },
-            ],
-          },
-        })
-          .on("routesfound", (e) => {
-            const routes = e.routes.map((route: any) => ({
-              summary: route.summary,
-              distance: (route.summary.totalDistance / 1000).toFixed(2),
-              time: (route.summary.totalTime / 60).toFixed(0),
-            }));
+        const clusters: [number, number][][] = [];
+        const used = new Array(parsed.length).fill(false);
+        const maxDist = 0.0004;
+        const minClusterSize = 5;
+        for (let i = 0; i < parsed.length; i++) {
+          if (used[i]) continue;
+          const group = [parsed[i]];
+          used[i] = true;
+          for (let j = 0; j < parsed.length; j++) {
+            if (!used[j]) {
+              const d = Math.hypot(
+                parsed[i][0] - parsed[j][0],
+                parsed[i][1] - parsed[j][1]
+              );
+              if (d < maxDist) {
+                group.push(parsed[j]);
+                used[j] = true;
+              }
+            }
+          }
+          clusters.push(group as [number, number][]);
+        }
+        clusters.forEach((group) => {
+          if (group.length >= minClusterSize) {
+            const lat = group.reduce((a, p) => a + p[0], 0) / group.length;
+            const lng = group.reduce((a, p) => a + p[1], 0) / group.length;
+            const circle = L.circle([lat, lng], {
+              radius: 30,
+              color: "red",
+              fillColor: "red",
+              fillOpacity: 0.3,
+            }).addTo(leafletMap.current!);
+            (circle as any)._badRouteLayer = true;
+          } else {
+            const poly = L.polyline(group, { color: "red", weight: 4 }).addTo(
+              leafletMap.current!
+            );
+            (poly as any)._badRouteLayer = true;
+            poly.bindPopup("Damage route").openPopup();
+          }
+        });
+      } catch (err) {
+        console.error("Error when call API bad routes:", err);
+        message.error("Can not get data bad routes");
+      }
+    }
+    setIsBadRoutesVisible(!isBadRoutesVisible);
+  };
 
-            setRouteInfo(routes);
+  const colors = ["blue", "orange", "purple", "brown"];
+
+  const findRoute = async () => {
+    const geocoder = (L.Control as any).Geocoder.nominatim();
+    geocoder.geocode(startLocation, (startRes: any[]) => {
+      if (!startRes.length) return;
+      geocoder.geocode(endLocation, async (endRes: any[]) => {
+        if (!endRes.length) return;
+        const s = startRes[0].center;
+        const e = endRes[0].center;
+        startMarker?.remove();
+        endMarker?.remove();
+        const sm = L.marker([s.lat, s.lng])
+          .addTo(leafletMap.current!)
+          .bindPopup("Start");
+        const em = L.marker([e.lat, e.lng])
+          .addTo(leafletMap.current!)
+          .bindPopup("End");
+        setStartMarker(sm);
+        setEndMarker(em);
+        const res = await fetch(
+          `http://192.168.120.135:5000/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
+        );
+        const data = await res.json();
+        const badRes = await dataService.getRouteMap();
+        const badRaw = badRes;
+
+        if (!Array.isArray(badRaw)) {
+          console.error(
+            "Bad route API return invalid datas:",
+            badRaw
+          );
+          message.error("Data bad route is invalid");
+          return;
+        }
+
+        const badGroups: [number, number][][] = badRaw.map((group: string[]) =>
+          group.map(
+            (pt: string) =>
+              pt.replace(/[()]/g, "").split(",").map(Number) as [number, number]
+          )
+        );
+
+        leafletMap.current?.eachLayer((l) => {
+          if (l instanceof L.Polyline) leafletMap.current?.removeLayer(l);
+        });
+        if (defaultRouting) {
+          defaultRouting.remove();
+          setDefaultRouting(null);
+        }
+        const info: any[] = [];
+        const stepsInfo: any[][] = [];
+        data.routes.forEach((r: any, idx: number) => {
+          const coords = r.geometry.coordinates.map(([lon, lat]: any) => [
+            lat,
+            lon,
+          ]);
+          const hit = new Array(badGroups.length).fill(false);
+          for (let i = 1; i < coords.length; i++) {
+            const mid = [
+              (coords[i][0] + coords[i - 1][0]) / 2,
+              (coords[i][1] + coords[i - 1][1]) / 2,
+            ];
+            badGroups.forEach((group: [any, any][], gIdx: number) => {
+              if (!hit[gIdx]) {
+                const near = group.some(
+                  ([x, y]) => Math.hypot(x - mid[0], y - mid[1]) < 0.0003
+                );
+                if (near) hit[gIdx] = true;
+              }
+            });
+          }
+          const count = hit.filter(Boolean).length;
+          const poly = L.polyline(coords, {
+            color: colors[idx % colors.length],
+            weight: selectedRouteIndex === idx + 1 ? 7 : 5, 
+            opacity: selectedRouteIndex === idx + 1 ? 1 : 0.8, 
+            dashArray: selectedRouteIndex === idx + 1 ? undefined : "5, 10", 
           })
-          .addTo(leafletMap.current!);
 
-        setRoutingControl(newRoutingControl);
+            .bindPopup(
+              `Route ${idx + 1}: ${count > 0 ? "Dangerously ⚠️" : "Safety ✅"}`
+            )
+            .addTo(leafletMap.current!);
+          leafletMap.current!.fitBounds(poly.getBounds());
+          info.push({
+            index: idx + 1,
+            distance: (r.distance / 1000).toFixed(2),
+            time: (r.duration / 60).toFixed(0),
+            dangerCount: count,
+          });
+          const steps = r.legs[0].steps.map(
+            (step: any, stepIdx: number) =>
+              `B${stepIdx + 1}: ${step.maneuver.instruction}`
+          );
+          stepsInfo.push(steps);
+        });
+        const sorted = info.sort(
+          (a, b) =>
+            a.dangerCount - b.dangerCount ||
+            parseFloat(a.time) - parseFloat(b.time)
+        );
+        setRouteInfo(sorted);
+        setRouteSteps(stepsInfo);
+        const routingCtrl = L.Routing.control({
+          waypoints: [L.latLng(s.lat, s.lng), L.latLng(e.lat, e.lng)],
+          router: L.Routing.osrmv1({
+            serviceUrl: "http://192.168.120.135:5000/route/v1",
+          }),
+          showAlternatives: false,
+          routeWhileDragging: false,
+          addWaypoints: false,
+          show: true,
+        }).addTo(leafletMap.current!);
+        setDefaultRouting(routingCtrl);
       });
     });
   };
 
-  // Hàm cập nhật mảng tọa độ
-  const updatePath = async () => {
-    try {
-      const response = await dataService.getRouteMap();
-      console.error("Dữ liệu tọa độ:", response);
-      const parsedCoordinates = response;
-
-      if (
-        Array.isArray(parsedCoordinates) &&
-        parsedCoordinates.every(
-          (group) =>
-            Array.isArray(group) &&
-            group.every(
-              (point) =>
-                typeof point === "string" &&
-                /^\(\d+(\.\d+)?,\s*\d+(\.\d+)?\)$/.test(point)
-            )
-        )
-      ) {
-        const routes = parsedCoordinates.map((group) =>
-          group.map((point: string) => {
-            const [lat, lng] = point
-              .slice(1, -1)
-              .split(",")
-              .map((coord) => parseFloat(coord.trim()));
-            return [lat, lng];
-          })
-        );
-
-        const sortedRoutes = routes.map((route) => {
-          return route.reverse();
-        });
-
-        setPath(sortedRoutes);
-      } else {
-        message.error("Dữ liệu không hợp lệ. Đảm bảo đúng định dạng mảng tọa độ.");
-      }
-    } catch (error) {
-      message.error("Lỗi khi phân tích JSON. Vui lòng nhập đúng định dạng.");
-    }
-  };
-
-  useEffect(() => {
-    if (path.length === 0 || !leafletMap.current) return;
-
-    if (routingControl) {
-      routingControl.remove();
-    }
-
-    path.forEach((route) => {
-      const waypoints =
-        Array.isArray(route) &&
-        route.every((point) => Array.isArray(point) && point.length === 2)
-          ? route.map((point: [number, number]) => L.latLng(point[0], point[1]))
-          : [];
-
-      const polyline = L.polyline(waypoints, {
-        color: "red",
-        weight: 4,
-      }).addTo(leafletMap.current!);
-
-      leafletMap.current?.fitBounds(polyline.getBounds());
-    });
-  }, [path]);
-
-  useEffect(() => {
-    if (!leafletMap.current) return;
-
-    if (isBadRoutesVisible) {
-      updatePath();
-    } else {
-      if (routingControl) {
-        routingControl.remove();
-        setRoutingControl(null);
-      }
-
-      if (leafletMap.current) {
-        leafletMap.current.eachLayer((layer) => {
-          if (layer instanceof L.Polyline && !(layer instanceof L.Marker)) {
-            leafletMap.current?.removeLayer(layer);
-          }
-        });
-      }
-    }
-  }, [isBadRoutesVisible]);
-
   return (
-    <div className="container">
-      <div className="sidebar">
-        <div className="header flex flex-col justify-between items-center  p-2">
-          <h2 className="text-2xl font-bold text-[#3749A6] ">
-            Tìm kiếm địa điểm
-          </h2>
-          <div className="flex flex-row font-medium items-center gap-1 ml-auto">
-            <p className="text-base">Bad routes</p>
-            <img
-              src={isBadRoutesVisible ? onButton : offButton}
-              alt="Toggle View Bad Routes"
-              className="cursor-pointer w-14 h-14 transition-transform transform hover:scale-110"
-              onClick={handleToggleBadRoutes}
-            />
-          </div>
+    <div className="container bg-gray-50">
+      <div className="sidebar bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-3">
+          <Search size={24} /> Location Search
+        </h2>
+
+        <div className="flex items-center justify-between mb-6 p-3 border border-blue-100 rounded-lg shadow-sm bg-blue-50">
+          <span className="text-sm font-medium text-blue-700">
+            Show damaged roads
+          </span>
+          <img
+            src={isBadRoutesVisible ? onButton : offButton}
+            alt="Toggle Bad Routes"
+            className="w-10 h-10 cursor-pointer"
+            onClick={toggleBadRoutes}
+          />
         </div>
 
-        {!isRouteInputVisible ? (
-          <>
-            <div className="inputGroup">
-              <input
-                type="text"
-                value={searchLocation}
-                onChange={(e) => {
-                  setSearchLocation(e.target.value);
-                  fetchSuggestions(e.target.value);
-                }}
-                placeholder="Nhập vị trí cần tìm"
-                className="input"
-              />
-              <ul className="suggestions">
-                {suggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    onClick={() => {
-                      setSearchLocation(suggestion.name);
-                      setSuggestions([]);
-                      searchForLocation(suggestion.name);
-                    }}
-                    className="suggestionItem"
-                  >
-                    {suggestion.name}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => searchForLocation(searchLocation)}
-                className="button"
-              >
-                Tìm kiếm
-              </button>
-            </div>
-            <button
-              onClick={() => setIsRouteInputVisible(true)}
-              className="secondaryButton"
-            >
-              Tìm tuyến đường
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="inputGroup">
-              <input
-                type="text"
-                value={startLocation}
-                onChange={(e) => setStartLocation(e.target.value)}
-                placeholder="Vị trí bắt đầu"
-                className="input"
-              />
-            </div>
-            <div className="inputGroup">
-              <input
-                type="text"
-                value={endLocation}
-                onChange={(e) => setEndLocation(e.target.value)}
-                placeholder="Vị trí kết thúc"
-                className="input"
-              />
-            </div>
-            <button onClick={findRoute} className="button">
-              Tìm đường
-            </button>
-            {routeInfo.length > 0 && (
-              <div className="route-info">
-                <h3>Thông tin các tuyến đường</h3>
-                <ul>
-                  {routeInfo.map((route, index) => (
-                    <li key={index}>
-                      <p>
-                        <strong>Tuyến {index + 1}:</strong>
-                      </p>
-                      <p>Khoảng cách: {route.distance} km</p>
-                      <p>Thời gian dự kiến: {route.time} phút</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+        {/* Start Location */}
+        <div className="relative mb-2">
+          <input
+            type="text"
+            placeholder="Start location"
+            value={startLocation}
+            onChange={(e) => setStartLocation(e.target.value)}
+            className="w-full py-3 px-4 pl-12 pr-12 border border-blue-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+          />
+          <MapPin
+            size={20}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500"
+          />
+          <button
+            title="Swap"
+            onClick={() => {
+              const temp = startLocation;
+              setStartLocation(endLocation);
+              setEndLocation(temp);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+          >
+            <Repeat2 size={20} />
+          </button>
+        </div>
 
-            <button
-              onClick={() => {
-                setIsRouteInputVisible(false);
-                if (routingControl) {
-                  routingControl.remove();
-                  setRoutingControl(null);
-                }
-                startMarker?.remove();
-                setStartMarker(null);
-                endMarker?.remove();
-                setEndMarker(null);
-              }}
-              className="secondaryButton"
-            >
-              Hủy
-            </button>
-          </>
+        {/* End Location */}
+        <div className="relative mb-6">
+          <input
+            type="text"
+            placeholder="End location"
+            value={endLocation}
+            onChange={(e) => setEndLocation(e.target.value)}
+            className="w-full py-3 px-4 pl-12 border border-blue-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+          />
+          <Flag
+            size={20}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500"
+          />
+        </div>
+
+        {/* Button */}
+        <button
+          className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-6 shadow"
+          onClick={findRoute}
+        >
+          <Route size={20} /> Find Route
+        </button>
+
+        {/* Route Info */}
+        {routeInfo.length > 0 && (
+          <div className="route-info p-5 bg-blue-50 rounded-xl shadow-sm border border-blue-100">
+            <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <Route size={18} /> Route Information
+            </h3>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+              <p className="text-blue-800 text-sm font-medium mb-1 flex items-center gap-1">
+                <Sparkles size={16} />
+                Best option is route {routeInfo[0].index}
+              </p>
+              <ul className="text-sm text-gray-700 list-disc list-inside pl-2">
+                <li>Safety (fewer damaged segments)</li>
+                <li>Shortest estimated time</li>
+                <li>
+                  Distance: <strong>{routeInfo[0].distance}</strong> km
+                </li>
+                <li>
+                  Time: <strong>{routeInfo[0].time}</strong> min
+                </li>
+              </ul>
+            </div>
+
+            <ul className="roadItems space-y-4">
+              {routeInfo.map((route, index) => (
+                <li
+                  key={index}
+                  className="roadItem p-4 rounded-lg bg-white border border-gray-200 shadow-sm"
+                >
+                  <p className="text-sm font-medium text-gray-800 mb-1">
+                    Route {route.index}:{" "}
+                    {route.dangerCount > 0 ? (
+                      <span className="text-red-600 flex items-center gap-1">
+                        <AlertCircle size={16} /> Dangerous
+                      </span>
+                    ) : (
+                      <span className="text-green-600">✅ Safe</span>
+                    )}
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700">
+                    <Ruler size={14} /> {route.distance} km
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700">
+                    <Clock size={14} /> {route.time} min
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700">
+                    <AlertCircle size={14} /> {route.dangerCount} damaged
+                    segments
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
-      <div ref={mapRef} className="map"></div>
+
+      <div
+        ref={mapRef}
+        className="map"
+        style={{ height: "100vh", width: "100%" }}
+      ></div>
     </div>
   );
 };
