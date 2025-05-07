@@ -10,7 +10,17 @@ import dataService from "../../services/data.service";
 import onButton from "../../assets/img/onButton.png";
 import offButton from "../../assets/img/offButton.png";
 import { message } from "antd";
-
+import {
+  MapPin,
+  Flag,
+  Repeat2,
+  Search,
+  Route,
+  AlertCircle,
+  Clock,
+  Ruler,
+  Sparkles,
+} from "lucide-react";
 declare module "leaflet" {
   namespace Control {
     class CustomGeocoder {
@@ -23,18 +33,18 @@ declare module "leaflet" {
 const Map: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<L.Map | null>(null);
-  const [searchLocation, setSearchLocation] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isBadRoutesVisible, setIsBadRoutesVisible] = useState(false);
   const [startLocation, setStartLocation] = useState("");
   const [endLocation, setEndLocation] = useState("");
   const [routeInfo, setRouteInfo] = useState<any[]>([]);
   const [startMarker, setStartMarker] = useState<L.Marker | null>(null);
   const [endMarker, setEndMarker] = useState<L.Marker | null>(null);
-  const api_url = "https://b9a3-42-116-6-46.ngrok-free.app";
   const [defaultRouting, setDefaultRouting] =
     useState<L.Routing.Control | null>(null);
-  const [routeSteps, setRouteSteps] = useState<any[][]>([]);
+  const [, setRouteSteps] = useState<any[][]>([]);
+  const [selectedRouteIndex, ] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -105,26 +115,6 @@ const Map: React.FC = () => {
     })();
   }, []);
 
-  const searchForLocation = (location: string) => {
-    const geocoder = (L.Control as any).Geocoder.nominatim();
-    geocoder.geocode(location, (results: any[]) => {
-      if (results.length > 0) {
-        const { center } = results[0];
-        leafletMap.current?.setView(center, 14);
-        L.marker(center)
-          .addTo(leafletMap.current!)
-          .bindPopup(location)
-          .openPopup();
-      } else message.error("Can't find location");
-    });
-  };
-
-  const fetchSuggestions = (query: string) => {
-    if (!query) return setSuggestions([]);
-    const geocoder = (L.Control as any).Geocoder.nominatim();
-    geocoder.geocode(query, (results: any[]) => setSuggestions(results));
-  };
-
   const toggleBadRoutes = async () => {
     if (!leafletMap.current) return;
     leafletMap.current.eachLayer((layer) => {
@@ -142,11 +132,8 @@ const Map: React.FC = () => {
         const rawGroups = response;
 
         if (!Array.isArray(rawGroups)) {
-          console.error(
-            "Bad route API return invalid datas:",
-            rawGroups
-          );
-          message.error("Dữ liệu đoạn đường hư hỏng không hợp lệ");
+          console.error("Bad route API return invalid datas:", rawGroups);
+          message.error("Data bad route is invalid");
           return;
         }
 
@@ -197,8 +184,8 @@ const Map: React.FC = () => {
           }
         });
       } catch (err) {
-        console.error("Lỗi khi gọi API bad routes:", err);
-        message.error("Không thể tải dữ liệu đoạn hư hỏng");
+        console.error("Error when call API bad routes:", err);
+        message.error("Can not get data bad routes");
       }
     }
     setIsBadRoutesVisible(!isBadRoutesVisible);
@@ -233,10 +220,10 @@ const Map: React.FC = () => {
 
         if (!Array.isArray(badRaw)) {
           console.error(
-            "Bad route API trả về dữ liệu không phải mảng:",
+            "Bad route API return invalid datas:",
             badRaw
           );
-          message.error("Dữ liệu đoạn đường hư hỏng không hợp lệ");
+          message.error("Data bad route is invalid");
           return;
         }
 
@@ -279,9 +266,11 @@ const Map: React.FC = () => {
           const count = hit.filter(Boolean).length;
           const poly = L.polyline(coords, {
             color: colors[idx % colors.length],
-            weight: 5,
-            opacity: 0.8,
+            weight: selectedRouteIndex === idx + 1 ? 7 : 5, 
+            opacity: selectedRouteIndex === idx + 1 ? 1 : 0.8, 
+            dashArray: selectedRouteIndex === idx + 1 ? undefined : "5, 10", 
           })
+
             .bindPopup(
               `Route ${idx + 1}: ${count > 0 ? "Dangerously ⚠️" : "Safety ✅"}`
             )
@@ -322,11 +311,16 @@ const Map: React.FC = () => {
   };
 
   return (
-    <div className="container">
-      <div className="sidebar">
-        <h2>Tìm kiếm địa điểm</h2>
-        <div className="flex flex-row items-center gap-2">
-          <p>Bad Routes</p>
+    <div className="container bg-gray-50">
+      <div className="sidebar bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-3">
+          <Search size={24} /> Location Search
+        </h2>
+
+        <div className="flex items-center justify-between mb-6 p-3 border border-blue-100 rounded-lg shadow-sm bg-blue-50">
+          <span className="text-sm font-medium text-blue-700">
+            Show damaged roads
+          </span>
           <img
             src={isBadRoutesVisible ? onButton : offButton}
             alt="Toggle Bad Routes"
@@ -334,72 +328,113 @@ const Map: React.FC = () => {
             onClick={toggleBadRoutes}
           />
         </div>
-        <input
-          type="text"
-          value={searchLocation}
-          onChange={(e) => {
-            setSearchLocation(e.target.value);
-            fetchSuggestions(e.target.value);
-          }}
-          placeholder="Enter location..."
-        />
-        <ul>
-          {suggestions.map((sug, idx) => (
-            <li
-              key={idx}
-              onClick={() => {
-                setSearchLocation(sug.name);
-                setSuggestions([]);
-                searchForLocation(sug.name);
-              }}
-            >
-              {sug.name}
-            </li>
-          ))}
-        </ul>
-        <input
-          type="text"
-          placeholder="Start"
-          value={startLocation}
-          onChange={(e) => setStartLocation(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="End"
-          value={endLocation}
-          onChange={(e) => setEndLocation(e.target.value)}
-        />
-        <button onClick={findRoute}>Find route</button>
+
+        {/* Start Location */}
+        <div className="relative mb-2">
+          <input
+            type="text"
+            placeholder="Start location"
+            value={startLocation}
+            onChange={(e) => setStartLocation(e.target.value)}
+            className="w-full py-3 px-4 pl-12 pr-12 border border-blue-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+          />
+          <MapPin
+            size={20}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500"
+          />
+          <button
+            title="Swap"
+            onClick={() => {
+              const temp = startLocation;
+              setStartLocation(endLocation);
+              setEndLocation(temp);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+          >
+            <Repeat2 size={20} />
+          </button>
+        </div>
+
+        {/* End Location */}
+        <div className="relative mb-6">
+          <input
+            type="text"
+            placeholder="End location"
+            value={endLocation}
+            onChange={(e) => setEndLocation(e.target.value)}
+            className="w-full py-3 px-4 pl-12 border border-blue-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+          />
+          <Flag
+            size={20}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500"
+          />
+        </div>
+
+        {/* Button */}
+        <button
+          className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition mb-6 shadow"
+          onClick={findRoute}
+        >
+          <Route size={20} /> Find Route
+        </button>
+
+        {/* Route Info */}
         {routeInfo.length > 0 && (
-          <div className="route-info">
-            <h3>Routes information</h3>
-            <ul>
+          <div className="route-info p-5 bg-blue-50 rounded-xl shadow-sm border border-blue-100">
+            <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <Route size={18} /> Route Information
+            </h3>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+              <p className="text-blue-800 text-sm font-medium mb-1 flex items-center gap-1">
+                <Sparkles size={16} />
+                Best option is route {routeInfo[0].index}
+              </p>
+              <ul className="text-sm text-gray-700 list-disc list-inside pl-2">
+                <li>Safety (fewer damaged segments)</li>
+                <li>Shortest estimated time</li>
+                <li>
+                  Distance: <strong>{routeInfo[0].distance}</strong> km
+                </li>
+                <li>
+                  Time: <strong>{routeInfo[0].time}</strong> min
+                </li>
+              </ul>
+            </div>
+
+            <ul className="roadItems space-y-4">
               {routeInfo.map((route, index) => (
-                <li key={index}>
-                  <p>
-                    <strong>
-                      Route {route.index}:{" "}
-                      {route.dangerCount > 0 ? (
-                        <span style={{ color: "red" }}>Dangerously ⚠️</span>
-                      ) : (
-                        <span style={{ color: "green" }}>Safety ✅</span>
-                      )}
-                    </strong>
+                <li
+                  key={index}
+                  className="roadItem p-4 rounded-lg bg-white border border-gray-200 shadow-sm"
+                >
+                  <p className="text-sm font-medium text-gray-800 mb-1">
+                    Route {route.index}:{" "}
+                    {route.dangerCount > 0 ? (
+                      <span className="text-red-600 flex items-center gap-1">
+                        <AlertCircle size={16} /> Dangerous
+                      </span>
+                    ) : (
+                      <span className="text-green-600">✅ Safe</span>
+                    )}
                   </p>
-                  <p>Distance: {route.distance} km</p>
-                  <p>Expected time: {route.time} min</p>
-                  <p>Number of damage routes: {route.dangerCount}</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700">
+                    <Ruler size={14} /> {route.distance} km
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700">
+                    <Clock size={14} /> {route.time} min
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700">
+                    <AlertCircle size={14} /> {route.dangerCount} damaged
+                    segments
+                  </p>
                 </li>
               ))}
             </ul>
-            <p>
-              ✅ Suggestion: Prioritize the route {routeInfo[0].index} (
-              {routeInfo[0].dangerCount > 0 ? "dangerously" : "safety"},{" "}
-              {routeInfo[0].distance} km, {routeInfo[0].time} phút)
-            </p>
           </div>
         )}
       </div>
+
       <div
         ref={mapRef}
         className="map"
