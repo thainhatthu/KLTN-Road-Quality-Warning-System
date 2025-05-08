@@ -67,12 +67,16 @@ class ProfileService:
         upload_folder = "avatar"
         os.makedirs(upload_folder, exist_ok=True)
 
-        file_extension = file.filename.split(".")[-1]
-        if file_extension.lower() not in ["jpg", "jpeg", "png"]:
+        file_extension = file.filename.split(".")[-1].lower()
+        if file_extension not in ["jpg", "jpeg", "png"]:
             raise HTTPException(status_code=400, detail="Invalid file format")
 
-        file_path = os.path.join(upload_folder, f"{username}.{file_extension}")
+        for ext in ["jpg", "jpeg", "png"]:
+            old_path = os.path.join(upload_folder, f"{username}.{ext}")
+            if os.path.exists(old_path):
+                os.remove(old_path)
 
+        file_path = os.path.join(upload_folder, f"{username}.{file_extension}")
         with open(file_path, "wb") as f:
             f.write(file.file.read())
 
