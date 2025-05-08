@@ -6,10 +6,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useRecoilValue } from "recoil";
 import { profileState } from "../../atoms/profileState";
 import userProfileService from "../../services/userprofile.service";
-import {
-  EditProfileDataType,
-  UploadAvatarType,
-} from "../../defination/types/profile.type";
+import { EditProfileDataType } from "../../defination/types/profile.type";
 
 dayjs.extend(customParseFormat);
 const { Option } = Select;
@@ -30,45 +27,6 @@ export default function EditProfile() {
   const [selectedBirthday, setSelectedBirthday] = useState<string>(
     profileData.birthday || ""
   );
-  const [, setAvatar] = useState<string>(profileData.avatar || "");
-
-  const handleAvatarChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const uploadData: UploadAvatarType = { file: file };
-        const response = await userProfileService.uploadAvatar(uploadData);
-        console.log("Response from API:", response);
-
-        if (
-          response &&
-          response.status &&
-          response.status.toString() === "Success"
-        ) {
-          const newAvatarUrl = response.data.avatarUrl;
-          setAvatar(newAvatarUrl);
-          alert("Avatar uploaded successfully!");
-        } else {
-          alert("Failed to upload avatar.");
-        }
-      } catch (error) {
-        console.error("Error uploading avatar:", error);
-        alert("Something went wrong while uploading avatar.");
-      }
-    }
-  };
-
-  const handleButtonClick = () => {
-    const avatarInput = document.getElementById("avatar") as HTMLInputElement;
-    if (avatarInput) {
-      avatarInput.click();
-    }
-  };
 
   const handleGenderChange = (value: string) => setSelectedGender(value);
   const handleBirthdayChange = (date: dayjs.Dayjs | null) => {
@@ -218,22 +176,6 @@ export default function EditProfile() {
         >
           Save Information
         </button>
-      </div>
-      {/* Avatar Upload Section */}
-      <div className="flex items-center">
-        <button
-          onClick={handleButtonClick}
-          className="ml-4 text-white px-4 py-2 rounded-md"
-        >
-          Upload Avatar
-        </button>
-        <input
-          type="file"
-          id="avatar"
-          style={{ display: "none" }}
-          accept="image/*"
-          onChange={handleAvatarChange}
-        />
       </div>
     </div>
   );
