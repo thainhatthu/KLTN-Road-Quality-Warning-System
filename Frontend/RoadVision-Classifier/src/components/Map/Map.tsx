@@ -21,6 +21,8 @@ import {
   Ruler,
   Sparkles,
 } from "lucide-react";
+import "leaflet-control-geocoder";
+
 declare module "leaflet" {
   namespace Control {
     class CustomGeocoder {
@@ -41,10 +43,8 @@ const Map: React.FC = () => {
   const [endMarker, setEndMarker] = useState<L.Marker | null>(null);
   const [defaultRouting, setDefaultRouting] =
     useState<L.Routing.Control | null>(null);
-  const [, setRouteSteps] = useState<any[][]>([]);
-  const [selectedRouteIndex, ] = useState<number | null>(
-    null
-  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -73,6 +73,7 @@ const Map: React.FC = () => {
     (async () => {
       try {
         const roads = await dataService.getInfoRoads({ all: false });
+
         if (Array.isArray(roads)) {
           roads.forEach((roadStr: string) => {
             const road = JSON.parse(roadStr);
@@ -190,49 +191,144 @@ const Map: React.FC = () => {
     }
     setIsBadRoutesVisible(!isBadRoutesVisible);
   };
+  const fetchSuggestions = (query: string) => {
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
 
-  const colors = ["blue", "orange", "purple", "brown"];
+    const geocoder = (L.Control as any).Geocoder.nominatim({
+      geocodingQueryParams: {
+        countrycodes: "VN",
+        bounded: 1,
+        viewbox: "102.14441,23.39339,109.4642,8.3816",
+      },
+    });
+
+    geocoder.geocode(query, (results: any[]) => {
+      setSuggestions(results);
+    });
+  };
+
+  const handleSelectSuggestion = (result: any) => {
+    setSearchQuery(result.name);
+    setSuggestions([]);
+    if (leafletMap.current) {
+      leafletMap.current.setView(result.center, 16);
+      L.marker(result.center)
+        .addTo(leafletMap.current)
+        .bindPopup(result.name)
+        .openPopup();
+    }
+  };
+
+  const getDamagePoints = async (): Promise<
+    { lat: number; lng: number; weight: number }[]
+  > => {
+    const roads = await dataService.getInfoRoads({ all: false });
+    return Array.isArray(roads)
+      ? roads.map((roadStr: string) => {
+          const road = JSON.parse(roadStr);
+          return {
+            lat: road.latitude,
+            lng: road.longitude,
+            weight: Number(road.weight) || 1,
+          };
+        })
+      : [];
+  };
+
+  const calculateWeightForRoute = (
+    coords: [number, number][],
+    damagePoints: { lat: number; lng: number; weight: number }[],
+    map: L.Map
+  ): number => {
+    let totalWeight = 0;
+    const counted = new Set<number>();
+
+    damagePoints.forEach((d, i) => {
+      for (let j = 0; j < coords.length - 1; j++) {
+        const [aLat, aLng] = coords[j];
+        const [bLat, bLng] = coords[j + 1];
+        const ax = bLat - aLat,
+          ay = bLng - aLng;
+        const bx = d.lat - aLat,
+          by = d.lng - aLng;
+        const t = (ax * bx + ay * by) / (ax * ax + ay * ay);
+
+        if (t >= 0 && t <= 1) {
+          const projLat = aLat + t * ax;
+          const projLng = aLng + t * ay;
+          const dist = Math.hypot(projLat - d.lat, projLng - d.lng);
+          if (dist < 0.0001 && !counted.has(i)) {
+            totalWeight += d.weight;
+            counted.add(i);
+
+            L.circleMarker([d.lat, d.lng], {
+              radius: 6,
+              color: "red",
+              fillColor: "#f03",
+              fillOpacity: 0.7,
+            })
+              .addTo(map)
+              .bindPopup(`✅ Counted (weight=${d.weight})`);
+            break;
+          }
+        }
+      }
+    });
+
+    return totalWeight;
+  };
+
+  const drawRoutePolyline = (
+    coords: [number, number][],
+    weight: number,
+    idx: number,
+    map: L.Map
+  ) => {
+    const polyColor =
+      weight === 0 ? "green" : idx % 2 === 0 ? "#facc15" : "#facc15";
+
+    return L.polyline(coords, {
+      color: polyColor,
+      weight: 5,
+      opacity: 0.9,
+    })
+      .bindPopup(
+        `Route ${idx + 1}: ${
+          weight > 0 ? "Danger ⚠️" : "Safe ✅"
+        }\nWeight = ${weight}`
+      )
+      .addTo(map);
+  };
 
   const findRoute = async () => {
     const geocoder = (L.Control as any).Geocoder.nominatim();
+
     geocoder.geocode(startLocation, (startRes: any[]) => {
       if (!startRes.length) return;
       geocoder.geocode(endLocation, async (endRes: any[]) => {
         if (!endRes.length) return;
+
         const s = startRes[0].center;
         const e = endRes[0].center;
+
         startMarker?.remove();
         endMarker?.remove();
-        const sm = L.marker([s.lat, s.lng])
-          .addTo(leafletMap.current!)
-          .bindPopup("Start");
-        const em = L.marker([e.lat, e.lng])
-          .addTo(leafletMap.current!)
-          .bindPopup("End");
-        setStartMarker(sm);
-        setEndMarker(em);
+        setStartMarker(
+          L.marker([s.lat, s.lng]).addTo(leafletMap.current!).bindPopup("Start")
+        );
+        setEndMarker(
+          L.marker([e.lat, e.lng]).addTo(leafletMap.current!).bindPopup("End")
+        );
+
         const res = await fetch(
           `http://192.168.120.135:5000/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
         );
         const data = await res.json();
-        const badRes = await dataService.getRouteMap();
-        const badRaw = badRes;
 
-        if (!Array.isArray(badRaw)) {
-          console.error(
-            "Bad route API return invalid datas:",
-            badRaw
-          );
-          message.error("Data bad route is invalid");
-          return;
-        }
-
-        const badGroups: [number, number][][] = badRaw.map((group: string[]) =>
-          group.map(
-            (pt: string) =>
-              pt.replace(/[()]/g, "").split(",").map(Number) as [number, number]
-          )
-        );
+        const damagePoints = await getDamagePoints();
 
         leafletMap.current?.eachLayer((l) => {
           if (l instanceof L.Polyline) leafletMap.current?.removeLayer(l);
@@ -241,60 +337,37 @@ const Map: React.FC = () => {
           defaultRouting.remove();
           setDefaultRouting(null);
         }
+
         const info: any[] = [];
-        const stepsInfo: any[][] = [];
+
         data.routes.forEach((r: any, idx: number) => {
           const coords = r.geometry.coordinates.map(([lon, lat]: any) => [
             lat,
             lon,
           ]);
-          const hit = new Array(badGroups.length).fill(false);
-          for (let i = 1; i < coords.length; i++) {
-            const mid = [
-              (coords[i][0] + coords[i - 1][0]) / 2,
-              (coords[i][1] + coords[i - 1][1]) / 2,
-            ];
-            badGroups.forEach((group: [any, any][], gIdx: number) => {
-              if (!hit[gIdx]) {
-                const near = group.some(
-                  ([x, y]) => Math.hypot(x - mid[0], y - mid[1]) < 0.0003
-                );
-                if (near) hit[gIdx] = true;
-              }
-            });
-          }
-          const count = hit.filter(Boolean).length;
-          const poly = L.polyline(coords, {
-            color: colors[idx % colors.length],
-            weight: selectedRouteIndex === idx + 1 ? 7 : 5, 
-            opacity: selectedRouteIndex === idx + 1 ? 1 : 0.8, 
-            dashArray: selectedRouteIndex === idx + 1 ? undefined : "5, 10", 
-          })
+          const weight = calculateWeightForRoute(
+            coords,
+            damagePoints,
+            leafletMap.current!
+          );
+          drawRoutePolyline(coords, weight, idx, leafletMap.current!);
 
-            .bindPopup(
-              `Route ${idx + 1}: ${count > 0 ? "Dangerously ⚠️" : "Safety ✅"}`
-            )
-            .addTo(leafletMap.current!);
-          leafletMap.current!.fitBounds(poly.getBounds());
           info.push({
             index: idx + 1,
+            coords,
             distance: (r.distance / 1000).toFixed(2),
             time: (r.duration / 60).toFixed(0),
-            dangerCount: count,
+            dangerWeight: weight,
           });
-          const steps = r.legs[0].steps.map(
-            (step: any, stepIdx: number) =>
-              `B${stepIdx + 1}: ${step.maneuver.instruction}`
-          );
-          stepsInfo.push(steps);
         });
+
         const sorted = info.sort(
           (a, b) =>
-            a.dangerCount - b.dangerCount ||
+            a.dangerWeight - b.dangerWeight ||
             parseFloat(a.time) - parseFloat(b.time)
         );
         setRouteInfo(sorted);
-        setRouteSteps(stepsInfo);
+
         const routingCtrl = L.Routing.control({
           waypoints: [L.latLng(s.lat, s.lng), L.latLng(e.lat, e.lng)],
           router: L.Routing.osrmv1({
@@ -316,7 +389,6 @@ const Map: React.FC = () => {
         <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-3">
           <Search size={24} /> Location Search
         </h2>
-
         <div className="flex items-center justify-between mb-6 p-3 border border-blue-100 rounded-lg shadow-sm bg-blue-50">
           <span className="text-sm font-medium text-blue-700">
             Show damaged roads
@@ -328,9 +400,31 @@ const Map: React.FC = () => {
             onClick={toggleBadRoutes}
           />
         </div>
-
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search a location..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              fetchSuggestions(e.target.value);
+            }}
+            className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm"
+          />
+          <ul className="bg-white border border-gray-200 mt-1 rounded shadow-sm max-h-40 overflow-y-auto">
+            {suggestions.map((sug, idx) => (
+              <li
+                key={idx}
+                className="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
+                onClick={() => handleSelectSuggestion(sug)}
+              >
+                {sug.name}
+              </li>
+            ))}
+          </ul>
+        </div>
         {/* Start Location */}
-        <div className="relative mb-2">
+        <div className="relative">
           <input
             type="text"
             placeholder="Start location"
@@ -356,7 +450,7 @@ const Map: React.FC = () => {
         </div>
 
         {/* End Location */}
-        <div className="relative mb-6">
+        <div className="relative mb-3">
           <input
             type="text"
             placeholder="End location"
@@ -378,56 +472,65 @@ const Map: React.FC = () => {
           <Route size={20} /> Find Route
         </button>
 
-        {/* Route Info */}
         {routeInfo.length > 0 && (
           <div className="route-info p-5 bg-blue-50 rounded-xl shadow-sm border border-blue-100">
             <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
               <Route size={18} /> Route Information
             </h3>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-              <p className="text-blue-800 text-sm font-medium mb-1 flex items-center gap-1">
-                <Sparkles size={16} />
-                Best option is route {routeInfo[0].index}
+            {routeInfo.length > 1 ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                <p className="text-blue-800 text-sm font-medium mb-1 flex items-center gap-1">
+                  <Sparkles size={16} />
+                  Best option is route {routeInfo[0].index}s
+                </p>
+                <ul className="text-sm text-gray-700 list-disc list-inside pl-2">
+                  <li>Have fewer damaged segments</li>
+                  <li>Shortest estimated time</li>
+                  <li>
+                    Distance: <strong>{routeInfo[0].distance}</strong> km
+                  </li>
+                  <li>
+                    Time: <strong>{routeInfo[0].time}</strong> min
+                  </li>
+                </ul>
+              </div>
+            ) : (
+              <p className="text-gray-700 text-sm mb-4 italic">
+                🛣 Only one route is available for this trip.
               </p>
-              <ul className="text-sm text-gray-700 list-disc list-inside pl-2">
-                <li>Safety (fewer damaged segments)</li>
-                <li>Shortest estimated time</li>
-                <li>
-                  Distance: <strong>{routeInfo[0].distance}</strong> km
-                </li>
-                <li>
-                  Time: <strong>{routeInfo[0].time}</strong> min
-                </li>
-              </ul>
-            </div>
+            )}
 
-            <ul className="roadItems space-y-4">
-              {routeInfo.map((route, index) => (
+            <ul className="space-y-3">
+              {routeInfo.map((route) => (
                 <li
-                  key={index}
-                  className="roadItem p-4 rounded-lg bg-white border border-gray-200 shadow-sm"
+                  key={route.index}
+                  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
                 >
-                  <p className="text-sm font-medium text-gray-800 mb-1">
-                    Route {route.index}:{" "}
-                    {route.dangerCount > 0 ? (
-                      <span className="text-red-600 flex items-center gap-1">
-                        <AlertCircle size={16} /> Dangerous
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-gray-800 font-medium text-sm">
+                      Route {route.index}
+                    </span>
+                    {route.dangerWeight > 0 ? (
+                      <span className="text-red-600 flex items-center gap-1 text-sm">
+                        <AlertCircle size={14} /> Dangerous
                       </span>
                     ) : (
-                      <span className="text-green-600">✅ Safe</span>
+                      <span className="text-green-600 text-sm">✅ Safe</span>
                     )}
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-gray-700">
-                    <Ruler size={14} /> {route.distance} km
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-gray-700">
-                    <Clock size={14} /> {route.time} min
-                  </p>
-                  <p className="flex items-center gap-2 text-sm text-gray-700">
-                    <AlertCircle size={14} /> {route.dangerCount} damaged
-                    segments
-                  </p>
+                  </div>
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Ruler size={14} /> {route.distance} km
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} /> {route.time} min
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={14} /> Danger Weight:{" "}
+                      {route.dangerWeight}
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
