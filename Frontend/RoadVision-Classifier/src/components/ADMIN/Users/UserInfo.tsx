@@ -6,6 +6,7 @@ import { RoadDataType } from "../../../defination/types/alluser.type";
 import { format } from "date-fns";
 import { AiOutlineDelete } from "react-icons/ai";
 import dataService from "../../../services/data.service";
+
 interface DataType {
   key: React.Key;
   user_id: number;
@@ -31,7 +32,6 @@ export default function UserInfo({
   const [loading, setLoading] = useState(false);
   const [contribution, setContribution] = useState(user.contribution || 0); 
 
-  // GET ROAD LIST
   const fetchAllRoads = async () => {
     setLoading(true);
     try {
@@ -53,10 +53,10 @@ export default function UserInfo({
             road_status: road.status,
           }));
           setDataSource(extractedRoads || []);
-          setContribution(extractedRoads.length); // Cập nhật contribution dựa trên danh sách đường
+          setContribution(extractedRoads.length);
         } else {
           setDataSource([]);
-          setContribution(0); // Không còn đường nào
+          setContribution(0);
         }
       } else console.log("Mảng rỗng");
     } catch (error) {
@@ -78,8 +78,8 @@ export default function UserInfo({
           const updatedDataSource = dataSource.filter(
             (road) => road.road_id !== road_id
           );
-          setDataSource(updatedDataSource); // Cập nhật danh sách đường
-          setContribution(updatedDataSource.length); // Cập nhật contribution
+          setDataSource(updatedDataSource);
+          setContribution(updatedDataSource.length);
           message.success("Road deleted successfully!");
         } catch (error) {
           message.error("Fail to delete road!");
@@ -226,11 +226,17 @@ export default function UserInfo({
       />
       <div className="relative flex flex-row gap-5 w-[95%] h-48 px-10 rounded-2xl bg-[#3749A6] justify-between items-center">
         <div className="absolute bg-white rounded-full w-36 h-36 flex justify-center items-center">
-          <img
-            src={user.avatar || avt}
-            alt="Avatar"
-            className="w-[95%] h-[95%] object-cover rounded-full"
-          />
+        <img
+          src={user.avatar}
+          alt="Avatar"
+          className="w-[95%] h-[95%] object-cover rounded-full"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = avt;
+          }}
+        />
+
         </div>
         <div className="flex flex-col justify-between ml-40">
           <div className="text-white font-bold text-2xl">
