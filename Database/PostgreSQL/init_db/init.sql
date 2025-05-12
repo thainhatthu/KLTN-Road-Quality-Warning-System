@@ -1,6 +1,4 @@
---
 -- PostgreSQL database dump
---
 
 -- Dumped from database version 14.6
 -- Dumped by pg_dump version 14.15 (Ubuntu 14.15-0ubuntu0.22.04.1)
