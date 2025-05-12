@@ -169,15 +169,6 @@ const SignInBlock = () => {
           Sign up
         </button>
       </div>
-
-      {/* Divider for Social Login */}
-      <div className="flex items-center justify-center mt-4">
-        <span className="text-[#2d2c2c]">________</span>
-        <label className="inline-flex items-center text-[#2d2c2c] mx-2 text-sm">
-          OR LOGIN WITH
-        </label>
-        <span className="text-[#2d2c2c]">________</span>
-      </div>
     </div>
   );
 };
