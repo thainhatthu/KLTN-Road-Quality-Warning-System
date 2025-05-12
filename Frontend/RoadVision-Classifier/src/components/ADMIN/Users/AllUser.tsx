@@ -19,7 +19,7 @@ interface DataType {
 interface AllUserProps {
   onViewUserInfo: (user: DataType) => void;
 }
-const api_url = "https://b9a3-42-116-6-46.ngrok-free.app";
+const api_url = "https://b151-42-116-6-46.ngrok-free.app";
 
 export default function AllUser({ onViewUserInfo }: AllUserProps) {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
