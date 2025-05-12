@@ -98,7 +98,7 @@ const Map: React.FC = () => {
               iconSize: [30, 30],
               iconAnchor: [15, 30],
             });
-            const fullImageUrl = `https://b9a3-42-116-6-46.ngrok-free.app/${filepath}`;
+            const fullImageUrl = `https://b151-42-116-6-46.ngrok-free.app/${filepath}`;
             L.marker([latitude, longitude], { icon: customIcon }).addTo(map)
               .bindPopup(`
                     <div>
@@ -324,7 +324,7 @@ const Map: React.FC = () => {
         );
 
         const res = await fetch(
-          `http://192.168.120.135:5000/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
+          `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
         );
         const data = await res.json();
 
@@ -371,7 +371,7 @@ const Map: React.FC = () => {
         const routingCtrl = L.Routing.control({
           waypoints: [L.latLng(s.lat, s.lng), L.latLng(e.lat, e.lng)],
           router: L.Routing.osrmv1({
-            serviceUrl: "http://192.168.120.135:5000/route/v1",
+            serviceUrl: "https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1",
           }),
           showAlternatives: false,
           routeWhileDragging: false,

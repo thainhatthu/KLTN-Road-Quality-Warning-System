@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { PageEnum } from "../../defination/enums/page.enum";
 import { handleLogOut } from "../../utils/auth.util";
 import defaultAvatar from "../../assets/img/defaultAvatar.png";
-const api_url = "https://b9a3-42-116-6-46.ngrok-free.app";
+const api_url = "https://b151-42-116-6-46.ngrok-free.app";
 
 const Header: React.FC = () => {
   const userRecoilStateValue = useRecoilValue(accountState);
@@ -31,22 +31,33 @@ const Header: React.FC = () => {
       key: "1",
     },
   ];
+
   useEffect(() => {
-    const fetchAvatar = async () => {
-      try {
-        const avatarUrl = `${api_url}/user/api/getAvatar?username=${userRecoilStateValue.username}`;
+    const fetchAndValidateAvatar = async () => {
+      const avatarUrl = `${api_url}/user/api/getAvatar?username=${userRecoilStateValue.username}`;
+      const img = new Image();
+      img.src = avatarUrl;
+  
+      img.onload = () => {
         setUserRecoilState((prevState) => ({
           ...prevState,
           avatar: avatarUrl,
         }));
-      } catch (error) {
-        console.error("Failed to fetch avatar:", error);
-      }
+      };
+  
+      img.onerror = () => {
+        setUserRecoilState((prevState) => ({
+          ...prevState,
+          avatar: defaultAvatar,
+        }));
+      };
     };
-
-    fetchAvatar();
-  }, [setUserRecoilState]);
-
+  
+    if (userRecoilStateValue?.username) {
+      fetchAndValidateAvatar();
+    }
+  }, [userRecoilStateValue.username, setUserRecoilState]);
+ 
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-[#F9F9F9]">
       <div className="flex items-center space-x-4 w-96 px-4 py-2"></div>
@@ -65,7 +76,7 @@ const Header: React.FC = () => {
             >
               <Space>
                 <img
-                  src={userRecoilState.avatar || defaultAvatar}
+                  src={userRecoilState.avatar}
                   alt="User"
                   className="w-9 h-9 mr-1 rounded-full"
                 />

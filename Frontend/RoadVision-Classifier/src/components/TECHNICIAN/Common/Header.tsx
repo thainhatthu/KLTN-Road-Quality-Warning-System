@@ -4,6 +4,7 @@ import type { MenuProps } from "antd";
 import { Dropdown, Space } from "antd";
 import search from "../../../assets/img/search.png";
 import { handleLogOut } from "../../../utils/auth.util";
+import avt from "../../../assets/img/defaultAvatar.png";
 
 const Header: React.FC = () => {
     const items: MenuProps["items"] = [
@@ -42,7 +43,7 @@ const Header: React.FC = () => {
             >
               <Space>
                 <img
-                  src="https://via.placeholder.com/40"
+                  src= { avt }
                   alt="User"
                   className="w-9 h-9 mr-1 rounded-full"
                 />
