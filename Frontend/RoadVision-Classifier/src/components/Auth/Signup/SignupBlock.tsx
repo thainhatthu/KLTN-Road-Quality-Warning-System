@@ -1,5 +1,3 @@
-import gg from "../../../assets/img/gg.png";
-import fb from "../../../assets/img/fb.png";
 import React, { useState } from "react";
 import { z } from "zod";
 import { useRecoilState } from "recoil";
@@ -182,16 +180,6 @@ const SignupBlock = () => {
           OR SIGNUP WITH
         </label>
         <span className="text-[#2d2c2c]">________</span>
-      </div>
-
-      {/* Social Sign-Up Buttons */}
-      <div className="flex flex-row justify-center gap-2 mt-4">
-        <button className="w-20 h-10 sm:w-15 sm:h-15 rounded-lg border-[2px] border-[#a5b3ff] flex justify-center items-center">
-          <img src={fb} alt="Facebook" className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-        <button className="w-20 h-10 sm:w-15 sm:h-15 rounded-lg border-[2px] border-[#a5b3ff] flex justify-center items-center">
-          <img src={gg} alt="Google" className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
       </div>
     </div>
   );
