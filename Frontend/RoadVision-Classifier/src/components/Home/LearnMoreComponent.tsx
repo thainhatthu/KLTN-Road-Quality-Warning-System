@@ -4,6 +4,7 @@ import step2 from "../../assets/img/step2.png";
 import step3 from "../../assets/img/step3.png";
 import step4 from "../../assets/img/step4.png";
 import mask from "../../assets/img/mask.png";
+import useNavigateTo from "../../hooks/useNavigateTo";
 interface Step {
   id: number;
   title: string;
@@ -24,7 +25,7 @@ const steps: Step[] = [
     title: "Received Result",
     description:
       "After uploading your road image, you will receive a result about the road's status. It will be shown in",
-    image: step2, 
+    image: step2,
     linkText: "here",
   },
   {
@@ -32,7 +33,7 @@ const steps: Step[] = [
     title: "Emergency fixing",
     description:
       "Our technicians team will be present at the location you provide to promptly repair the road. Our team will update about the status frequently for your convenience in",
-    image: step3, 
+    image: step3,
     linkText: "here",
   },
   {
@@ -44,6 +45,7 @@ const steps: Step[] = [
   },
 ];
 export default function LearnMoreComponent() {
+  const { navigateMap } = useNavigateTo();
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] flex flex-col gap-5 justify-start items-center overflow-x-auto">
       <Breadcrumb
@@ -113,8 +115,14 @@ export default function LearnMoreComponent() {
               </div>
             </div>
           ))}
-        </div>23
+        </div>
       </div>
+      <button
+        className="w-48 bg-[#3749A6] mb-5 text-white font-semibold p-3 rounded-full hover:ring-4 hover:ring-blue-300"
+        onClick={navigateMap}
+      >
+        Get started
+      </button>
     </div>
   );
 }

@@ -62,11 +62,10 @@ def classifier_road(img):
         return 'Very poor'
 
 
-
 def getRoadImage():
     consumer=consumer = KafkaConsumer(
         'image',
-        bootstrap_servers='192.168.120.26:9092',
+        bootstrap_servers='192.168.120.179:9092',
         auto_offset_reset='earliest',
         enable_auto_commit=False,
         group_id='road_classifier',

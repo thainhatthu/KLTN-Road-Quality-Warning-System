@@ -231,7 +231,7 @@ class AssignService:
             task = Task(username=username)
             report_results = task.get_report_task(road_id=road_id)
 
-            if not tasks:
+            if not  report_results:
                 return format_response(
                     status="Success",
                     data=[],
@@ -241,7 +241,7 @@ class AssignService:
 
             return format_response(
                 status="Success",
-                data=tasks,
+                data=report_results,
                 message="Get report task successfully",
                 status_code=200
             )

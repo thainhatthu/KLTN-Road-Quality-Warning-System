@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Select, DatePicker } from "antd";
+import { Select, DatePicker, message } from "antd";
 import { countryList } from "./country";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -15,52 +15,19 @@ const dateFormatList = ["DD-MM-YYYY"];
 export default function EditProfile() {
   const profileData = useRecoilValue(profileState);
 
-  const [selectedGender, setSelectedGender] = useState<string>(profileData.gender || "");
+  const [selectedGender, setSelectedGender] = useState<string>(
+    profileData.gender || ""
+  );
   const [fullname, setFullname] = useState(profileData.fullname || "");
   const [phonenumber, setPhonenumber] = useState(profileData.phonenumber || "");
   const [address, setAddress] = useState(profileData.location || "");
-  const [selectedCountry, setSelectedCountry] = useState<string>(profileData.state || "");
-  const [selectedBirthday, setSelectedBirthday] = useState<string>(profileData.birthday || "");
+  const [selectedCountry, setSelectedCountry] = useState<string>(
+    profileData.state || ""
+  );
+  const [selectedBirthday, setSelectedBirthday] = useState<string>(
+    profileData.birthday || ""
+  );
 
-  // const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = event.target.files;
-  //   if (files && files.length > 0) {
-  //     const file = files[0];
-  //     const formData = new FormData();
-  //     formData.append("file", file);
-  //     try {
-  //       // Replace with actual token retrieval logic
-  //       const uploadData: UploadAvatarType = { file: file };
-  //       const response = await userProfileService.uploadAvatar(uploadData);        
-  //       if (response.status.toString() === "Success") {
-  //         // Lấy URL avatar mới
-  //         const newAvatarUrl = response.data.avatarUrl;
-  
-  //         // Cập nhật Recoil state
-  //         setUserRecoilState((prevState) => ({
-  //           ...prevState,
-  //           avatar: newAvatarUrl,
-  //         }));
-  //         alert("Avatar uploaded successfully!");
-  //       } else {
-  //         alert("Failed to upload avatar.");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error uploading avatar:", error);
-  //       alert("Something went wrong while uploading avatar.");
-  //     }
-  //   }
-  // };
-  
-  // const handleButtonClick = () => {
-  //   const avatarInput = document.getElementById("avatar") as HTMLInputElement;
-  //   if (avatarInput) {
-  //     avatarInput.click();
-  //   }
-  // };
-
-
-  
   const handleGenderChange = (value: string) => setSelectedGender(value);
   const handleBirthdayChange = (date: dayjs.Dayjs | null) => {
     if (date) {
@@ -70,6 +37,7 @@ export default function EditProfile() {
     }
   };
   const handleCountryChange = (value: string) => setSelectedCountry(value);
+
   const handleSave = async () => {
     try {
       const phoneNumberAsString = String(phonenumber);
@@ -84,22 +52,19 @@ export default function EditProfile() {
         state: selectedCountry,
       };
 
-      const response = await userProfileService.editProfile(updatedProfileData);
+      await userProfileService.editProfile(updatedProfileData);
 
-      if (response.status.toString() === "Success") {
-        alert("Profile updated successfully!");
-      } else {
-        alert("An error occurred while updating your profile.");
-      }
+      message.success("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
     }
   };
 
-
   return (
     <div className="flex flex-col items-center w-full h-72 text-center py-5 gap-10">
+      {/* Other form fields (Full Name, Phone Number, Date of Birth, etc.) */}
       <div className="flex flex-row px-5 justify-between items-center w-[95%] gap-2">
+        {/* Full Name */}
         <div className="w-[30%]">
           <div className="text-left font-normal font-sm text-gray-700 text-sm">
             Full Name
@@ -115,6 +80,7 @@ export default function EditProfile() {
           </div>
         </div>
 
+        {/* Phone Number */}
         <div className="w-[30%]">
           <div className="text-left font-normal font-sm text-gray-700 text-sm">
             Phone number
@@ -130,6 +96,7 @@ export default function EditProfile() {
           </div>
         </div>
 
+        {/* Date of Birth */}
         <div className="w-[30%]">
           <div className="text-left font-normal font-sm text-gray-700 text-sm">
             Date of birth
@@ -146,7 +113,9 @@ export default function EditProfile() {
         </div>
       </div>
 
+      {/* Gender and other fields */}
       <div className="flex flex-row px-5 justify-between items-center w-[95%] gap-2">
+        {/* Gender */}
         <div className="w-[30%]">
           <div className="text-left font-normal font-sm text-gray-700 text-sm">
             Gender
@@ -164,6 +133,7 @@ export default function EditProfile() {
           </Select>
         </div>
 
+        {/* Address */}
         <div className="w-[30%]">
           <div className="text-left font-normal font-sm text-gray-700 text-sm">
             Address
@@ -179,6 +149,7 @@ export default function EditProfile() {
           </div>
         </div>
 
+        {/* Country */}
         <div className="w-[30%]">
           <div className="text-left font-normal font-sm text-gray-700 text-sm">
             Country
@@ -197,6 +168,7 @@ export default function EditProfile() {
         </div>
       </div>
 
+      {/* Save Button */}
       <div>
         <button
           onClick={handleSave}

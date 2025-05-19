@@ -3,6 +3,7 @@ from torch import nn
 from .layers.nn import ConcatLayer,InterleavedLayer, CascadedGroupAttention, LocalWindowAttention
 from .modules.efficientvitb1_block.nn import LiteMLA
 import torch.nn.functional as F
+import torch
 
 class concat_block(nn.Module):
     def __init__(self,x_channel,y_channel):
@@ -44,6 +45,26 @@ class interaction_block(nn.Module):
             reshape(1, -1, H * W).permute(0, 2, 1)
         return pos_embed
         
+class CrossAttention(nn.Module):
+    def __init__(self,d_in,img_size):
+        super().__init__()
+        self.d_out_kq=d_in
+        self.W_query=nn.Parameter(torch.rand(d_in,img_size,img_size))
+        self.W_key  = nn.Parameter(torch.rand(d_in,img_size,img_size))
+        self.W_value=nn.Parameter(torch.rand(d_in, img_size,img_size))
+    
+    def forward(self, x_1, x_2):
+        queries_1=x_1.matmul(self.W_query)
+        keys_2=x_2.matmul(self.W_key)
+        values_2=x_2.matmul(self.W_value)
+        attn_scores=queries_1.matmul(keys_2)
+        attn_weights=torch.softmax(
+            attn_scores/self.d_out_kq**0.5, dim=-1
+        )
+        
+        context_vec=attn_weights.matmul(values_2)
+        return context_vec
+
 
 class restevit_road_backbone(nn.Module):
     def __init__(self,
@@ -65,7 +86,7 @@ class restevit_road_backbone(nn.Module):
         self.concat_block=concat_block(res_channels[3],efficientvit_channels[4])
         self.interaction_to_r=interaction_block(res_channels[2],efficientvit_channels[3],res_channels[2],0)
         self.interaction_to_v=interaction_block(res_channels[2],efficientvit_channels[3],efficientvit_channels[3],1)
-
+        
     def forward(self,x):
         res=self.resnet_in(x)
         vit=self.efficientvit_in(x)

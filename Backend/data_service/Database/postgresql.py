@@ -2,7 +2,6 @@ import psycopg2
 import os
 current_file_path = os.path.abspath(__file__)
 
-
 class Postgresql:
     def __init__(self):
         self.connection_params={

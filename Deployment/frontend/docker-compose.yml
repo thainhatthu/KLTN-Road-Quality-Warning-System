@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   frontend:
-    image: caothi/frontend_roadvision_classifier:latest
+    image: 21521490/frontend_roadvision_classifier:latest
     container_name: frontend
     restart: always
     networks:

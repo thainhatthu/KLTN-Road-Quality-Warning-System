@@ -16,7 +16,7 @@ interface DataType {
 interface AllUserProps {
   onViewUserInfo: (user: DataType) => void;
 }
-const api_url = import.meta.env.VITE_BASE_URL;
+const api_url = "https://b151-42-116-6-46.ngrok-free.app";
 
 export default function AllUser({ onViewUserInfo }: AllUserProps) {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
@@ -31,7 +31,7 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
       const response = await manageAlluserService.getAllUser({});
       const users = response.data?.map((user: any, index: number) => ({
         key: index,
-        avatar: `${api_url}${user.avatar}`,
+        avatar: `${api_url}/${user.avatar}`,
         user_id: user.user_id,
         username: user.username,
         fullname: user.fullname,

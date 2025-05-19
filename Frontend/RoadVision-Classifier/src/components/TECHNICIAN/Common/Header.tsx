@@ -3,20 +3,11 @@ import { DownOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Dropdown, Space } from "antd";
 import search from "../../../assets/img/search.png";
-import notification from "../../../assets/img/notification.png";
-import { Link } from "react-router-dom";
 import { handleLogOut } from "../../../utils/auth.util";
+import avt from "../../../assets/img/defaultAvatar.png";
 
 const Header: React.FC = () => {
     const items: MenuProps["items"] = [
-    {
-      label: (
-        <Link className="text-base p-1" to="/profile">
-          Profile
-        </Link>
-      ),
-      key: "0",
-    },
     {
       label: (
         <div onClick={handleLogOut} className="text-base p-1">
@@ -39,10 +30,6 @@ const Header: React.FC = () => {
       </div>
 
       <div className="flex items-center space-x-4">
-        {/* notification */}
-        <button className="bg-white rounded-3xl w-10 h-10 p-2">
-          <img src={notification} alt="" />
-        </button>
         {/* account */}
         <button className="flex items-center justify-center bg-[#3749A6] rounded-full px-3 py-2">
           <Dropdown
@@ -56,7 +43,7 @@ const Header: React.FC = () => {
             >
               <Space>
                 <img
-                  src="https://via.placeholder.com/40"
+                  src= { avt }
                   alt="User"
                   className="w-9 h-9 mr-1 rounded-full"
                 />

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AiOutlineDelete } from "react-icons/ai";
-import { Table, Modal, Button, Form, Input } from "antd";
+import { Table, Modal, Button, Form, Input, message } from "antd";
 import manageAlluserService from "../../../services/manageAlluser.service";
 import { useRecoilState } from "recoil";
 import { userState } from "../../../atoms/admin/accountState";
@@ -19,7 +19,7 @@ interface DataType {
 interface AllUserProps {
   onViewUserInfo: (user: DataType) => void;
 }
-const api_url = import.meta.env.VITE_BASE_URL;
+const api_url = "https://b151-42-116-6-46.ngrok-free.app";
 
 export default function AllUser({ onViewUserInfo }: AllUserProps) {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
@@ -34,7 +34,7 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
       const response = await manageAlluserService.getAllUser({});
       const users = response.data?.map((user: any, index: number) => ({
         key: index,
-        avatar: `${api_url}${user.avatar}`,
+        avatar: `${api_url}/${user.avatar}`,
         user_id: user.user_id,
         username: user.username,
         fullname: user.fullname,
@@ -62,12 +62,12 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
     const payload = { ...values, permission_id: "3" };
     try {
       await manageAlluserService.addNewUser(payload);
-      alert("Add user successfully!");
+      message.success("Add user successfully!");
       fetchAllUsers();
       form.resetFields();
       setIsModalVisible(false);
     } catch (error) {
-      console.log("Thêm tài khoản thất bại!");
+      message.error("Fail to add new user!");
     }
   };
 
@@ -85,7 +85,7 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
       onOk: async () => {
         try {
           await manageAlluserService.deleteUser(username);
-          alert("Delete user successfully!");
+          message.success("Delete user successfully!");
           fetchAllUsers();
         } catch (error) {
           console.log("Xóa tài khoản thất bại!");
@@ -96,38 +96,74 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
 
   const columns = [
     {
-      title: "User ID",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          USER ID
+        </span>
+      ),
       dataIndex: "user_id",
       key: "user_id",
       align: "center" as "center",
     },
     {
-      title: "Username",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          USER NAME
+        </span>
+      ),
       dataIndex: "username",
       key: "username",
       align: "center" as "center",
     },
     {
-      title: "Fullname",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          FULL NAME
+        </span>
+      ),
       dataIndex: "fullname",
       key: "fullname",
       align: "center" as "center",
     },
     {
-      title: "Join Date",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          JOIN DATE
+        </span>
+      ),
       dataIndex: "joindate",
       key: "joindate",
       align: "center" as "center",
     },
     {
-      title: "Contribution",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          CONTRIBUTION
+        </span>
+      ),
       dataIndex: "contribution",
       key: "contribution",
       align: "center" as "center",
       render: (contribution: number) => `${contribution} image(s)`,
     },
     {
-      title: "Action",
+      title: (
+        <span
+          style={{ color: "#23038C", fontWeight: "bold", fontSize: "16px" }}
+        >
+          ACTION
+        </span>
+      ),
       key: "action",
       align: "center" as "center",
       render: (_: any, record: DataType) => (
@@ -215,7 +251,7 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
             name="email"
             label="Email"
             rules={[
-              { required: false, message: "Please input email!" },
+              { required: true, message: "Please input email!" },
               { type: "email", message: "Invalid email format!" },
             ]}
           >

@@ -1,6 +1,4 @@
---
 -- PostgreSQL database dump
---
 
 -- Dumped from database version 14.6
 -- Dumped by pg_dump version 14.15 (Ubuntu 14.15-0ubuntu0.22.04.1)
@@ -68,7 +66,6 @@ ALTER TABLE public."AccessRoad_id_road_seq" OWNER TO admin;
 
 ALTER SEQUENCE public."AccessRoad_id_road_seq" OWNED BY public."AccessRoad".id_road;
 
-
 --
 -- Name: AccessRoad_id_user_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
@@ -80,7 +77,6 @@ CREATE SEQUENCE public."AccessRoad_id_user_seq"
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
 
 ALTER TABLE public."AccessRoad_id_user_seq" OWNER TO admin;
 
@@ -590,48 +586,6 @@ ALTER TABLE ONLY public.ward ALTER COLUMN id SET DEFAULT nextval('public.ward_id
 
 ALTER TABLE ONLY public.ward ALTER COLUMN district_id SET DEFAULT nextval('public.ward_district_id_seq'::regclass);
 
-
---
--- Data for Name: AccessRoad; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-COPY public."AccessRoad" (id_user, id_road, type_access) FROM stdin;
-\.
-
-
---
--- Data for Name: account; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-COPY public.account (id, email, password, verified, username, active, created) FROM stdin;
-101	\N	8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92	\N	caothi	t	2025-01-01 04:00:41.7002+00
-31	lehuynhanhthu7403@gmail.com	8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92	74185	anhthu	t	2024-11-09 16:13:14.123556+00
-106	\N	8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92	\N	baongan	t	2025-01-01 04:21:18.896096+00
-113	\N	bcb15f821479b4d5772bd0ca866c00ad5f926e3580720659cc80d39c9d09802a	\N	nhatthu	t	2025-01-02 09:45:07.773285+00
-18	caothi2003@gmail.com	8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92	50619	thi	t	2024-11-09 16:13:14.123556+00
-69	nguyentrabaongan@gmail.com	bcb15f821479b4d5772bd0ca866c00ad5f926e3580720659cc80d39c9d09802a	42165	baongan123	t	2024-11-09 16:13:14.123556+00
-128	tnthu.78@gmail.com	bcb15f821479b4d5772bd0ca866c00ad5f926e3580720659cc80d39c9d09802a	33963	nhatthu123	t	2025-01-03 17:34:50.872363+00
-129	htra1204@gmail.com	d17f25ecfbcc7857f7bebea469308be0b2580943e96d13a3ad98a13675c4bfc2	\N	anhthu123	t	2025-01-03 19:00:53.988261+00
-68	21522613@gm.uit.edu.vn	8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92	96338	caothiabc	t	2024-11-09 16:13:14.123556+00
-70	thainhatthu.2003@gmail.com	bcb15f821479b4d5772bd0ca866c00ad5f926e3580720659cc80d39c9d09802a	70147	tes333	t	2024-11-09 16:13:14.123556+00
-9	caothiu2003@gmail.com	8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92	48885	caothi123	t	2024-11-09 16:13:14.123556+00
-\.
-
-
---
--- Data for Name: assignment; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-COPY public.assignment (id, user_id, ward_id, created_at, status, updated_at, deadline, comment) FROM stdin;
-60	106	181	2025-01-03 17:44:22.138874	Done	2025-01-03 17:44:31	2025-01-29 00:00:00	\N
-61	101	182	2025-01-03 18:19:19.234752	Not start	\N	2025-01-22 00:00:00	\N
-62	70	192	2025-01-03 18:51:27.971546	Not start	\N	2025-01-31 00:00:00	\N
-64	70	155	2025-01-03 18:52:31.342551	Not start	\N	2025-01-23 00:07:00	\N
-63	70	193	2025-01-03 18:52:13.833613	Done	2025-01-03 18:54:15	2025-01-29 00:00:00	\N
-59	70	309	2025-01-03 17:40:39.676726	In progress	2025-01-03 18:54:30	2025-01-31 00:00:00	\N
-\.
-
-
 --
 -- Data for Name: district; Type: TABLE DATA; Schema: public; Owner: admin
 --
@@ -850,69 +804,6 @@ Trà Vinh	62
 Vĩnh Long	63
 Tỉnh Bình Dương	47
 \.
-
-
---
--- Data for Name: road; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-COPY public.road (id, user_id, latitude, longitude, level, image_path, created_at, ward_id, location, update_at, status, report) FROM stdin;
-609	113	10.831293	106.6052	Very poor	roadImages/113_1735927639.8976483.jpg	2025-01-03 18:07:19.89795	67	Quốc lộ 1, Phường Tân Thới Nhất, Quận 12, Thành phố Hồ Chí Minh	\N	Not start	\N
-610	113	10.825023	106.602979	Very poor	roadImages/113_1735927677.0969346.jpg	2025-01-03 18:07:57.097478	182	Quốc lộ 1, Phường Bình Hưng Hòa B, Quận Bình Tân, Thành phố Hồ Chí Minh	\N	Not start	\N
-602	69	10.825933	106.694065	Good	roadImages/69_1735925036.335424.jpg	2025-01-03 17:23:56.336004	204	Dương Quảng Hàm, Phường 5, Quận Gò Vấp, Thành phố Hồ Chí Minh	2025-01-03 17:46:21	Done	\N
-604	69	10.870728	106.757736	Very poor	roadImages/69_1735926157.7166224.jpg	2025-01-03 17:42:37.716838	309	Phường An Bình, Thành phố Dĩ An, Tỉnh Bình Dương	\N	Not start	\N
-606	69	10.870728	106.757736	Very poor	roadImages/69_1735926223.4952557.jpg	2025-01-03 17:43:43.495596	309	Phường An Bình, Thành phố Dĩ An, Tỉnh Bình Dương	\N	Not start	\N
-612	113	10.870712872142207	106.75764844056427	Very poor	roadImages/113_1735927967.3485055.jpg	2025-01-03 18:12:47.34884	309	Phường An Bình, Thành phố Dĩ An, Tỉnh Bình Dương	\N	Not start	\N
-605	69	10.870728	106.757736	Good	roadImages/69_1735926207.5456178.jpg	2025-01-03 17:43:27.545782	309	Phường An Bình, Thành phố Dĩ An, Tỉnh Bình Dương	2025-01-03 17:56:26	Done	{"total_cost": 0.0, "incidental_costs": 0.0, "difficult": "string", "propose": "string"}
-603	69	10.870728	106.757736	Good	roadImages/69_1735926147.631052.jpg	2025-01-03 17:42:27.631408	309	Phường An Bình, Thành phố Dĩ An, Tỉnh Bình Dương	2025-01-03 17:57:46	Done	\N
-607	113	10.8706523	106.757841	Very poor	roadImages/113_1735927295.8837514.jpg	2025-01-03 18:01:35.884002	309	Phường An Bình, Thành phố Dĩ An, Tỉnh Bình Dương	\N	Not start	\N
-608	113	10.829228	106.604073	Very poor	roadImages/113_1735927603.8567572.jpg	2025-01-03 18:06:43.85702	225	Quốc lộ 1, Xã Bà Điểm, Huyện Hóc Môn, Thành phố Hồ Chí Minh	\N	Not start	\N
-591	113	10.794159655105563	106.61474496640818	Very poor	roadImages/113_1735921035.3894997.jpg	2025-01-03 16:17:15.389792	181	Chùa Di Lặc, Hẻm 596 Bình Long, Phường Bình Hưng Hòa A, Quận Bình Tân, Thành phố Hồ Chí Minh	\N	Not start	\N
-613	128	10.816547	106.699375	Very poor	roadImages/128_1735928027.0119028.jpg	2025-01-03 18:13:47.012187	192	Hẻm 290/45 Nơ Trang Long, Phường 12, Quận Bình Thạnh, Thành phố Hồ Chí Minh	\N	Not start	\N
-614	113	10.819908056084431	106.63904883852257	Very poor	roadImages/113_1735928113.2835398.jpg	2025-01-03 18:15:13.283865	155	Tân Sơn, Phường 15, Quận Tân Bình, Thành phố Hồ Chí Minh	\N	Not start	\N
-615	113	10.751321	106.598489	Very poor	roadImages/113_1735928163.9633374.jpg	2025-01-03 18:16:03.963595	183	Đường số 48, Phường Tân Tạo, Quận Bình Tân, Thành phố Hồ Chí Minh	\N	Not start	\N
-616	113	10.749904	106.595107	Poor	roadImages/113_1735928209.3926866.jpg	2025-01-03 18:16:49.393122	184	Cầu vượt Tân Tạo, Đường Lộ Tẻ, Phường Tân Tạo A, Quận Bình Tân, Thành phố Hồ Chí Minh	\N	Not start	\N
-611	128	10.816973	106.69753	Good	roadImages/128_1735927936.1103556.jpg	2025-01-03 18:12:16.110555	193	235, Đường Nơ Trang Long, Phường 13, Quận Bình Thạnh, Thành phố Hồ Chí Minh	2025-01-03 18:53:28	Done	\N
-587	113	10.870714922680575	106.75768220722223	Very poor	roadImages/113_1735920459.6660547.jpg	2025-01-03 16:07:39.667037	309	Phường An Bình, Thành phố Dĩ An, Tỉnh Bình Dương	\N	Not start	\N
-\.
-
-
---
--- Data for Name: role; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-COPY public.role (user_id, permission_id) FROM stdin;
-9	1
-68	1
-31	1
-69	3
-106	2
-101	2
-70	2
-113	3
-128	3
-129	3
-\.
-
-
---
--- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-COPY public."user" (user_id, birthday, fullname, gender, avatar, location, state, phonenumber) FROM stdin;
-70	2024-10-12	Thái Nhật Thư 	Female	\N	Bình Dương	Vietnam	12345677
-18	\N	\N	\N	\N	\N	\N	\N
-68	\N	\N	\N	\N	\N	\N	\N
-9	2003-11-10	Nguyễn Cao Thi	Male	avatar/caothi123.png		Vietnam	947791003
-31	2024-04-07	Le Huynh Anh Thu	Female	avatar/anhthu.jpg	Ho Chi Minh	Viet Nam	0333478530
-101	\N	\N	\N	\N	\N	\N	\N
-69	2003-07-04	Le Huynh Anh Thu	Female	avatar/baongan123.png	Binh Duong	Viet Nam	333478530
-106	2025-08-01	Thai Nhat Thu	Female	\N	Binh Duong	American Samoa	0907464382
-128	\N	\N	\N	\N	\N	\N	\N
-113	2021-12-11	Thai Nhat Thu	Female	avatar/nhatthu.jpg	Bình Dương	Vietnam	0907464382
-129	\N	\N	\N	\N	\N	\N	\N
-\.
-
 
 --
 -- Data for Name: ward; Type: TABLE DATA; Schema: public; Owner: admin
@@ -1744,9 +1635,3 @@ ALTER DEFAULT PRIVILEGES FOR ROLE admin IN SCHEMA public GRANT SELECT,USAGE ON S
 --
 
 ALTER DEFAULT PRIVILEGES FOR ROLE admin IN SCHEMA public GRANT ALL ON TABLES  TO dev;
-
-
---
--- PostgreSQL database dump complete
---
-

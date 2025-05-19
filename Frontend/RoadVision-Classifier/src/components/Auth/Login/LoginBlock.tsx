@@ -1,5 +1,4 @@
-import fb from "../../../assets/img/fb.png";
-import gg from "../../../assets/img/gg.png";
+
 import { z } from "zod";
 import { useState } from "react";
 import { useRecoilState } from "recoil";
@@ -10,8 +9,6 @@ import { setStoredUserInfo } from "../../../utils/local-storage.util";
 import { saveAccessToken, saveUserRole } from "../../../utils/auth.util";
 import { ERROR_MESSAGES } from "../../../defination/consts/messages.const";
 
-const api_url =  import.meta.env.VITE_BASE_URL;
-// Input validation schema using zod
 const signInSchema = z.object({
   username: z.string().min(6, ERROR_MESSAGES.auth.username),
   password: z.string().min(6, ERROR_MESSAGES.auth.password),
@@ -64,15 +61,10 @@ const SignInBlock = () => {
     }
 
     try {
-      // Call the API for sign-in
       const data = await authService.signIn(formData);
-      console.log(data);
-      const { info, token } = data; // Extract user info and token from response
+      const { info, token } = data;
 
       if (info && token) {
-        const user_avatar = `${api_url}/user/api/getAvatar?username=${info.username}`;
-        info.avatar = user_avatar; 
-        console.log(info);
         saveAccessToken(token); // Save token for future API calls
         setStoredUserInfo(info); // Save user info to local storage
         setAccountState(info);
@@ -175,25 +167,6 @@ const SignInBlock = () => {
           className="cursor-pointer hover:text-blue-800 text-sm font-bold ml-1"
         >
           Sign up
-        </button>
-      </div>
-
-      {/* Divider for Social Login */}
-      <div className="flex items-center justify-center mt-4">
-        <span className="text-[#2d2c2c]">________</span>
-        <label className="inline-flex items-center text-[#2d2c2c] mx-2 text-sm">
-          OR LOGIN WITH
-        </label>
-        <span className="text-[#2d2c2c]">________</span>
-      </div>
-
-      {/* Social Login Buttons */}
-      <div className="flex flex-row justify-center gap-2 mt-4">
-        <button className="w-20 h-10 sm:w-15 sm:h-15 rounded-lg border-[2px] border-[#a5b3ff] flex justify-center items-center">
-          <img src={fb} alt="Facebook" className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-        <button className="w-20 h-10 sm:w-15 sm:h-15 rounded-lg border-[2px] border-[#a5b3ff] flex justify-center items-center">
-          <img src={gg} alt="Google" className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       </div>
     </div>

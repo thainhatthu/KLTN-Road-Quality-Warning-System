@@ -24,7 +24,6 @@ import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Admin/Dashboard/Dashboard";
 import UsersManagement from "./pages/Admin/Users/UsersManagement";
 import TechniciansManagement from "./pages/Admin/Technicians/TechniciansManagement";
-import DashboardTechnician from "./pages/Technician/Dashboard/Dashboard";
 import TaskManagement from "./pages/Technician/TaskManagement/TaskManagement";
 import { getDefaultHomePage } from "./utils/auth.util";
 import MapTechnician from "./pages/Technician/MapTechnician/MapTechnician";
@@ -118,14 +117,6 @@ const App: React.FC = () => {
         />
 
         {/* TECHNICIAN ROUTE */}
-        <Route
-          path={TechnicianPageEnum.DASHBOARD}
-          element={
-            <PrivateRoute allowedRoles={["technical"]}>
-              <DashboardTechnician />
-            </PrivateRoute>
-          }
-        />
         <Route
           path={TechnicianPageEnum.TASK_MANAGEMENT}
           element={

@@ -2,14 +2,13 @@ import React, { useEffect } from "react";
 import { DownOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Dropdown, Space } from "antd";
-import notification from "../../assets/img/notification.png";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { accountState } from "../../atoms/authState";
 import { Link } from "react-router-dom";
 import { PageEnum } from "../../defination/enums/page.enum";
 import { handleLogOut } from "../../utils/auth.util";
 import defaultAvatar from "../../assets/img/defaultAvatar.png";
-const api_url = import.meta.env.VITE_BASE_URL;
+const api_url = "https://b151-42-116-6-46.ngrok-free.app";
 
 const Header: React.FC = () => {
   const userRecoilStateValue = useRecoilValue(accountState);
@@ -32,31 +31,38 @@ const Header: React.FC = () => {
       key: "1",
     },
   ];
+
   useEffect(() => {
-    const fetchAvatar = async () => {
-      try {
-        const avatarUrl = `${api_url}/user/api/getAvatar?username=${userRecoilStateValue.username}`;
+    const fetchAndValidateAvatar = async () => {
+      const avatarUrl = `${api_url}/user/api/getAvatar?username=${userRecoilStateValue.username}`;
+      const img = new Image();
+      img.src = avatarUrl;
+  
+      img.onload = () => {
         setUserRecoilState((prevState) => ({
           ...prevState,
           avatar: avatarUrl,
         }));
-      } catch (error) {
-        console.error("Failed to fetch avatar:", error);
-      }
+      };
+  
+      img.onerror = () => {
+        setUserRecoilState((prevState) => ({
+          ...prevState,
+          avatar: defaultAvatar,
+        }));
+      };
     };
-
-    fetchAvatar();
-  }, [setUserRecoilState]);
-
+  
+    if (userRecoilStateValue?.username) {
+      fetchAndValidateAvatar();
+    }
+  }, [userRecoilStateValue.username, setUserRecoilState]);
+ 
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-[#F9F9F9]">
       <div className="flex items-center space-x-4 w-96 px-4 py-2"></div>
 
       <div className="flex items-center space-x-4">
-        {/* notification */}
-        <button className="bg-white rounded-3xl w-10 h-10 p-2">
-          <img src={notification} alt="" />
-        </button>
         {/* account */}
         <button className="flex items-center justify-center bg-[#3749A6] rounded-full px-3 py-2">
           <Dropdown
@@ -70,7 +76,7 @@ const Header: React.FC = () => {
             >
               <Space>
                 <img
-                  src={userRecoilState.avatar || defaultAvatar}
+                  src={userRecoilState.avatar}
                   alt="User"
                   className="w-9 h-9 mr-1 rounded-full"
                 />

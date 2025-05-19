@@ -5,6 +5,7 @@ import manageAlluserService from "../../../services/manageAlluser.service";
 import { RoadDataType } from "../../../defination/types/alluser.type";
 import { format } from "date-fns";
 import { AiOutlineDelete } from "react-icons/ai";
+
 interface DataType {
   key: React.Key;
   user_id: number;
@@ -12,7 +13,6 @@ interface DataType {
   fullname: string;
   joindate: string;
   contribution: number;
-  avatar: string;
 }
 interface AllUserProps {
   user: DataType;
@@ -104,7 +104,7 @@ export default function UserInfo({
           const extractedRoads = roads.map((road) => ({
             key: road.id,
             road_id: road.id,
-            road_image: `${api_url}${road.filepath}`,
+            road_image: `${api_url}/${road.filepath}`,
             road_type: road.level,
             road_time: format(new Date(road.created_at), "dd/MM/yyyy HH:mm:ss"),
             road_location: road.location,
@@ -148,7 +148,7 @@ export default function UserInfo({
       <div className="relative flex flex-row gap-5 w-[95%] h-48 px-10 rounded-2xl bg-[#3749A6] justify-between items-center">
         <div className="absolute bg-white rounded-full w-36 h-36 flex justify-center items-center">
           <img
-            src={user.avatar || avt}
+            src={ avt }
             alt="Avatar"
             className="w-[95%] h-[95%] object-cover rounded-full"
           />
@@ -176,7 +176,7 @@ export default function UserInfo({
           onRow={(record) => ({
             onClick: () => {
               if (onViewRoadDetails) {
-                onViewRoadDetails(record); // Gọi hàm khi nhấp vào hàng
+                onViewRoadDetails(record);
               } else {
                 console.error("onViewRoadDetails is not defined");
               }

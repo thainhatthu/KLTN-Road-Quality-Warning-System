@@ -42,7 +42,7 @@ class RoadService:
             threading.Thread(target=RouteMap,args=([roadSchema.ward_id],)).start()
             img=roadSchema.file
             producer=KafkaProducer(
-                bootstrap_servers='kafka:9092',
+                bootstrap_servers='192.168.120.179:9092',
                 value_serializer=lambda v: json.dumps(v).encode('utf-8')
             )
             message={
@@ -140,7 +140,7 @@ class RoadService:
             days= (30 if during=='monthly' else 365)*number
             db=Postgresql()
             count_all=db.execute(f"SELECT level, count(level) FROM road where level <> 'Good' and level <> 'Classifing' and created_at >= NOW() - INTERVAL '{days} days' group by level",fetch='all')
-            count_done=db.execute(f"SELECT level, count(level) FROM road where level <> 'Good' and level <> 'Classifing' and status='Done' and created_at >= NOW() - INTERVAL '{days} days' group by level",fetch='all')
+            count_done=db.execute(f"SELECT level, count(level) FROM road where level = 'Good' and status='Done' and created_at >= NOW() - INTERVAL '{days} days' group by level",fetch='all')
             db.close()
             data={
                 'Total':[f"'{level}': {count}" for level,count in  count_all],

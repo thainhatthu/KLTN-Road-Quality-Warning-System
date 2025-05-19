@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 import dataService from "../../services/data.service";
 import { accountState } from "../../atoms/authState";
+const api_url = "https://b151-42-116-6-46.ngrok-free.app";
 
 interface DataType {
   time: string;
@@ -112,7 +113,7 @@ export default function History() {
       key: "image",
       align: "center" as "center",
       render: (image: string) => {
-        const fullImageUrl = `http://192.168.120.26/${image}`;
+        const fullImageUrl = `${api_url}/${image}`;
         return (
           <img
             src={fullImageUrl}

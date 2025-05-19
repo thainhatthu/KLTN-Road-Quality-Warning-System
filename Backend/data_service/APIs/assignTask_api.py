@@ -5,7 +5,6 @@ from schemas import Task,ReportSchema
 from services.assign_service import AssignService
 from services.auth_validate2 import validate_token
 
-
 @app.post('/api/assignTask')
 def assign_task(task: Task, user_info: dict = Depends(validate_token)):
     return AssignService.assign_task_service(task, user_info)
