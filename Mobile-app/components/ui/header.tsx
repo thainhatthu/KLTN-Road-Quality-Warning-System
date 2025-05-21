@@ -12,7 +12,7 @@ export default function Header({ title }: HeaderProps) {
     <View style={styles.wrapper}>
       <View style={styles.header}>
         <Image
-          source={require("@/assets/images/react-logo.png")}
+          source={require("@/assets/images/main-logo.png")}
           style={styles.icon}
         />
         <Text style={styles.title}>{title}</Text>

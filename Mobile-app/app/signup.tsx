@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    marginBottom: 4,
+    marginBottom: 15
   },
   rememberRow: {
     flexDirection: "row",

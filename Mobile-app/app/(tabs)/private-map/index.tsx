@@ -21,6 +21,7 @@ import dataService from "@/services/data.service";
 import type { WebView as WebViewType } from "react-native-webview";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
+import userProfileService from "@/services/userprofile.service";
 
 export default function PrivateMapScreen() {
   const router = useRouter();
@@ -32,8 +33,21 @@ export default function PrivateMapScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [userRoads, setUserRoads] = useState<any[]>([]);
-  const webviewRef = useRef<WebViewType>(null); 
+  const webviewRef = useRef<WebViewType>(null);
   const [webviewKey, setWebviewKey] = useState(0);
+  const [profile, setProfile] = useState<any>(null);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await userProfileService.getProfile({});
+        setProfile(res);
+      } catch (err) {
+        console.error("❌ Failed to fetch profile:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -181,6 +195,29 @@ export default function PrivateMapScreen() {
             <Text style={styles.actionButtonText}>Upload</Text>
           </TouchableOpacity>
         </View>
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Ionicons
+              name="checkmark-done-circle-outline"
+              size={18}
+              color="#2D82C6"
+            />
+            <Text style={styles.infoCardText}>
+              You’ve uploaded{" "}
+              <Text style={styles.infoHighlight}>
+                {profile?.contribution ?? 0} road issue
+                {profile?.contribution === 1 ? "" : "s"}
+              </Text>
+            </Text>
+          </View>
+
+          <View style={styles.infoDivider} />
+
+          <Text style={styles.tipHeader}>📸 Tips for better uploads:</Text>
+          <Text style={styles.tipItem}>• Capture in daylight</Text>
+          <Text style={styles.tipItem}>• Focus clearly on the damage</Text>
+          <Text style={styles.tipItem}>• Avoid blurry or tilted images</Text>
+        </View>
 
         {/* Upload Modal */}
         <Modal visible={showUploadModal} transparent animationType="slide">
@@ -280,39 +317,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-  headerWrapper: {
-    backgroundColor: "#fff",
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-    zIndex: 100,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  mainTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    tintColor: "#000",
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#ddd",
-  },
   headerContainer: {
     backgroundColor: "#2D82C6",
     borderRadius: 12,
@@ -377,42 +381,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  roadBox: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    overflow: "hidden",
-  },
-  roadBoxHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 12,
-    borderBottomWidth: 1,
-    borderColor: "#eee",
-  },
-  roadBoxTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-  },
-  roadScroll: {
-    maxHeight: 180,
-    paddingHorizontal: 12,
-  },
-  roadScrollItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  roadScrollText: {
-    fontSize: 13,
-    color: "#444",
-    flex: 1,
-    lineHeight: 18,
-  },
+
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -458,5 +427,57 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 10,
+  },
+  infoCard: {
+    marginTop: 16,
+    backgroundColor: "#F0F9FF",
+    padding: 14,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 4,
+    borderTopWidth: 1,
+    borderTopColor: "#2D82C6",
+    borderLeftColor: "#2D82C6",
+    borderRightColor: "#2D82C6",
+    borderBottomColor: "#2D82C6",
+  },
+  infoCardTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#2D82C6",
+    marginBottom: 10,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  infoCardText: {
+    marginLeft: 6,
+    fontSize: 13,
+    color: "#333",
+    flexShrink: 1,
+  },
+  infoHighlight: {
+    fontWeight: "bold",
+    color: "#1C6DD0",
+  },
+  infoDivider: {
+    height: 1,
+    backgroundColor: "#cce3f5",
+    marginVertical: 10,
+  },
+  tipHeader: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
+  },
+  tipItem: {
+    fontSize: 13,
+    color: "#555",
+    marginLeft: 4,
+    marginBottom: 2,
   },
 });

@@ -25,6 +25,12 @@ type Suggestion = { display_name: string; lat: string; lon: string };
 export default function FullMapScreen() {
   const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
+  const [showRouteHint, setShowRouteHint] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowRouteHint(false), 7000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [from, setFrom] = useState<{
     input: string;
     coord: { lat: number; lng: number } | null;
@@ -43,9 +49,7 @@ export default function FullMapScreen() {
     coord: null,
     suggestions: [],
   });
-  const [routesInfo, setRoutesInfo] = useState<
-    { distance: string; duration: string }[]
-  >([]);
+  const [routesInfo, setRoutesInfo] = useState<any[]>([]);
   const [showRoutesModal, setShowRoutesModal] = useState(false);
   const [selectedMarkerInfo, setSelectedMarkerInfo] = useState<null | {
     title: string;
@@ -219,8 +223,160 @@ export default function FullMapScreen() {
           onMarkerClick={(data) => setSelectedMarkerInfo(data)}
           webviewRef={webviewRef}
           badRoutes={showBadRoutes ? badRoutes : []}
-        />
+          onRoutesFound={async (routes) => {
+            try {
+              const res = (await dataService.getInfoRoads({ all: false })) as {
+                data: { data: string[] };
+              };
+              const parsed = Array.isArray(res?.data?.data)
+                ? res.data.data.map((item: string) => JSON.parse(item))
+                : [];
 
+              const damagePoints = parsed.map((r: any) => ({
+                lat: r.latitude,
+                lng: r.longitude,
+                weight: Number(r.weight) || 1,
+              }));
+
+              const calculateWeight = (route: any) => {
+                let weight = 0;
+                const counted = new Set<number>();
+                damagePoints.forEach((d, i) => {
+                  for (let j = 0; j < route.coords.length - 1; j++) {
+                    const [aLat, aLng] = route.coords[j];
+                    const [bLat, bLng] = route.coords[j + 1];
+                    const ax = bLat - aLat,
+                      ay = bLng - aLng;
+                    const bx = d.lat - aLat,
+                      by = d.lng - aLng;
+                    const t = (ax * bx + ay * by) / (ax * ax + ay * ay);
+                    if (t >= 0 && t <= 1) {
+                      const projLat = aLat + t * ax;
+                      const projLng = aLng + t * ay;
+                      const dist = Math.hypot(projLat - d.lat, projLng - d.lng);
+                      if (dist < 0.0002 && !counted.has(i)) {
+                        weight += d.weight;
+                        counted.add(i);
+                      }
+                    }
+                  }
+                });
+                return weight;
+              };
+
+              const enrichedRoutes = routes.map((r, idx) => {
+                const coords = r.coords;
+                return {
+                  ...r,
+                  dangerWeight: calculateWeight(r),
+                };
+              });
+
+              const sorted = enrichedRoutes.sort(
+                (a, b) =>
+                  a.dangerWeight - b.dangerWeight ||
+                  parseFloat(a.duration) - parseFloat(b.duration)
+              );
+
+              setRoutesInfo(sorted);
+              setShowRoutesModal(true);
+            } catch (err) {
+              console.error("❌ Route weight calc error:", err);
+            }
+          }}
+        />
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={() => setShowRoutesModal((prev) => !prev)}
+        >
+          <Text style={styles.floatingButtonText}>
+            {showRoutesModal ? "×" : "🛣"}
+          </Text>
+        </TouchableOpacity>
+
+        {showRouteHint && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={styles.hintBubble}
+            onPress={() => {
+              setShowRoutesModal(true);
+              setShowRouteHint(false);
+            }}
+          >
+            <Text style={styles.hintText}>✨ Tap here to view route info</Text>
+          </TouchableOpacity>
+        )}
+
+        <Modal visible={showRoutesModal} transparent animationType="slide">
+          <View style={styles.routesModalWrapper}>
+            <View style={styles.routesCard}>
+              <Text style={styles.routesTitle}>🛣 Routes Information</Text>
+
+              {routesInfo.length > 1 && (
+                <View style={styles.bestSuggestionCard}>
+                  <Text style={styles.bestSuggestionTitle}>
+                    ✨ Best option is route {routesInfo[0].index + 1}
+                  </Text>
+                  <View style={styles.bulletList}>
+                    <Text style={styles.bulletItem}>
+                      • Have fewer damaged segments
+                    </Text>
+                    <Text style={styles.bulletItem}>
+                      • Shortest estimated time
+                    </Text>
+                    <Text style={styles.bulletItem}>
+                      • Distance:{" "}
+                      <Text style={styles.bold}>{routesInfo[0].distance}</Text>{" "}
+                      km
+                    </Text>
+                    <Text style={styles.bulletItem}>
+                      • Time:{" "}
+                      <Text style={styles.bold}>{routesInfo[0].duration}</Text>{" "}
+                      min
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {routesInfo.map((r, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.routeItemCard,
+                    r.dangerWeight > 0 ? styles.dangerRoute : styles.safeRoute,
+                  ]}
+                >
+                  <Text style={styles.routeItemTitle}>Route {r.index + 1}</Text>
+                  <Text style={styles.routeItemSub}>
+                    Distance: {r.distance} km
+                  </Text>
+                  <Text style={styles.routeItemSub}>
+                    Time: {r.duration} min
+                  </Text>
+                  <Text
+                    style={[
+                      styles.routeItemSub,
+                      r.dangerWeight > 0 ? styles.textDanger : styles.textSafe,
+                    ]}
+                  >
+                    {r.dangerWeight > 0
+                      ? `⚠️ Danger weight: ${r.dangerWeight}`
+                      : "✅ Safe"}
+                  </Text>
+                </View>
+              ))}
+
+              <TouchableOpacity
+                style={styles.closeRoutesModalBtn}
+                onPress={() => setShowRoutesModal(false)}
+              >
+                <Text style={{ color: "#fff" }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal for marker details */}
         <Modal visible={!!selectedMarkerInfo} transparent animationType="slide">
           <View style={styles.routesModalWrapper}>
             <View style={styles.detailCard}>
@@ -294,6 +450,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     color: "#000",
   },
+  routeItemCard: {
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
   goButton: {
     marginLeft: 8,
     padding: 12,
@@ -338,15 +499,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ddd",
     paddingBottom: 6,
   },
-  routeText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  routeSubText: {
-    fontSize: 13,
-    color: "#555",
-  },
+
   closeRoutesModalBtn: {
     marginTop: 14,
     backgroundColor: "#2D82C6",
@@ -417,5 +570,120 @@ const styles = StyleSheet.create({
     color: "#444",
     textAlign: "right",
     marginTop: 8,
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: 50,
+    right: 20,
+    backgroundColor: "#ffffff",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 20,
+    borderColor: "#2D82C6",
+    borderWidth: 2,
+  },
+  floatingButtonText: {
+    fontSize: 24,
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  suggestionText: {
+    color: "#0077b6",
+    fontWeight: "bold",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  bestSuggestionCard: {
+    backgroundColor: "#E6F7FF",
+    borderRadius: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: "#2D82C6",
+    padding: 10,
+    marginBottom: 10,
+  },
+
+  bestSuggestionTitle: {
+    color: "#2D82C6",
+    fontWeight: "bold",
+    marginBottom: 6,
+    fontSize: 14,
+  },
+  bulletList: {
+    marginLeft: 4,
+  },
+  bulletItem: {
+    fontSize: 13,
+    color: "#333",
+    marginBottom: 2,
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+
+  safeRoute: {
+    backgroundColor: "#e6fffa",
+    borderLeftWidth: 4,
+    borderLeftColor: "#38b2ac",
+  },
+  dangerRoute: {
+    backgroundColor: "#fff5f5",
+    borderLeftWidth: 4,
+    borderLeftColor: "#f56565",
+  },
+  routeItemTitle: {
+    fontWeight: "bold",
+    fontSize: 14,
+    marginBottom: 4,
+    color: "#222",
+  },
+  routeItemSub: {
+    fontSize: 13,
+    color: "#555",
+  },
+  textDanger: {
+    color: "#c53030",
+    fontWeight: "bold",
+  },
+  textSafe: {
+    color: "#2f855a",
+    fontWeight: "bold",
+  },
+  hintBubble: {
+    position: "absolute",
+    bottom: 110,
+    right: 20,
+    backgroundColor: "#f0f9ff",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: "#2D82C6",
+    zIndex: 30,
+    maxWidth: 240,
+  },
+  hintText: {
+    color: "#2D82C6",
+    fontWeight: "500",
+    fontSize: 13,
+  },
+  hintArrow: {
+    textAlign: "center",
+    color: "#2D82C6",
+    fontSize: 18,
+    marginTop: 2,
   },
 });
