@@ -36,14 +36,14 @@ export default {
     return `${API_URL}${url}?username=${username}`;
   },
 
-  uploadAvatar: async (formData: UploadAvatarType) => {
+  uploadAvatar: async (formData: FormData) => {
     const url = `/user/api/uploadAvatar`;
-    const token = getAccessToken();
+    const token = await getAccessToken();
     const requestUrl = `${url}?token=${token}`;
     try {
       const data = await axiosRequest.post(requestUrl, formData, {
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "Content-Type": "multipart/form-data",
         },
       });
@@ -56,7 +56,7 @@ export default {
 
   editProfile: async (formData: EditProfileDataType) => {
     const url = `/user/api/editProfile`;
-    const token = getAccessToken();
+    const token = await getAccessToken();
     const requestUrl = `${url}?token=${token}`;
     try {
       const data = await axiosRequest.post(requestUrl, formData);

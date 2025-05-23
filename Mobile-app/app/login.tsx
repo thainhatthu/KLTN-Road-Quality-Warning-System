@@ -32,7 +32,7 @@ export default function LoginScreen() {
     password: "",
   });
   const [error, setError] = useState<string | null>(null);
-  const setAccount = useAccountStore((state) => state.setAccount); // zustand
+  const setAccount = useAccountStore((state) => state.setAccount); 
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleChange = (fieldName: keyof typeof formData, value: string) => {
@@ -57,7 +57,7 @@ export default function LoginScreen() {
 
         saveAccessToken(token);
         setStoredUserInfo(fullInfo);
-        setAccount(fullInfo); // zustand
+        setAccount(fullInfo); 
 
         router.push("/home");
       } else {

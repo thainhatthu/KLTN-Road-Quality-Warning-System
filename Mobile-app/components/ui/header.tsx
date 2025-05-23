@@ -1,4 +1,5 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { useAccountStore } from "@/stores/accountStore";
 import { useRouter } from "expo-router";
 
 interface HeaderProps {
@@ -7,6 +8,7 @@ interface HeaderProps {
 
 export default function Header({ title }: HeaderProps) {
   const router = useRouter();
+  const account = useAccountStore((state) => state.account);
 
   return (
     <View style={styles.wrapper}>
@@ -17,10 +19,14 @@ export default function Header({ title }: HeaderProps) {
         />
         <Text style={styles.title}>{title}</Text>
         <TouchableOpacity onPress={() => router.push("/profile")}>
-          <Image
-            source={require("@/assets/images/img_avatar.png")}
-            style={styles.avatar}
-          />
+        <Image
+          source={
+            account?.avatar
+              ? { uri: account.avatar }
+              : require("@/assets/images/img_avatar.png")
+          }
+          style={styles.avatar}
+        />
         </TouchableOpacity>
       </View>
     </View>

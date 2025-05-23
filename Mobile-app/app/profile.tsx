@@ -84,15 +84,16 @@ export default function ProfileScreen() {
 
       <View style={styles.avatarContainer}>
         <Image
-          source={require("@/assets/images/img_avatar.png")}
+          source={
+            user?.avatar
+              ? { uri: user.avatar }
+              : require("@/assets/images/img_avatar.png")
+          }
           style={styles.avatar}
         />
-        <TouchableOpacity style={styles.editIcon}>
-          <Ionicons name="pencil" size={14} color="#fff" />
-        </TouchableOpacity>
       </View>
 
-      <Text style={styles.name}>{user?.username ?? "User name"}</Text>
+      <Text style={styles.name}>{user?.username ?? "Username"}</Text>
       <Text style={styles.contributionText}>
         Has contributed {profile?.contribution ?? 0} pics from{" "}
         {profile?.created?.slice(0, 10) ?? "N/A"}
@@ -101,7 +102,7 @@ export default function ProfileScreen() {
       <View style={styles.rowButtonContainer}>
         <TouchableOpacity
           style={[styles.editButton, { marginRight: 10 }]}
-          onPress={() => router.push("/edit-profile")}
+          onPress={() => router.push({ pathname: "/edit-profile", params: { profile: JSON.stringify(profile) } })}
         >
           <Ionicons name="pencil" size={16} color="#fff" />
           <Text style={styles.editText}>Edit profile</Text>
