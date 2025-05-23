@@ -123,8 +123,8 @@ class Task(BaseModel):
                     "road_done": road_count,
                     "all_road": all_road_count
                 })
-
             return tasks
+        
         except Exception as e:
             print(f"Error getting tasks: {e}")
             return []
