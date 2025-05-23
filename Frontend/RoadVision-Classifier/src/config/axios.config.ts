@@ -54,8 +54,10 @@ const hideLoading = () => {
   }
 };
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 const axiosRequest = axios.create({
-  baseURL: 'http://192.168.120.179',
+  baseURL: BASE_URL,
 });
 
 axiosRequest.interceptors.request.use((config) => {
