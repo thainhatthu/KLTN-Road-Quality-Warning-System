@@ -20,7 +20,6 @@ SET row_security = off;
 
 CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA public;
 
-
 --
 -- Name: EXTENSION fuzzystrmatch; Type: COMMENT; Schema: -; Owner: 
 --
