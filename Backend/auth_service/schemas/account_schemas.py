@@ -81,7 +81,6 @@ class Account(BaseModel):
         db = Postgresql()
         result = db.select('account', 'username', f"token = '{token}'")
 
-
     def getRole(self):
         sql=f"SELECT permission.name FROM account JOIN role ON account.id = role.user_id JOIN permission ON role.permission_id = permission.id WHERE username = '{self.username}'"
         db = Postgresql()

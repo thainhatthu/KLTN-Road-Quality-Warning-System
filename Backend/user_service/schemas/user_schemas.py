@@ -272,4 +272,3 @@ class User(BaseModel):
             return {}
         finally:
             db.close()
-
