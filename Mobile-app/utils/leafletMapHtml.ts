@@ -57,8 +57,10 @@ export const getLeafletHtml = () => `
           const summaries = e.routes.map((route, index) => ({
             index,
             distance: (route.summary.totalDistance / 1000).toFixed(2),
-            duration: (route.summary.totalTime / 60).toFixed(0)
+            duration: (route.summary.totalTime / 60).toFixed(0),
+            coords: route.coordinates.map(p => [p.lat, p.lng]) // cần có
           }));
+
           if (window.ReactNativeWebView?.postMessage) {
             window.ReactNativeWebView.postMessage(JSON.stringify({
               type: 'routes_found',

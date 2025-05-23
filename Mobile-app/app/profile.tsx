@@ -12,13 +12,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import userProfileService from "@/services/userprofile.service";
-import { useRecoilValue } from "recoil";
-import { accountState } from "@/atoms/authState";
+import { useAccountStore } from "@/stores/accountStore";
 import authService from "@/services/auth.service";
 
-const AlertModal = ({ visible, message, onClose }: { visible: boolean; message: string; onClose: () => void }) => {
+const AlertModal = ({
+  visible,
+  message,
+  onClose,
+}: {
+  visible: boolean;
+  message: string;
+  onClose: () => void;
+}) => {
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+    <Modal
+      animationType="fade"
+      transparent
+      visible={visible}
+      onRequestClose={onClose}
+    >
       <View style={styles.modalOverlay}>
         <View style={styles.alertBox}>
           <Text style={styles.alertMessage}>{message}</Text>
@@ -31,11 +43,9 @@ const AlertModal = ({ visible, message, onClose }: { visible: boolean; message: 
   );
 };
 
-
 export default function ProfileScreen() {
   const router = useRouter();
-  const user = useRecoilValue(accountState);
-
+  const user = useAccountStore((state) => state.account);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -44,7 +54,6 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -75,15 +84,16 @@ export default function ProfileScreen() {
 
       <View style={styles.avatarContainer}>
         <Image
-          source={require("@/assets/images/img_avatar.png")}
+          source={
+            user?.avatar
+              ? { uri: user.avatar }
+              : require("@/assets/images/img_avatar.png")
+          }
           style={styles.avatar}
         />
-        <TouchableOpacity style={styles.editIcon}>
-          <Ionicons name="pencil" size={14} color="#fff" />
-        </TouchableOpacity>
       </View>
 
-      <Text style={styles.name}>{user?.username ?? "User name"}</Text>
+      <Text style={styles.name}>{user?.username ?? "Username"}</Text>
       <Text style={styles.contributionText}>
         Has contributed {profile?.contribution ?? 0} pics from{" "}
         {profile?.created?.slice(0, 10) ?? "N/A"}
@@ -92,7 +102,7 @@ export default function ProfileScreen() {
       <View style={styles.rowButtonContainer}>
         <TouchableOpacity
           style={[styles.editButton, { marginRight: 10 }]}
-          onPress={() => router.push("/edit-profile")}
+          onPress={() => router.push({ pathname: "/edit-profile", params: { profile: JSON.stringify(profile) } })}
         >
           <Ionicons name="pencil" size={16} color="#fff" />
           <Text style={styles.editText}>Edit profile</Text>
@@ -106,7 +116,7 @@ export default function ProfileScreen() {
             setConfirmPassword("");
             setShowChangePasswordModal(true);
           }}
-                  >
+        >
           <Ionicons name="lock-closed-outline" size={16} color="#fff" />
           <Text style={[styles.editText, { marginLeft: 6 }]}>
             Change Password
@@ -173,7 +183,7 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
-        
+
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={async () => {
@@ -232,16 +242,20 @@ export default function ProfileScreen() {
                 style={styles.saveButton}
                 onPress={async () => {
                   if (newPassword.length < 6 || confirmPassword.length < 6) {
-                    setAlertMessage("Password must be at least 6 characters long.");
+                    setAlertMessage(
+                      "Password must be at least 6 characters long."
+                    );
                     setAlertVisible(true);
                     return;
                   }
                   if (newPassword !== confirmPassword) {
-                    setAlertMessage("New password and confirm password do not match.");
+                    setAlertMessage(
+                      "New password and confirm password do not match."
+                    );
                     setAlertVisible(true);
                     return;
                   }
-                
+
                   try {
                     const updatedPasswordData = {
                       email: user?.email ?? "",
@@ -249,9 +263,11 @@ export default function ProfileScreen() {
                       new_password: newPassword,
                       confirm_password: confirmPassword,
                     };
-                
-                    const res = await authService.changePass(updatedPasswordData);
-                
+
+                    const res = await authService.changePass(
+                      updatedPasswordData
+                    );
+
                     setAlertMessage("Password updated successfully!");
                     setAlertVisible(true);
                     setCurrentPassword("");
@@ -260,14 +276,15 @@ export default function ProfileScreen() {
                     setShowChangePasswordModal(false);
                   } catch (error) {
                     console.error("❌ Error updating password:", error);
-                    setAlertMessage("Failed to update password. Please try again.");
+                    setAlertMessage(
+                      "Failed to update password. Please try again."
+                    );
                     setAlertVisible(true);
                   }
                 }}
-                              >
+              >
                 <Text style={styles.saveText}>Save</Text>
               </TouchableOpacity>
-
             </View>
           </View>
         </View>
@@ -278,7 +295,6 @@ export default function ProfileScreen() {
         message={alertMessage}
         onClose={() => setAlertVisible(false)}
       />
-
     </ScrollView>
   );
 }
@@ -490,7 +506,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 10,
   },
-  
+
   logoutText: {
     color: "#fff",
     fontSize: 16,
@@ -523,5 +539,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
-  },  
+  },
 });

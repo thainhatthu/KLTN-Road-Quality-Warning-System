@@ -8,26 +8,87 @@ import {
   ScrollView,
   Platform,
   Image,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter } from "expo-router";
+import { stateList } from "../app/country";
+import { Picker } from "@react-native-picker/picker";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAccountStore } from "@/stores/accountStore";
+import profileApi from "@/services/userprofile.service";
+import { UploadAvatarType } from "@/defination/types/profile.type";
 
 export default function EditProfileScreen() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [dob, setDob] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [gender, setGender] = useState("");
-  const [address, setAddress] = useState("");
-  const [state, setState] = useState("");
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const profile = params?.profile ? JSON.parse(params.profile as string) : {};
 
-  const handleDateChange = (event, selectedDate) => {
+  const [name, setName] = useState(profile?.fullname || "");
+  const user = useAccountStore((state) => state.account);
+  const [phone, setPhone] = useState(profile?.phonenumber || "");
+  const [dob, setDob] = useState(
+    profile?.birthday ? new Date(profile.birthday) : new Date()
+  );
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [gender, setGender] = useState(profile?.gender || "");
+  const [address, setAddress] = useState(profile?.location || "");
+  const [state, setState] = useState(profile?.state || "");
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      base64: false,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      const file = {
+        uri: result.assets[0].uri,
+        type: result.assets[0].mimeType || 'image/jpeg',
+        name: result.assets[0].fileName || 'avatar.jpg',
+      };
+      console.log("Selected file:", file);
+
+      const formData = new FormData();
+      formData.append('file', file as any);
+      console.log("Form data:", formData);
+
+      try {
+        await profileApi.uploadAvatar(formData);
+        Alert.alert("Thành công", "Cập nhật avatar thành công");
+      } catch (err) {
+        console.error("❌ Upload thất bại:", err);
+        Alert.alert("Lỗi", "Upload thất bại");
+      }
+    }
+  };
+  const handleDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || dob;
     setShowDatePicker(Platform.OS === "ios");
     setDob(currentDate);
+  };
+
+  const handleSave = async () => {
+    try {
+      const formData = {
+        username: user?.username ?? "",
+        fullname: name,
+        phonenumber: phone,
+        birthday: dob.toISOString().split("T")[0],
+        gender: gender,
+        location: address,
+        state: state,
+      };
+
+      const res = await profileApi.editProfile(formData);
+      Alert.alert("Success", "Profile updated successfully!");
+    } catch (error) {
+      console.error("❌ Failed to update profile:", error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    }
   };
 
   return (
@@ -41,30 +102,29 @@ export default function EditProfileScreen() {
       </View>
       {/* Avatar */}
       <View style={styles.avatarContainer}>
-        <Image
-          source={require("@/assets/images/img_avatar.png")}
-          style={styles.avatar}
-        />
-        <TouchableOpacity style={styles.editIcon}>
-          <Ionicons name="pencil" size={14} color="#fff" />
-        </TouchableOpacity>
+      <Image
+        source={
+          avatarUri
+            ? { uri: avatarUri }
+            : user?.avatar
+            ? { uri: user.avatar }
+            : require("@/assets/images/img_avatar.png")
+        }
+        style={styles.avatar}
+      />
+      <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
+        <Ionicons name="pencil" size={14} color="#fff" />
+      </TouchableOpacity>
+
       </View>
 
-      <Text style={styles.name}>User name</Text>
+      <Text style={styles.name}>{user?.username ?? "User name"}</Text>
       <Text style={styles.sectionTitle}>Personalization</Text>
-      <View style={styles.inputBox}>
+      <View style={styles.inputBox1}>
         <TextInput
-          placeholder="Full name"
+          placeholder="Fullname"
           value={name}
           onChangeText={setName}
-          style={styles.input}
-          placeholderTextColor="#6E6D6D"
-        />
-
-        <TextInput
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
           style={styles.input}
           placeholderTextColor="#6E6D6D"
         />
@@ -78,7 +138,7 @@ export default function EditProfileScreen() {
       </View>
 
       <Text style={styles.sectionTitle}>Other</Text>
-      <View style={styles.inputBox}>
+      <View style={styles.inputBox2}>
         <View style={styles.rowBetween}>
           <TouchableOpacity
             onPress={() => setShowDatePicker(true)}
@@ -88,13 +148,17 @@ export default function EditProfileScreen() {
             <Text style={{ marginLeft: 6 }}>{dob.toDateString()}</Text>
           </TouchableOpacity>
 
-          <TextInput
-            placeholder="Gender"
-            value={gender}
-            onChangeText={setGender}
-            style={[styles.input, { width: "48%" }]}
-            placeholderTextColor="#6E6D6D"
-          />
+        <View style={[styles.input, { width: "48%", height: 40, justifyContent: "center", paddingVertical: 0, paddingHorizontal: 4 }]}>
+          <Picker
+            selectedValue={gender}
+            onValueChange={(itemValue) => setGender(itemValue)}
+            dropdownIconColor="#6E6D6D"
+          >
+            <Picker.Item label="Select gender" value="" color="#6E6D6D" />
+            <Picker.Item label="Male" value="Male" />
+            <Picker.Item label="Female" value="Female" />
+          </Picker>
+        </View>
         </View>
         <TextInput
           placeholder="Address"
@@ -103,13 +167,19 @@ export default function EditProfileScreen() {
           style={styles.input}
           placeholderTextColor="#6E6D6D"
         />
-        <TextInput
-          placeholder="State"
-          value={state}
-          onChangeText={setState}
-          style={styles.input}
-          placeholderTextColor="#6E6D6D"
-        />
+        <View style={[styles.input, { height: 40, paddingHorizontal: 0, justifyContent: "center" }]}>
+          <Picker
+            selectedValue={state}
+            onValueChange={(itemValue) => setState(itemValue)}
+            style={{ height: undefined }}
+            dropdownIconColor="#6E6D6D"
+          >
+            <Picker.Item label="Select state" value="" color="#6E6D6D" />
+            {stateList.map((stateItem) => (
+              <Picker.Item key={stateItem.key} label={stateItem.label} value={stateItem.label} />
+            ))}
+          </Picker>
+        </View>
       </View>
 
       {showDatePicker && (
@@ -128,9 +198,13 @@ export default function EditProfileScreen() {
         >
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+        >
           <Text style={styles.saveText}>Save</Text>
         </TouchableOpacity>
+
       </View>
     </ScrollView>
   );
@@ -187,11 +261,19 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     width: "90%",
   },
-  inputBox: {
+  inputBox1: {
     backgroundColor: "#E6F5FF",
     padding: 12,
     borderRadius: 12,
-    height: 200,
+    height: 120,
+    width: "90%",
+    justifyContent: "space-between",
+  },
+    inputBox2: {
+    backgroundColor: "#E6F5FF",
+    padding: 12,
+    borderRadius: 12,
+    height: 170,
     width: "90%",
     justifyContent: "space-between",
   },

@@ -13,6 +13,7 @@ type Props = {
   markers?: any[];
   badRoutes?: any[];
   webviewRef?: React.RefObject<WebViewType>;
+  onRoutesFound?: (routes: any[]) => void; // mới
 };
 
 export default function LeafletMapWebView({
@@ -22,7 +23,9 @@ export default function LeafletMapWebView({
   markers,
   badRoutes,
   webviewRef: externalRef,
-}: Props) {
+  onRoutesFound, // 👈 Thêm dòng này vào đây
+}: Props)
+ {
   const internalRef = useRef<WebViewType>(null);
   const webviewRef = externalRef ?? internalRef;
   const [isLoaded, setIsLoaded] = useState(false);
@@ -54,7 +57,6 @@ export default function LeafletMapWebView({
         `window.displayBadRoutes(${JSON.stringify(badRoutes)});`
       );
     } else {
-      console.log("🧹 Clearing bad routes");
       webviewRef.current.injectJavaScript(`window.clearBadRoutes();`);
     }
   }, [badRoutes, isLoaded]);
@@ -105,8 +107,14 @@ export default function LeafletMapWebView({
           if (msg.type === "marker_click" && onMarkerClick) {
             onMarkerClick(msg.data);
           }
+          if (msg.type === "routes_found" && onRoutesFound) {
+            onRoutesFound(msg.routes); // Gửi về màn hình chính
+          }
         } catch (e) {
-          console.warn("📛 Invalid message from WebView:", event.nativeEvent.data);
+          console.warn(
+            "📛 Invalid message from WebView:",
+            event.nativeEvent.data
+          );
         }
       }}
     />
