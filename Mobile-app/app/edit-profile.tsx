@@ -18,7 +18,9 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAccountStore } from "@/stores/accountStore";
 import profileApi from "@/services/userprofile.service";
-import { UploadAvatarType } from "@/defination/types/profile.type";
+import { API_URL } from "@/configs";
+import { setStoredUserInfo } from "@/utils/auth.util";
+
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function EditProfileScreen() {
 
   const [name, setName] = useState(profile?.fullname || "");
   const user = useAccountStore((state) => state.account);
+  const setAccount = useAccountStore((state) => state.setAccount); 
   const [phone, setPhone] = useState(profile?.phonenumber || "");
   const [dob, setDob] = useState(
     profile?.birthday ? new Date(profile.birthday) : new Date()
@@ -37,27 +40,54 @@ export default function EditProfileScreen() {
   const [state, setState] = useState(profile?.state || "");
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
+  const [showModal, setShowModal] = useState(false);
+
+  const openCamera = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission required", "Camera permission is required.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      base64: false,
+    });
+
+    handleImageResult(result);
+  };
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       base64: false,
     });
+    handleImageResult(result);
+  };
 
+  const handleImageResult = async (result: ImagePicker.ImagePickerResult) => {
     if (!result.canceled && result.assets?.length > 0) {
+      const selectedAsset = result.assets[0];
       const file = {
-        uri: result.assets[0].uri,
-        type: result.assets[0].mimeType || 'image/jpeg',
-        name: result.assets[0].fileName || 'avatar.jpg',
+        uri: selectedAsset.uri,
+        type: selectedAsset.mimeType || "image/jpeg",
+        name: selectedAsset.fileName || "avatar.jpg",
       };
-      console.log("Selected file:", file);
 
       const formData = new FormData();
-      formData.append('file', file as any);
-      console.log("Form data:", formData);
+      formData.append("file", file as any);
 
       try {
         await profileApi.uploadAvatar(formData);
+        setAvatarUri(selectedAsset.uri);
+        const timestamp = new Date().getTime();
+        const user_avatar = `${API_URL}/user/api/getAvatar?username=${user?.username}&t=${timestamp}`;
+        const fullInfo = { ...user, avatar: user_avatar, username: user?.username ?? "" };
+
+        setStoredUserInfo(fullInfo);
+        setAccount(fullInfo);
+        setShowModal(false);
         Alert.alert("Thành công", "Cập nhật avatar thành công");
       } catch (err) {
         console.error("❌ Upload thất bại:", err);
@@ -65,6 +95,8 @@ export default function EditProfileScreen() {
       }
     }
   };
+
+
   const handleDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || dob;
     setShowDatePicker(Platform.OS === "ios");
@@ -102,17 +134,18 @@ export default function EditProfileScreen() {
       </View>
       {/* Avatar */}
       <View style={styles.avatarContainer}>
-      <Image
-        source={
-          avatarUri
-            ? { uri: avatarUri }
-            : user?.avatar
-            ? { uri: user.avatar }
-            : require("@/assets/images/img_avatar.png")
-        }
-        style={styles.avatar}
-      />
-      <TouchableOpacity style={styles.editIcon} onPress={pickImage}>
+        <Image
+          source={
+            avatarUri
+              ? { uri: avatarUri }
+              : user?.avatar
+              ? { uri: user.avatar }
+              : require("@/assets/images/img_avatar.png")
+          }
+          style={styles.avatar}
+        />
+
+      <TouchableOpacity style={styles.editIcon} onPress={() => setShowModal(true)}>
         <Ionicons name="pencil" size={14} color="#fff" />
       </TouchableOpacity>
 
@@ -206,6 +239,27 @@ export default function EditProfileScreen() {
         </TouchableOpacity>
 
       </View>
+
+      {showModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Chọn ảnh đại diện</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={openCamera}>
+              <Text style={styles.modalButtonText}>Use Camera</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalButton} onPress={pickImage}>
+              <Text style={styles.modalButtonText}>Choose from Library</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: "#ccc" }]}
+              onPress={() => setShowModal(false)}
+            >
+              <Text style={[styles.modalButtonText, { color: "#000" }]}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
     </ScrollView>
   );
 }
@@ -333,5 +387,41 @@ const styles = StyleSheet.create({
     height: 140,
     top: 60,
     resizeMode: "cover",
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  modalContainer: {
+    width: "80%",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalButton: {
+    width: "100%",
+    padding: 12,
+    backgroundColor: "#2D82C6",
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
