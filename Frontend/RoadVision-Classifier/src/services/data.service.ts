@@ -8,7 +8,8 @@ import { getAccessToken } from "../utils/auth.util";
 
 export default {
   uploadRoad: async (formData: UploadImgFormDataType) => {
-    const url = `/datasvc/api/uploadRoad`;
+    const token = getAccessToken();
+    const url = `/datasvc/api/uploadRoad?token=${token}`;
     const data = await axiosRequest.post(url, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -41,11 +42,10 @@ export default {
         accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
-    });    
+    });
     console.log("response status", response);
     return response;
   },
-  
 
   getRouteMap: async () => {
     try {
