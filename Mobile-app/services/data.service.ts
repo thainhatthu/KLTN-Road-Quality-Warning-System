@@ -9,7 +9,9 @@ import { getAccessToken } from "../utils/auth.util";
 export default {
   uploadRoad: async (formData: FormData) => {
     const url = `/datasvc/api/uploadRoad`;
-    const data = await axiosRequest.post(url, formData, {
+    const token = await getAccessToken();
+    const requestUrl = `${url}?token=${token}`;
+    const data = await axiosRequest.post(requestUrl, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return data;

@@ -170,29 +170,46 @@ export default function FullMapScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={styles.container}>
-        <View style={styles.inputContainer}>
-          <View style={styles.inputRow}>
+        <View style={styles.searchCard}>
+          <Text style={styles.label}>Start location</Text>
+          <View style={styles.inputRowStyled}>
+            <Ionicons
+              name="locate-outline"
+              size={16}
+              style={styles.iconStart}
+            />
             <TextInput
               placeholder="Current location..."
-              value={from.input || "Current location"}
-              placeholderTextColor="#888"
+              value={from.input || ""}
               onChangeText={(text) => {
                 setFrom((prev) => ({ ...prev, input: text }));
                 fetchSuggestions(text, "from");
               }}
-              style={styles.input}
+              style={styles.inputStyled}
+              placeholderTextColor="#aaa"
             />
-          </View>
-          <FlatList
-            data={from.suggestions}
-            keyExtractor={(item, index) => item.display_name + index}
-            renderItem={({ item }) => (
-              <Pressable onPress={() => handleSelectSuggestion(item, "from")}>
-                <Text style={styles.suggestion}>{item.display_name}</Text>
-              </Pressable>
+            {from.suggestions.length > 0 && (
+              <View style={styles.suggestionBox}>
+                <FlatList
+                  data={from.suggestions}
+                  keyExtractor={(item, index) => item.display_name + index}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => handleSelectSuggestion(item, "from")}
+                    >
+                      <Text style={styles.suggestionItem}>
+                        {item.display_name}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+              </View>
             )}
-          />
-          <View style={styles.inputRow}>
+          </View>
+
+          <Text style={styles.label}>Destination</Text>
+          <View style={styles.inputRowStyled}>
+            <Ionicons name="flag-outline" size={16} style={styles.iconStart} />
             <TextInput
               placeholder="To..."
               value={to.input}
@@ -200,21 +217,30 @@ export default function FullMapScreen() {
                 setTo((prev) => ({ ...prev, input: text }));
                 fetchSuggestions(text, "to");
               }}
-              style={styles.input}
+              style={styles.inputStyled}
+              placeholderTextColor="#aaa"
             />
-            <TouchableOpacity style={styles.goButton} onPress={handleRoute}>
-              <Ionicons name="navigate" size={20} color="#fff" />
+            <TouchableOpacity style={styles.goBtn} onPress={handleRoute}>
+              <Ionicons name="navigate" size={18} color="#fff" />
             </TouchableOpacity>
-          </View>
-          <FlatList
-            data={to.suggestions}
-            keyExtractor={(item, index) => item.display_name + index}
-            renderItem={({ item }) => (
-              <Pressable onPress={() => handleSelectSuggestion(item, "to")}>
-                <Text style={styles.suggestion}>{item.display_name}</Text>
-              </Pressable>
+            {to.suggestions.length > 0 && (
+              <View style={styles.suggestionBox}>
+                <FlatList
+                  data={to.suggestions}
+                  keyExtractor={(item, index) => item.display_name + index}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => handleSelectSuggestion(item, "to")}
+                    >
+                      <Text style={styles.suggestionItem}>
+                        {item.display_name}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+              </View>
             )}
-          />
+          </View>
         </View>
 
         <LeafletMapWebView
@@ -254,7 +280,7 @@ export default function FullMapScreen() {
                       const projLat = aLat + t * ax;
                       const projLng = aLng + t * ay;
                       const dist = Math.hypot(projLat - d.lat, projLng - d.lng);
-                      if (dist < 0.0002 && !counted.has(i)) {
+                      if (dist < 0.0001 && !counted.has(i)) {
                         weight += d.weight;
                         counted.add(i);
                       }
@@ -429,7 +455,7 @@ export default function FullMapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: "#fff" },
   inputContainer: {
     paddingHorizontal: 12,
     paddingTop: 60,
@@ -470,6 +496,7 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     zIndex: 1,
+    marginTop: 40,
   },
   routesModalWrapper: {
     flex: 1,
@@ -685,5 +712,77 @@ const styles = StyleSheet.create({
     color: "#2D82C6",
     fontSize: 18,
     marginTop: 2,
+  },
+  searchCard: {
+    backgroundColor: "#fff",
+    padding: 12,
+    shadowColor: "#000",
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 100,
+    height: 150,
+    top: 45,
+  },
+  label: {
+    fontSize: 12,
+    color: "#88888",
+    marginBottom: 4,
+    marginLeft: 4,
+  },
+  inputRowStyled: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "#f9f9f9",
+    marginBottom: 12,
+  },
+  inputStyled: {
+    flex: 1,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: "#000",
+    zIndex: 100,
+  },
+  iconStart: {
+    marginRight: 8,
+    color: "#2D82C6",
+  },
+  goBtn: {
+    backgroundColor: "#2D82C6",
+    padding: 10,
+    borderRadius: 10,
+    left: 12,
+  },
+  suggestionBox: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderWidth: 1,
+borderBottomRightRadius: 10,
+borderBottomLeftRadius: 10,
+    maxHeight: 140,
+    marginBottom: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    zIndex: 999,
+    position: "absolute",
+    top: 40,
+    left: 2,
+    right: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  suggestionItem: {
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    fontSize: 13,
+    color: "#333",
+    borderBottomColor: "#eee",
+    borderBottomWidth: 1,
   },
 });

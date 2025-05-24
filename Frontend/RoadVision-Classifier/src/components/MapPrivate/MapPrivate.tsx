@@ -171,7 +171,9 @@ const MapPrivate: React.FC = () => {
                 window.location.reload();
               } catch (error) {
                 console.error("Error uploading image:", error);
-                message.error("An error occurred during the upload. Please try again.");
+                message.error(
+                  "An error occurred during the upload. Please try again."
+                );
               }
             },
             (error) => {
@@ -266,6 +268,11 @@ const MapPrivate: React.FC = () => {
       alert("Please enter valid latitude and longitude.");
       return;
     }
+    console.log("Uploading with:", {
+      file: selectedFile,
+      latitude,
+      longitude,
+    });
     const formData = new FormData();
     formData.append("file", selectedFile);
     formData.append("latitude", latitude.toString());
@@ -278,8 +285,7 @@ const MapPrivate: React.FC = () => {
       alert("Image uploaded successfully!");
       closeUploadWithLocationModal();
       handleAddMarker(latitude, longitude, {
-        filepath:
-          "https://images4.alphacoders.com/115/thumb-1920-115716.jpg",
+        filepath: "https://images4.alphacoders.com/115/thumb-1920-115716.jpg",
       });
       window.location.reload();
     } catch (error: any) {

@@ -23,7 +23,7 @@ export default function Header({ title }: HeaderProps) {
           source={
             account?.avatar
               ? { uri: account.avatar }
-              : require("@/assets/images/img_avatar.png")
+              : require("@/assets/images/main-logo.png")
           }
           style={styles.avatar}
         />

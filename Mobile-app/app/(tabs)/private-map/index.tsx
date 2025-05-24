@@ -223,59 +223,82 @@ export default function PrivateMapScreen() {
         <Modal visible={showUploadModal} transparent animationType="slide">
           <View style={styles.modalWrapper}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Fill location</Text>
-              <TextInput
-                placeholder="Latitude"
-                style={styles.inputModal}
-                keyboardType="numeric"
-                value={uploadLat}
-                onChangeText={setUploadLat}
-              />
-              <TextInput
-                placeholder="Longitude"
-                style={styles.inputModal}
-                keyboardType="numeric"
-                value={uploadLng}
-                onChangeText={setUploadLng}
-              />
               <TouchableOpacity
-                style={[styles.actionButton, { marginVertical: 12 }]}
+                style={styles.modalCloseBtn}
+                onPress={() => setShowUploadModal(false)}
+              >
+                <Ionicons name="close" size={20} color="#333" />
+              </TouchableOpacity>
+
+              <Text style={styles.modalTitle}>📍 Upload Road Issue</Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Latitude</Text>
+                <TextInput
+                  placeholder="e.g., 10.762622"
+                  keyboardType="numeric"
+                  value={uploadLat}
+                  onChangeText={setUploadLat}
+                  style={styles.inputModal}
+                  placeholderTextColor="#aaa"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Longitude</Text>
+                <TextInput
+                  placeholder="e.g., 106.660172"
+                  keyboardType="numeric"
+                  value={uploadLng}
+                  onChangeText={setUploadLng}
+                  style={styles.inputModal}
+                  placeholderTextColor="#aaa"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.actionButtonModal, { marginVertical: 12 }]}
                 onPress={pickImage}
               >
                 <Ionicons
-                  name="image"
-                  size={20}
+                  name="image-outline"
+                  size={18}
                   color="#fff"
                   style={{ marginRight: 6 }}
                 />
                 <Text style={styles.actionButtonText}>Choose Image</Text>
               </TouchableOpacity>
+
               {selectedImage && (
                 <Image
                   source={{ uri: selectedImage }}
                   style={{
                     width: "100%",
                     height: 160,
-                    borderRadius: 8,
+                    borderRadius: 10,
                     marginBottom: 12,
+                    borderWidth: 1,
+                    borderColor: "#ddd",
                   }}
                 />
               )}
+
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#2D82C6" }]}
+                style={[
+                  styles.actionButtonModal,
+                  { backgroundColor: "#5CB338" },
+                ]}
                 onPress={async () => {
                   setShowUploadModal(false);
                   if (!selectedImage || !uploadLat || !uploadLng)
-                    return alert("Please fill enough information");
+                    return alert("Please fill all information");
 
                   const fileName = selectedImage.split("/").pop();
                   const latNum = parseFloat(uploadLat);
                   const lngNum = parseFloat(uploadLng);
 
-                  if (isNaN(latNum) || isNaN(lngNum)) {
-                    alert("Invalid latitude or longitude");
-                    return;
-                  }
+                  if (isNaN(latNum) || isNaN(lngNum))
+                    return alert("Invalid coordinates");
 
                   const formData = new FormData();
                   formData.append("file", {
@@ -287,10 +310,10 @@ export default function PrivateMapScreen() {
                   } as any);
                   formData.append("latitude", latNum.toString());
                   formData.append("longitude", lngNum.toString());
+
                   try {
                     await dataService.uploadRoad(formData);
                     setWebviewKey((prev) => prev + 1);
-
                     alert("Upload successful!");
                   } catch (err) {
                     console.error("❌ Upload failed:", err);
@@ -298,7 +321,13 @@ export default function PrivateMapScreen() {
                   }
                 }}
               >
-                <Text style={styles.actionButtonText}>OK</Text>
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={18}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.actionButtonText}>Submit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -362,26 +391,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     zIndex: 10,
   },
-  toggleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  toggleLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-  },
-
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -396,6 +405,9 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: "#fff",
     fontWeight: "600",
+    zIndex: 1,
+    fontSize: 14,
+    textAlign: "center",
   },
   modalWrapper: {
     flex: 1,
@@ -442,12 +454,6 @@ const styles = StyleSheet.create({
     borderRightColor: "#2D82C6",
     borderBottomColor: "#2D82C6",
   },
-  infoCardTitle: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "#2D82C6",
-    marginBottom: 10,
-  },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -479,5 +485,32 @@ const styles = StyleSheet.create({
     color: "#555",
     marginLeft: 4,
     marginBottom: 2,
+  },
+  inputGroup: {
+    marginBottom: 10,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#444",
+    marginBottom: 4,
+  },
+  modalCloseBtn: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    padding: 6,
+  },
+  actionButtonModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2D82C6",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    marginVertical: 6,
+    flexWrap: "nowrap",
   },
 });
