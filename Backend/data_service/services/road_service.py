@@ -56,7 +56,6 @@ class RoadService:
             print(current_file_path, e)
             return False
 
-
     @staticmethod
     def getlistRoad(user_id=None,id_road=None,ward_id=None,all=False,getDone=False):
         try:

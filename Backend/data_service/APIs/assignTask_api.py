@@ -3,7 +3,7 @@ from fastapi import Depends, Query
 from schemas import Task,ReportSchema
 
 from services.assign_service import AssignService
-from services.auth_validate2 import validate_token
+from services.auth_validate import validate_token
 
 @app.post('/api/assignTask')
 def assign_task(task: Task, user_info: dict = Depends(validate_token)):

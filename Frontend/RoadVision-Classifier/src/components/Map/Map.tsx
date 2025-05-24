@@ -64,6 +64,7 @@ const Map: React.FC = () => {
         iconSize: [35, 35],
         iconAnchor: [15, 30],
       });
+
       L.marker(currentLocation, { icon })
         .addTo(map)
         .bindPopup("Vị trí hiện tại của bạn")
@@ -215,7 +216,16 @@ const Map: React.FC = () => {
     setSuggestions([]);
     if (leafletMap.current) {
       leafletMap.current.setView(result.center, 16);
-      L.marker(result.center)
+      const customIcon = L.divIcon({
+        className: "",
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="blue">
+                <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="blue" />
+              </svg>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+      });
+
+      L.marker(result.center, { icon: customIcon })
         .addTo(leafletMap.current)
         .bindPopup(result.name)
         .openPopup();
@@ -316,12 +326,25 @@ const Map: React.FC = () => {
 
         startMarker?.remove();
         endMarker?.remove();
-        setStartMarker(
-          L.marker([s.lat, s.lng]).addTo(leafletMap.current!).bindPopup("Start")
-        );
-        setEndMarker(
-          L.marker([e.lat, e.lng]).addTo(leafletMap.current!).bindPopup("End")
-        );
+        
+        const customIcon = L.divIcon({
+          className: "",
+          html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="blue">
+                  <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="blue" />
+                </svg>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+        });
+
+        const startMarkerInstance = L.marker([s.lat, s.lng], { icon: customIcon })
+          .addTo(leafletMap.current!)
+          .bindPopup("Start");
+        setStartMarker(startMarkerInstance);
+
+        const endMarkerInstance = L.marker([e.lat, e.lng], { icon: customIcon })
+          .addTo(leafletMap.current!)
+          .bindPopup("End");
+        setEndMarker(endMarkerInstance);
 
         const res = await fetch(
           `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`

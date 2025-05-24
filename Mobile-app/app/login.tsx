@@ -32,7 +32,7 @@ export default function LoginScreen() {
     password: "",
   });
   const [error, setError] = useState<string | null>(null);
-  const setAccount = useAccountStore((state) => state.setAccount); // zustand
+  const setAccount = useAccountStore((state) => state.setAccount); 
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleChange = (fieldName: keyof typeof formData, value: string) => {
@@ -52,12 +52,13 @@ export default function LoginScreen() {
       const { info, token } = data;
 
       if (info && token && typeof info.username === "string") {
-        const user_avatar = `${API_URL}/user/api/getAvatar?username=${info.username}`;
-        const fullInfo = { ...info, avatar: user_avatar, username: info.username as string };
+        const timestamp = new Date().getTime();
+        const user_avatar = `${API_URL}/user/api/getAvatar?username=${info.username}&t=${timestamp}`;
 
-        saveAccessToken(token);
+        const fullInfo = { ...info, avatar: user_avatar, username: info.username as string };
         setStoredUserInfo(fullInfo);
-        setAccount(fullInfo); // zustand
+        setAccount(fullInfo);
+        saveAccessToken(token);
 
         router.push("/home");
       } else {
