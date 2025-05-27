@@ -328,44 +328,30 @@ const Map: React.FC = () => {
         endMarker?.remove();
         const startIcon = L.divIcon({
           html: `
-    <div style="
-      background-color: #4ade80;
-      color: white;
-      border: 2px solid white;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      box-shadow: 0 0 4px rgba(0,0,0,0.3);
-    ">A</div>
-  `,
-          className: "", 
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
+          <div style="position: relative; width: 30px; height: 42px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="30" height="42">
+              <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#4ade80" stroke="white" stroke-width="2"/>
+              <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial" dy=".3em" font-weight="bold">A</text>
+            </svg>
+          </div>
+        `,
+          className: "",
+          iconSize: [30, 42],
+          iconAnchor: [15, 42],
         });
 
         const endIcon = L.divIcon({
           html: `
-    <div style="
-      background-color: #f87171;
-      color: white;
-      border: 2px solid white;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      box-shadow: 0 0 4px rgba(0,0,0,0.3);
-    ">B</div>
-  `,
+        <div style="position: relative; width: 30px; height: 42px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="30" height="42">
+            <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#f87171" stroke="white" stroke-width="2"/>
+            <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial" dy=".3em" font-weight="bold">B</text>
+          </svg>
+        </div>
+      `,
           className: "",
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
+          iconSize: [30, 42],
+          iconAnchor: [15, 42],
         });
 
         const newStartMarker = L.marker([s.lat, s.lng], { icon: startIcon })
@@ -432,7 +418,10 @@ const Map: React.FC = () => {
           routeWhileDragging: false,
           addWaypoints: false,
           show: true,
-        }).addTo(leafletMap.current!);
+
+          createMarker: () => null,
+        } as any).addTo(leafletMap.current!);
+
         setDefaultRouting(routingCtrl);
       });
     });
