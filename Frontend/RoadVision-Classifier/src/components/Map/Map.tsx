@@ -330,7 +330,7 @@ const Map: React.FC = () => {
           html: `
           <div style="position: relative; width: 30px; height: 42px;">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="30" height="42">
-              <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#4ade80" stroke="white" stroke-width="2"/>
+              <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#AF3E3E" stroke="white" stroke-width="2"/>
               <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial" dy=".3em" font-weight="bold">A</text>
             </svg>
           </div>
@@ -342,13 +342,13 @@ const Map: React.FC = () => {
 
         const endIcon = L.divIcon({
           html: `
-        <div style="position: relative; width: 30px; height: 42px;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="30" height="42">
-            <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#f87171" stroke="white" stroke-width="2"/>
-            <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial" dy=".3em" font-weight="bold">B</text>
-          </svg>
-        </div>
-      `,
+            <div style="position: relative; width: 30px; height: 42px;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="30" height="42">
+                <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#FE5D26" stroke="white" stroke-width="2"/>
+                <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial" dy=".3em" font-weight="bold">B</text>
+              </svg>
+            </div>
+          `,
           className: "",
           iconSize: [30, 42],
           iconAnchor: [15, 42],
