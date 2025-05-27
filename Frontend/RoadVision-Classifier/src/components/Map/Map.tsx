@@ -326,17 +326,17 @@ const Map: React.FC = () => {
 
         startMarker?.remove();
         endMarker?.remove();
-        
+
         const customIcon = L.divIcon({
           className: "",
-          html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="blue">
-                  <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="blue" />
-                </svg>`,
+          html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="pink"><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="yellow" /><circle cx="12" cy="12" r="4" fill="white" /></svg>`,
           iconSize: [30, 30],
           iconAnchor: [15, 30],
         });
 
-        const startMarkerInstance = L.marker([s.lat, s.lng], { icon: customIcon })
+        const startMarkerInstance = L.marker([s.lat, s.lng], {
+          icon: customIcon,
+        })
           .addTo(leafletMap.current!)
           .bindPopup("Start");
         setStartMarker(startMarkerInstance);
