@@ -326,25 +326,20 @@ const Map: React.FC = () => {
 
         startMarker?.remove();
         endMarker?.remove();
-
-        const customIcon = L.divIcon({
-          className: "",
-          html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="pink"><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="yellow" /><circle cx="12" cy="12" r="4" fill="white" /></svg>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 30],
-        });
-
-        const startMarkerInstance = L.marker([s.lat, s.lng], {
-          icon: customIcon,
+        const defaultIcon = new L.Icon.Default();
+        const newStartMarker = L.marker([s.lat, s.lng], {
+          icon: defaultIcon,
         })
           .addTo(leafletMap.current!)
           .bindPopup("Start");
-        setStartMarker(startMarkerInstance);
+        setStartMarker(newStartMarker);
 
-        const endMarkerInstance = L.marker([e.lat, e.lng], { icon: customIcon })
+        const newEndMarker = L.marker([e.lat, e.lng], {
+          icon: defaultIcon,
+        })
           .addTo(leafletMap.current!)
           .bindPopup("End");
-        setEndMarker(endMarkerInstance);
+        setEndMarker(newEndMarker);
 
         const res = await fetch(
           `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
