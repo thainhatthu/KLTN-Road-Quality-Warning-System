@@ -64,7 +64,8 @@ export default {
     latitude: number,
     longitude: number
   ) => {
-    const url = `/datasvc/api/updateLocationRoad`;
+    const token = getAccessToken();
+    const url = `/datasvc/api/updateLocationRoad?token=${token}`;
     const data = await axiosRequest.patch(url, null, {
       params: { id, latitude, longitude },
     });
