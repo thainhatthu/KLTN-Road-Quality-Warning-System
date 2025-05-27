@@ -326,21 +326,58 @@ const Map: React.FC = () => {
 
         startMarker?.remove();
         endMarker?.remove();
-        const defaultIcon = new L.Icon.Default();
-        const newStartMarker = L.marker([s.lat, s.lng], {
-          icon: defaultIcon,
-        })
+        const startIcon = L.divIcon({
+          html: `
+    <div style="
+      background-color: #4ade80;
+      color: white;
+      border: 2px solid white;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    ">A</div>
+  `,
+          className: "", 
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+        });
+
+        const endIcon = L.divIcon({
+          html: `
+    <div style="
+      background-color: #f87171;
+      color: white;
+      border: 2px solid white;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    ">B</div>
+  `,
+          className: "",
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+        });
+
+        const newStartMarker = L.marker([s.lat, s.lng], { icon: startIcon })
           .addTo(leafletMap.current!)
           .bindPopup("Start");
-        setStartMarker(newStartMarker);
 
-        const newEndMarker = L.marker([e.lat, e.lng], {
-          icon: defaultIcon,
-        })
+        const newEndMarker = L.marker([e.lat, e.lng], { icon: endIcon })
           .addTo(leafletMap.current!)
           .bindPopup("End");
-        setEndMarker(newEndMarker);
 
+        setStartMarker(newStartMarker);
+        setEndMarker(newEndMarker);
         const res = await fetch(
           `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
         );
