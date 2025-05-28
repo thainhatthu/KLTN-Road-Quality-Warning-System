@@ -44,7 +44,7 @@ class ImageTransform():
         return self.data_transform[phase](img)
     
 def classifier_road(img): 
-    threshold = 0.7
+    threshold = 0.1
 
     model = restevit_road_cls(num_class=4)
     checkpoint = torch.load('models/ResEViT_multiclass.pth', map_location=torch.device("cpu"))
@@ -61,22 +61,16 @@ def classifier_road(img):
         max_prob = np.max(probs_np)
         max_id = np.argmax(probs_np)
 
-    # In ra các thông số
-    print(f"Logits: {logits.numpy()}")
-    print(f"Probabilities: {probs_np}")
-    print(f"Max Probability: {max_prob:.4f}")
-    print(f"Predicted Class ID: {max_id}")
-
     if max_prob < threshold:
-        return 'Unknown'
+        return logits, max_prob, max_id, 'Unknown'
     elif max_id == 0:
-        return 'Good'
+        return logits, max_prob, max_id, 'Good'
     elif max_id == 1:
-        return 'Poor'
+        return logits, max_prob, max_id, 'Poor'
     elif max_id == 2:
-        return 'Satisfactory'
+        return logits, max_prob, max_id, 'Satisfactory'
     else:
-        return 'Very poor'
+        return logits, max_prob, max_id, 'Very poor'
 
 # def classifier_road(img):
 #     model=restevit_road_cls(num_class=4)
