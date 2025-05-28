@@ -2,7 +2,6 @@ from torchvision import transforms
 import torch
 import logging
 import torch.utils.data as data
-from torch.nn import Softmax
 from kafka import KafkaConsumer
 import json
 from PIL import Image
@@ -42,53 +41,25 @@ class ImageTransform():
     
     def __call__(self, img, phase='Test'):
         return self.data_transform[phase](img)
-    
-def classifier_road(img): 
-    threshold = 0.1
 
-    model = restevit_road_cls(num_class=4)
-    checkpoint = torch.load('models/ResEViT_multiclass.pth', map_location=torch.device("cpu"))
+
+def classifier_road(img):
+    model=restevit_road_cls(num_class=4)
+    checkpoint = torch.load('models/ResEViT_multiclass.pth',map_location=torch.device("cpu"))
     model.load_state_dict(checkpoint)
+    img=ImageTransform(224)(img)
     model.eval()
-
-    img = ImageTransform(224)(img)
-    img = img.unsqueeze(0)
-
-    with torch.no_grad():
-        logits = model(img)
-        probs = Softmax(dim=1)(logits)
-        probs_np = probs.numpy()[0]
-        max_prob = np.max(probs_np)
-        max_id = np.argmax(probs_np)
-
-    if max_prob < threshold:
-        return logits, max_prob, max_id, 'Unknown'
-    elif max_id == 0:
-        return logits, max_prob, max_id, 'Good'
-    elif max_id == 1:
-        return logits, max_prob, max_id, 'Poor'
-    elif max_id == 2:
-        return logits, max_prob, max_id, 'Satisfactory'
+    img=img.unsqueeze(0)
+    result= model(img)
+    max_id = np.argmax(result.detach().numpy(),axis=1)
+    if max_id==0:
+        return 'Good'
+    elif max_id==1:
+        return 'Poor'
+    elif max_id==2:
+        return 'Satisfactory'
     else:
-        return logits, max_prob, max_id, 'Very poor'
-
-# def classifier_road(img):
-#     model=restevit_road_cls(num_class=4)
-#     checkpoint = torch.load('models/ResEViT_multiclass.pth',map_location=torch.device("cpu"))
-#     model.load_state_dict(checkpoint)
-#     img=ImageTransform(224)(img)
-#     model.eval()
-#     img=img.unsqueeze(0)
-#     result= model(img)
-#     max_id = np.argmax(result.detach().numpy(),axis=1)
-#     if max_id==0:
-#         return 'Good'
-#     elif max_id==1:
-#         return 'Poor'
-#     elif max_id==2:
-#         return 'Satisfactory'
-#     else:
-#         return 'Very poor'
+        return 'Very poor'
 
 
 def getRoadImage():
