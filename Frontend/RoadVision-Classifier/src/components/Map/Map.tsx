@@ -526,7 +526,7 @@ const Map: React.FC = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
                 <p className="text-blue-800 text-sm font-medium mb-1 flex items-center gap-1">
                   <Sparkles size={16} />
-                  Best option is route {routeInfo[0].index}s
+                  Best option is route {routeInfo[0].index}
                 </p>
                 <ul className="text-sm text-gray-700 list-disc list-inside pl-2">
                   <li>Have fewer damaged segments</li>
