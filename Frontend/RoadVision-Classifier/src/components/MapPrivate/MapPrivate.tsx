@@ -527,30 +527,29 @@ const MapPrivate: React.FC = () => {
           </div>
         )}
 
-        <span>
-          _______________________________________________________________
-        </span>
+        <div className="uploadCard">
+          <h3 className="uploadCardTitle">📤 Upload Road Image</h3>
 
-        <div className="buttonContainer flex flex-col">
-          <button className="uploadButton" onClick={openUploadModal}>
-            Upload current image
-          </button>
-          <span
-            style={{
-              alignSelf: "center",
-              fontSize: "16px",
-              padding: "25px",
-              fontWeight: "bold",
-            }}
-          >
-            Or
-          </span>{" "}
-          <button
-            className="modalButtonLibrary"
-            onClick={openUploadWithLocationModal}
-          >
-            Upload with location
-          </button>
+          <div className="uploadCardButtons">
+            <button className="uploadPrimaryBtn" onClick={openUploadModal}>
+              📷 Upload current image
+            </button>
+
+            <div className="uploadDivider">or</div>
+
+            <button
+              className="uploadSecondaryBtn"
+              onClick={openUploadWithLocationModal}
+            >
+              📍 Upload with location
+            </button>
+          </div>
+
+          <p className="uploadNote">
+            ⚠️ Please take clear photos focusing only on the road surface. Avoid
+            taking blurry photos or photos with foreign objects to ensure
+            accurate detection.
+          </p>
         </div>
       </div>
 
@@ -658,14 +657,13 @@ const MapPrivate: React.FC = () => {
       {showUploadWithLocationModal && (
         <div className="modalUpload">
           <div className="modal-content">
-            {/* Nút đóng modal */}
             <button
               className="close-button"
               onClick={closeUploadWithLocationModal}
             >
               <CloseOutlined />
             </button>
-            <h2>Upload Image with Location</h2>
+            <h2>📍 Upload Image with Location</h2>
             <div className="modal-body">
               <label>
                 Latitude:
