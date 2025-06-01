@@ -251,10 +251,13 @@ const MapPrivate: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleFileChange = (info: any) => {
-    const file = info.file.originFileObj;
-    if (file) {
-      setSelectedFile(file);
-      alert("Image selected successfully!");
+    const fileList = info.fileList;
+    if (fileList.length > 0) {
+      const file = fileList[fileList.length - 1].originFileObj;
+      if (file) {
+        setSelectedFile(file);
+        alert("Image selected successfully!");
+      }
     }
   };
 
