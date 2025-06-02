@@ -40,64 +40,6 @@
   font-size: 16px;
 }
 
-.button,
-.secondaryButton {
-  padding: 10px;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.button {
-  background: #007bff;
-}
-
-.secondaryButton {
-  background: #6c757d;
-}
-
-/* Suggestions List */
-.suggestions {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
-  background-color: #fff;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.suggestionItem {
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #dee2e6;
-}
-
-/* style.css */
-.sidebar {
-  width: 30%;
-  padding: 20px;
-  background: #f8f9fa;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.header {
-  font-size: 18px;
-  font-weight: bold;
-  color: #343a40;
-  margin-bottom: 10px;
-  border-bottom: 2px solid #dee2e6;
-  padding-bottom: 5px;
-}
-
 .uploadButton {
   padding: 10px;
   background: #007bff;
@@ -132,17 +74,6 @@
   right: 10px;
   display: flex;
   gap: 5px;
-}
-
-.historyButton {
-  padding: 10px;
-  background: #28a745;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.3s;
 }
 
 .map {
@@ -468,3 +399,69 @@
   justify-content: flex-end;
   margin-top: 20px;
 }
+
+.uploadCard {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.uploadCardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 16px;
+}
+
+.uploadCardButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.uploadPrimaryBtn,
+.uploadSecondaryBtn {
+  padding: 10px 15px;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  color: white;
+}
+
+.uploadPrimaryBtn {
+  background-color: #007bff;
+}
+
+.uploadPrimaryBtn:hover {
+  background-color: #0056b3;
+}
+
+.uploadSecondaryBtn {
+  background-color: #20c997;
+}
+
+.uploadSecondaryBtn:hover {
+  background-color: #17a589;
+}
+
+.uploadDivider {
+  text-align: center;
+  font-size: 14px;
+  color: #777;
+  font-weight: 500;
+}
+
+.uploadNote {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666666;
+  font-style: italic;
+  line-height: 1.5;
+}
+

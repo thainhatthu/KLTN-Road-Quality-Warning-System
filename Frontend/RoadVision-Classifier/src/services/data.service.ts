@@ -23,9 +23,10 @@ export default {
     });
     return data;
   },
-
+  
   deleteRoad: async (params: GetInfoRoadsParams) => {
-    const url = "/datasvc/api/deleteRoad";
+    const token = getAccessToken();
+    const url = `/datasvc/api/deleteRoad?token=${token}`;
     const data = await axiosRequest.delete(url, {
       params,
     });
@@ -63,7 +64,8 @@ export default {
     latitude: number,
     longitude: number
   ) => {
-    const url = `/datasvc/api/updateLocationRoad`;
+    const token = getAccessToken();
+    const url = `/datasvc/api/updateLocationRoad?token=${token}`;
     const data = await axiosRequest.patch(url, null, {
       params: { id, latitude, longitude },
     });
