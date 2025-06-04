@@ -270,7 +270,7 @@ const Map: React.FC = () => {
           const projLat = aLat + t * ax;
           const projLng = aLng + t * ay;
           const dist = Math.hypot(projLat - d.lat, projLng - d.lng);
-          if (dist < 0.0001 && !counted.has(i)) {
+          if (dist < 0.00005 && !counted.has(i)) {
             totalWeight += d.weight;
             counted.add(i);
 
