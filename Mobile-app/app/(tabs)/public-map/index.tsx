@@ -1,4 +1,3 @@
-// Mobile-app/app/(tabs)/public-map/index.tsx
 import {
   View,
   Text,
