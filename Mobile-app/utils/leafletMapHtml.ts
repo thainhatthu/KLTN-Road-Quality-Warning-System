@@ -12,21 +12,25 @@ export const getLeafletHtml = () => `
   <body>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.min.js"></script>
     <script>
       window.API_BASE = "";
       var map = L.map('map').setView([10.7769, 106.7009], 14);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
       var marker = null;
-      var currentRouteControl = null;
       var lastUserLatLng = null;
       window.markersLayer = L.layerGroup().addTo(map);
+      window.currentPolylines = [];
+      window.routeMarkers = [];
 
       window.clearMarkers = function () {
         if (window.markersLayer) {
           window.markersLayer.clearLayers();
         }
+        if (window.routeMarkers.length > 0) {
+          window.routeMarkers.forEach(m => map.removeLayer(m));
+        }
+        window.routeMarkers = [];
       };
 
       window.setUserLocation = function(lat, lng) {
@@ -36,46 +40,53 @@ export const getLeafletHtml = () => `
         marker = L.marker(lastUserLatLng).addTo(map).bindPopup("You are here").openPopup();
       };
 
-      window.drawRoute = function(fromLat, fromLng, toLat, toLng) {
-        if (currentRouteControl) map.removeControl(currentRouteControl);
-        currentRouteControl = L.Routing.control({
-          waypoints: [L.latLng(fromLat, fromLng), L.latLng(toLat, toLng)],
-          show: false,
-          showAlternatives: true,
-          altLineOptions: {
-            styles: [
-              { color: 'blue', opacity: 0.7, weight: 5 },
-              { color: 'gray', opacity: 0.3, weight: 4 }
-            ]
-          },
-          routeWhileDragging: false,
-          addWaypoints: false,
-          draggableWaypoints: false,
-        }).addTo(map);
+      window.drawPolylineRoute = function(routes) {
+        if (!routes || !Array.isArray(routes)) return;
 
-        currentRouteControl.on('routesfound', function(e) {
-          const summaries = e.routes.map((route, index) => ({
-            index,
-            distance: (route.summary.totalDistance / 1000).toFixed(2),
-            duration: (route.summary.totalTime / 60).toFixed(0),
-            coords: route.coordinates.map(p => [p.lat, p.lng]) // cần có
-          }));
+        if (window.currentPolylines.length > 0) {
+          window.currentPolylines.forEach(p => map.removeLayer(p));
+        }
+        window.currentPolylines = [];
 
-          if (window.ReactNativeWebView?.postMessage) {
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-              type: 'routes_found',
-              routes: summaries
-            }));
+        if (window.routeMarkers.length > 0) {
+          window.routeMarkers.forEach(m => map.removeLayer(m));
+        }
+        window.routeMarkers = [];
+
+        const distinctColors = ["red", "orange", "blue", "purple", "brown", "green"];
+
+        routes.forEach(function(route, idx) {
+          var color = distinctColors[idx % distinctColors.length];
+          var polyline = L.polyline(route.coords, {
+            color: color,
+            weight: 5,
+            opacity: 0.9
+          }).addTo(map).bindPopup("Route " + (idx + 1) + " 📏 Distance: " + route.distance + " km");
+
+          window.currentPolylines.push(polyline);
+
+          // Add A and B markers for the first route only (they are shared)
+          if (idx === 0 && route.coords.length > 1) {
+            var start = route.coords[0];
+            var end = route.coords[route.coords.length - 1];
+
+            var markerA = L.marker(start, { title: "Start (A)" }).addTo(map).bindPopup("Start (A)");
+            var markerB = L.marker(end, { title: "End (B)" }).addTo(map).bindPopup("End (B)");
+
+            window.routeMarkers.push(markerA);
+            window.routeMarkers.push(markerB);
           }
         });
+
+        if (routes.length > 0) {
+          map.fitBounds(L.polyline(routes[0].coords).getBounds());
+        }
       };
 
       window.displayRoadMarkers = function (roads) {
-        console.log("📌 Injected markers from React Native:", roads);
         if (!window.markersLayer) {
           window.markersLayer = L.layerGroup().addTo(map);
         }
-
         roads.forEach((road) => {
           const { latitude, longitude, level, filepath, created_at } = road;
           const color =
@@ -114,8 +125,6 @@ export const getLeafletHtml = () => `
       };
 
       window.displayBadRoutes = function (routes) {
-        console.log("🛣️ Displaying bad routes:", routes);
-
         if (!window.badRouteLayer) {
           window.badRouteLayer = L.layerGroup().addTo(map);
         } else {
@@ -124,22 +133,15 @@ export const getLeafletHtml = () => `
 
         routes.forEach((segment) => {
           const latlngs = segment.map(([lat, lng]) => [lat, lng]);
-           console.log("🟩 RENDERING POLYLINE:", latlngs);
-
           L.polyline(latlngs, { color: "red", weight: 5 }).addTo(window.badRouteLayer);
         });
-    };
-
-
+      };
 
       window.clearBadRoutes = function () {
         if (window.badRouteLayer) {
           window.badRouteLayer.clearLayers();
         }
       };
-      console.log("📦 routes from RN:", routes);
-      alert("📦 Got routes: " + JSON.stringify(routes));
-
     </script>
   </body>
 </html>
