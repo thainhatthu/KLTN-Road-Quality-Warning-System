@@ -45,27 +45,6 @@ const MapPrivate: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const handleCameraUpload = () => {
-    setShowUploadModal(false);
-    setIsCameraActive(true);
-
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play();
-          }
-        })
-        .catch((error) => {
-          console.error("Error accessing camera:", error);
-        });
-    } else {
-      message.error("Camera is not supported on this device.");
-    }
-  };
-
   const handleAddMarker = (lat: number, lng: number, road: any) => {
     // Determine marker color based on road condition
     let markerColor;
@@ -564,12 +543,6 @@ const MapPrivate: React.FC = () => {
           <div className="modalContent">
             <h3 className="modalTitle">Choose Image Source</h3>
             <div className="modalActions">
-              <button
-                className="modalButtonCamera"
-                onClick={handleCameraUpload}
-              >
-                Use Camera
-              </button>
               <button
                 className="modalButtonLibrary"
                 onClick={handleLibraryUpload}
