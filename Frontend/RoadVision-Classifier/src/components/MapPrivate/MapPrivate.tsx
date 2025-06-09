@@ -30,7 +30,7 @@ const MapPrivate: React.FC = () => {
     status: null,
   });
 
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [, setShowUploadModal] = useState(false);
   const [showUploadWithLocationModal, setShowUploadWithLocationModal] =
     useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -283,9 +283,6 @@ const MapPrivate: React.FC = () => {
     }
   };
 
-  const openUploadModal = () => {
-    setShowUploadModal(true);
-  };
 
   const closeUploadModal = () => {
     setShowUploadModal(false);
@@ -513,7 +510,7 @@ const MapPrivate: React.FC = () => {
           <h3 className="uploadCardTitle">📤 Upload Road Image</h3>
 
           <div className="uploadCardButtons">
-            <button className="uploadPrimaryBtn" onClick={openUploadModal}>
+            <button className="uploadPrimaryBtn" onClick={handleLibraryUpload}>
               📷 Upload current image
             </button>
 
@@ -536,26 +533,6 @@ const MapPrivate: React.FC = () => {
       </div>
 
       <div ref={mapRef} className="map" />
-
-      {/* Upload Modal */}
-      {showUploadModal && (
-        <div className="modal">
-          <div className="modalContent">
-            <h3 className="modalTitle">Choose Image Source</h3>
-            <div className="modalActions">
-              <button
-                className="modalButtonLibrary"
-                onClick={handleLibraryUpload}
-              >
-                Upload from Library
-              </button>
-              <button className="modalButtonCancel" onClick={closeUploadModal}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Edit Coordinates Modal */}
       {showEditModal && (
