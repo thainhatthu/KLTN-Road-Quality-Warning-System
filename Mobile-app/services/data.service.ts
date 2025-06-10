@@ -9,7 +9,9 @@ import { getAccessToken } from "../utils/auth.util";
 export default {
   uploadRoad: async (formData: FormData) => {
     const url = `/datasvc/api/uploadRoad`;
-    const data = await axiosRequest.post(url, formData, {
+    const token = await getAccessToken();
+    const requestUrl = `${url}?token=${token}`;
+    const data = await axiosRequest.post(requestUrl, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
@@ -25,7 +27,9 @@ export default {
 
   deleteRoad: async (params: GetInfoRoadsParams) => {
     const url = "/datasvc/api/deleteRoad";
-    const data = await axiosRequest.delete(url, {
+    const token = await getAccessToken();
+    const requestUrl = `${url}?token=${token}`;
+    const data = await axiosRequest.delete(requestUrl, {
       params,
     });
     return data;
@@ -48,7 +52,9 @@ export default {
     longitude: number
   ) => {
     const url = `/datasvc/api/updateLocationRoad`;
-    const data = await axiosRequest.patch(url, null, {
+    const token = await getAccessToken();
+    const requestUrl = `${url}?token=${token}`;
+    const data = await axiosRequest.patch(requestUrl, null, {
       params: { id, latitude, longitude },
     });
     return data;

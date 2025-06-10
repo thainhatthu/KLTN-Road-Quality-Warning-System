@@ -53,6 +53,7 @@ const hideLoading = () => {
     requestCount = 0;
   }
 };
+
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const axiosRequest = axios.create({

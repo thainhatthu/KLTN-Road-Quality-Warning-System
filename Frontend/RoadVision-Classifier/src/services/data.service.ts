@@ -8,7 +8,8 @@ import { getAccessToken } from "../utils/auth.util";
 
 export default {
   uploadRoad: async (formData: UploadImgFormDataType) => {
-    const url = `/datasvc/api/uploadRoad`;
+    const token = getAccessToken();
+    const url = `/datasvc/api/uploadRoad?token=${token}`;
     const data = await axiosRequest.post(url, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -22,9 +23,10 @@ export default {
     });
     return data;
   },
-
+  
   deleteRoad: async (params: GetInfoRoadsParams) => {
-    const url = "/datasvc/api/deleteRoad";
+    const token = getAccessToken();
+    const url = `/datasvc/api/deleteRoad?token=${token}`;
     const data = await axiosRequest.delete(url, {
       params,
     });
@@ -41,11 +43,10 @@ export default {
         accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
-    });    
+    });
     console.log("response status", response);
     return response;
   },
-  
 
   getRouteMap: async () => {
     try {
@@ -63,7 +64,8 @@ export default {
     latitude: number,
     longitude: number
   ) => {
-    const url = `/datasvc/api/updateLocationRoad`;
+    const token = getAccessToken();
+    const url = `/datasvc/api/updateLocationRoad?token=${token}`;
     const data = await axiosRequest.patch(url, null, {
       params: { id, latitude, longitude },
     });

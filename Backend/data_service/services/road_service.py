@@ -37,25 +37,44 @@ class RoadService:
         try: 
             latitude = roadSchema.latitude
             longitude = roadSchema.longitude
-            roadSchema.location,roadSchema.location_part = get_location(latitude, longitude)
-            id=roadSchema.insertRoad()[0]
-            threading.Thread(target=RouteMap,args=([roadSchema.ward_id],)).start()
-            img=roadSchema.file
-            producer=KafkaProducer(
+            roadSchema.location, roadSchema.location_part = get_location(latitude, longitude)
+
+            db = Postgresql()
+
+            existing_road = db.execute(
+                f"SELECT id FROM road WHERE latitude = {latitude} AND longitude = {longitude}",
+                fetch='one'
+            )
+
+            if existing_road:
+                old_id = existing_road[0]
+                file_path = db.execute(f"SELECT image_path FROM road WHERE id={old_id}")[0]
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                db.execute(f"DELETE FROM road WHERE id = {old_id}", fetch='none')
+                db.commit()
+
+            id = roadSchema.insertRoad()[0]
+            db.close()
+
+            threading.Thread(target=RouteMap, args=([roadSchema.ward_id],)).start()
+
+            img = roadSchema.file
+            producer = KafkaProducer(
                 bootstrap_servers='192.168.120.179:9092',
                 value_serializer=lambda v: json.dumps(v).encode('utf-8')
             )
-            message={
-                "id":id,
+            message = {
+                "id": id,
                 "file": base64.b64encode(img).decode('utf-8'),
             }
             producer.send('image', message)
             producer.flush()
+
             return True
         except Exception as e:
             print(current_file_path, e)
             return False
-
 
     @staticmethod
     def getlistRoad(user_id=None,id_road=None,ward_id=None,all=False,getDone=False):

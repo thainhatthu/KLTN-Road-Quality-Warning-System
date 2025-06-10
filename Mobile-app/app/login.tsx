@@ -13,8 +13,7 @@ import { Link, router } from "expo-router";
 import { useState } from "react";
 import z from "zod";
 import { ERROR_MESSAGES } from "@/defination/consts/messages.const";
-import { useRecoilState } from "recoil";
-import { accountState } from "@/atoms/authState";
+import { useAccountStore } from "@/stores/accountStore";
 import authService from "@/services/auth.service";
 import { API_URL } from "@/configs";
 import { LoginDataType } from "@/defination/types/auth.type";
@@ -26,30 +25,25 @@ const signInSchema = z.object({
 });
 
 type SignInData = z.infer<typeof signInSchema>;
+
 export default function LoginScreen() {
   const [formData, setFormData] = useState<SignInData>({
     username: "",
     password: "",
   });
-
   const [error, setError] = useState<string | null>(null);
-  const [, setAccountState] = useRecoilState(accountState);
-  // Handle input field changes
+  const setAccount = useAccountStore((state) => state.setAccount); 
+  const [rememberMe, setRememberMe] = useState(false);
+
   const handleChange = (fieldName: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [fieldName]: value }));
   };
 
-  const [rememberMe, setRememberMe] = useState(false);
   const handleSignInClick = async () => {
     setError(null);
-
     const parseResult = signInSchema.safeParse(formData);
     if (!parseResult.success) {
-      const errorMessage = parseResult.error.errors[0].message;
-      setError(errorMessage);
+      setError(parseResult.error.errors[0].message);
       return;
     }
 
@@ -57,15 +51,16 @@ export default function LoginScreen() {
       const data = await authService.signIn(formData);
       const { info, token } = data;
 
-      if (info && token) {
-        const user_avatar = `${API_URL}/user/api/getAvatar?username=${info.username}`;
-        const fullInfo = { ...info, avatar: user_avatar };
+      if (info && token && typeof info.username === "string") {
+        const timestamp = new Date().getTime();
+        const user_avatar = `${API_URL}/user/api/getAvatar?username=${info.username}&t=${timestamp}`;
 
+        const fullInfo = { ...info, avatar: user_avatar, username: info.username as string };
+        setStoredUserInfo(fullInfo);
+        setAccount(fullInfo);
         saveAccessToken(token);
-        setStoredUserInfo(fullInfo); 
-        setAccountState(fullInfo);
 
-        router.push("/home"); 
+        router.push("/home");
       } else {
         console.error("Missing info or token");
       }
@@ -74,7 +69,6 @@ export default function LoginScreen() {
       setError("Invalid username or password.");
     }
   };
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}

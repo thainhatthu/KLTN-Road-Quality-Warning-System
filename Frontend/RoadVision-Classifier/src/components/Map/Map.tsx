@@ -270,7 +270,7 @@ const Map: React.FC = () => {
           const projLat = aLat + t * ax;
           const projLng = aLng + t * ay;
           const dist = Math.hypot(projLat - d.lat, projLng - d.lng);
-          if (dist < 0.0001 && !counted.has(i)) {
+          if (dist < 0.00005 && !counted.has(i)) {
             totalWeight += d.weight;
             counted.add(i);
 
@@ -326,26 +326,44 @@ const Map: React.FC = () => {
 
         startMarker?.remove();
         endMarker?.remove();
-        
-        const customIcon = L.divIcon({
+        const startIcon = L.divIcon({
+          html: `
+          <div style="position: relative; width: 30px; height: 42px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="30" height="42">
+              <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#AF3E3E" stroke="white" stroke-width="2"/>
+              <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial" dy=".3em" font-weight="bold">A</text>
+            </svg>
+          </div>
+        `,
           className: "",
-          html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="blue">
-                  <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="blue" />
-                </svg>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 30],
+          iconSize: [30, 42],
+          iconAnchor: [15, 42],
         });
 
-        const startMarkerInstance = L.marker([s.lat, s.lng], { icon: customIcon })
+        const endIcon = L.divIcon({
+          html: `
+            <div style="position: relative; width: 30px; height: 42px;">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="30" height="42">
+                <path d="M16 0C7 0 0 7.5 0 16.5S16 42 16 42s16-17.5 16-25.5S25 0 16 0z" fill="#FE5D26" stroke="white" stroke-width="2"/>
+                <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial" dy=".3em" font-weight="bold">B</text>
+              </svg>
+            </div>
+          `,
+          className: "",
+          iconSize: [30, 42],
+          iconAnchor: [15, 42],
+        });
+
+        const newStartMarker = L.marker([s.lat, s.lng], { icon: startIcon })
           .addTo(leafletMap.current!)
           .bindPopup("Start");
-        setStartMarker(startMarkerInstance);
 
-        const endMarkerInstance = L.marker([e.lat, e.lng], { icon: customIcon })
+        const newEndMarker = L.marker([e.lat, e.lng], { icon: endIcon })
           .addTo(leafletMap.current!)
           .bindPopup("End");
-        setEndMarker(endMarkerInstance);
 
+        setStartMarker(newStartMarker);
+        setEndMarker(newEndMarker);
         const res = await fetch(
           `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
         );
@@ -400,7 +418,10 @@ const Map: React.FC = () => {
           routeWhileDragging: false,
           addWaypoints: false,
           show: true,
-        }).addTo(leafletMap.current!);
+
+          createMarker: () => null,
+        } as any).addTo(leafletMap.current!);
+
         setDefaultRouting(routingCtrl);
       });
     });
@@ -505,7 +526,7 @@ const Map: React.FC = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
                 <p className="text-blue-800 text-sm font-medium mb-1 flex items-center gap-1">
                   <Sparkles size={16} />
-                  Best option is route {routeInfo[0].index}s
+                  Best option is route {routeInfo[0].index}
                 </p>
                 <ul className="text-sm text-gray-700 list-disc list-inside pl-2">
                   <li>Have fewer damaged segments</li>

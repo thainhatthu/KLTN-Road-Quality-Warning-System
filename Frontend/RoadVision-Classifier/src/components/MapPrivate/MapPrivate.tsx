@@ -30,7 +30,7 @@ const MapPrivate: React.FC = () => {
     status: null,
   });
 
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [, setShowUploadModal] = useState(false);
   const [showUploadWithLocationModal, setShowUploadWithLocationModal] =
     useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -44,27 +44,6 @@ const MapPrivate: React.FC = () => {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  const handleCameraUpload = () => {
-    setShowUploadModal(false);
-    setIsCameraActive(true);
-
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.play();
-          }
-        })
-        .catch((error) => {
-          console.error("Error accessing camera:", error);
-        });
-    } else {
-      message.error("Camera is not supported on this device.");
-    }
-  };
 
   const handleAddMarker = (lat: number, lng: number, road: any) => {
     // Determine marker color based on road condition
@@ -171,7 +150,9 @@ const MapPrivate: React.FC = () => {
                 window.location.reload();
               } catch (error) {
                 console.error("Error uploading image:", error);
-                message.error("An error occurred during the upload. Please try again.");
+                message.error(
+                  "An error occurred during the upload. Please try again."
+                );
               }
             },
             (error) => {
@@ -249,10 +230,13 @@ const MapPrivate: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleFileChange = (info: any) => {
-    const file = info.file.originFileObj;
-    if (file) {
-      setSelectedFile(file);
-      alert("Image selected successfully!");
+    const fileList = info.fileList;
+    if (fileList.length > 0) {
+      const file = fileList[fileList.length - 1].originFileObj;
+      if (file) {
+        setSelectedFile(file);
+        alert("Image selected successfully!");
+      }
     }
   };
 
@@ -266,6 +250,11 @@ const MapPrivate: React.FC = () => {
       alert("Please enter valid latitude and longitude.");
       return;
     }
+    console.log("Uploading with:", {
+      file: selectedFile,
+      latitude,
+      longitude,
+    });
     const formData = new FormData();
     formData.append("file", selectedFile);
     formData.append("latitude", latitude.toString());
@@ -278,8 +267,7 @@ const MapPrivate: React.FC = () => {
       alert("Image uploaded successfully!");
       closeUploadWithLocationModal();
       handleAddMarker(latitude, longitude, {
-        filepath:
-          "https://images4.alphacoders.com/115/thumb-1920-115716.jpg",
+        filepath: "https://images4.alphacoders.com/115/thumb-1920-115716.jpg",
       });
       window.location.reload();
     } catch (error: any) {
@@ -295,9 +283,6 @@ const MapPrivate: React.FC = () => {
     }
   };
 
-  const openUploadModal = () => {
-    setShowUploadModal(true);
-  };
 
   const closeUploadModal = () => {
     setShowUploadModal(false);
@@ -521,60 +506,33 @@ const MapPrivate: React.FC = () => {
           </div>
         )}
 
-        <span>
-          _______________________________________________________________
-        </span>
+        <div className="uploadCard">
+          <h3 className="uploadCardTitle">📤 Upload Road Image</h3>
 
-        <div className="buttonContainer flex flex-col">
-          <button className="uploadButton" onClick={openUploadModal}>
-            Upload current image
-          </button>
-          <span
-            style={{
-              alignSelf: "center",
-              fontSize: "16px",
-              padding: "25px",
-              fontWeight: "bold",
-            }}
-          >
-            Or
-          </span>{" "}
-          <button
-            className="modalButtonLibrary"
-            onClick={openUploadWithLocationModal}
-          >
-            Upload with location
-          </button>
+          <div className="uploadCardButtons">
+            <button className="uploadPrimaryBtn" onClick={handleLibraryUpload}>
+              📷 Upload current image
+            </button>
+
+            <div className="uploadDivider">or</div>
+
+            <button
+              className="uploadSecondaryBtn"
+              onClick={openUploadWithLocationModal}
+            >
+              📍 Upload with location
+            </button>
+          </div>
+
+          <p className="uploadNote">
+            ⚠️ Please take clear photos focusing only on the road surface. Avoid
+            taking blurry photos or photos with foreign objects to ensure
+            accurate detection.
+          </p>
         </div>
       </div>
 
       <div ref={mapRef} className="map" />
-
-      {/* Upload Modal */}
-      {showUploadModal && (
-        <div className="modal">
-          <div className="modalContent">
-            <h3 className="modalTitle">Choose Image Source</h3>
-            <div className="modalActions">
-              <button
-                className="modalButtonCamera"
-                onClick={handleCameraUpload}
-              >
-                Use Camera
-              </button>
-              <button
-                className="modalButtonLibrary"
-                onClick={handleLibraryUpload}
-              >
-                Upload from Library
-              </button>
-              <button className="modalButtonCancel" onClick={closeUploadModal}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Edit Coordinates Modal */}
       {showEditModal && (
@@ -652,14 +610,13 @@ const MapPrivate: React.FC = () => {
       {showUploadWithLocationModal && (
         <div className="modalUpload">
           <div className="modal-content">
-            {/* Nút đóng modal */}
             <button
               className="close-button"
               onClick={closeUploadWithLocationModal}
             >
               <CloseOutlined />
             </button>
-            <h2>Upload Image with Location</h2>
+            <h2>📍 Upload Image with Location</h2>
             <div className="modal-body">
               <label>
                 Latitude:

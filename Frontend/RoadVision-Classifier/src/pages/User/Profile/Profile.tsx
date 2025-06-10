@@ -127,7 +127,7 @@ export default function Profile() {
             src={mask}
             className="absolute top-0 left-0 w-full h-full object-cover rounded-2xl"
           />
-          <div className="absolute bg-white rounded-full top-[40%] w-36 h-36 flex justify-center items-center relative">
+          <div className="absolute bg-white rounded-full top-[40%] w-36 h-36 flex justify-center items-center">
             <img
               src={userRecoilStateValue.avatar}
               alt="Avatar"

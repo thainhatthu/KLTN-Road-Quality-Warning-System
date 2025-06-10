@@ -23,7 +23,7 @@ info_handler.setLevel(logging.INFO)
 info_handler.setFormatter(log_foramt)
 
 error_handler = logging.FileHandler("logs/backend.log")
-error_handler.setLevel(logging.ERROR)  # Chỉ ghi các log ERROR trở lên
+error_handler.setLevel(logging.ERROR)
 error_handler.setFormatter(log_foramt)
 logger.addHandler(info_handler)
 logger.addHandler(error_handler)

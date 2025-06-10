@@ -265,11 +265,10 @@ class User(BaseModel):
                 }
                 for province, districts in locations.items()
             }
-
             return formatted_locations
+        
         except Exception as e:
             print(f"Error getting valid wards: {e}")
             return {}
         finally:
             db.close()
-
