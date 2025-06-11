@@ -364,7 +364,7 @@ const MapPrivate: React.FC = () => {
         if (Array.isArray(data)) {
           if (data.length > 0) {
             const roads = data.map((item: string) => JSON.parse(item));
-            console.log("Dữ liệu đường:", roads);
+            console.log("Road data:", roads);
 
             setRoadsData(roads);
 
@@ -374,13 +374,13 @@ const MapPrivate: React.FC = () => {
               handleAddMarker(latitude, longitude, road);
             });
           } else {
-            console.error("Dữ liệu không hợp lệ, mảng rỗng:", data);
+            console.error("Invalid data, empty array:", data);
           }
         } else {
-          console.error("Dữ liệu không phải mảng:", data);
+          console.error("Invalid data, not an array:", data);
         }
       } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu đường:", error);
+        console.error("Error fetching road data:", error);
       }
     };
 
@@ -401,7 +401,6 @@ const MapPrivate: React.FC = () => {
       setRoadsData((prevRoads) =>
         prevRoads.filter((road) => road.id !== imageData.id)
       );
-      // Xóa marker liên quan đến đường đã xóa
       markersRef.current = markersRef.current.filter((marker) => {
         const { lat, lng } = marker.getLatLng();
         if (lat === imageData.latitude && lng === imageData.longitude) {

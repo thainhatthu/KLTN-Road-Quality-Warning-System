@@ -19,9 +19,3 @@ export type VerifyFormDataType = Partial<{
 export type ForgotFormDataType = {
   email: string;
 };
-
-// export type ChangePassFormDataType = {
-//   current_password: string;
-//   new_password: string;
-//   confirm_password: string;
-// };
