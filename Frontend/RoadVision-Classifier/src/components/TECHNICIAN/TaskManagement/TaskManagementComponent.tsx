@@ -364,28 +364,28 @@ const TaskManagementComponent: React.FC<TaskManagementComponentProps> = ({
       >
         <div className="flex flex-col gap-3">
           <Input
-            placeholder="Tổng chi phí"
+            placeholder="Total cost"
             value={report.totalCost}
             onChange={(e) =>
               setReport({ ...report, totalCost: e.target.value })
             }
           />
           <Input
-            placeholder="Phát sinh so với dự kiến"
+            placeholder="Deviation from plan"
             value={report.deviation}
             onChange={(e) =>
               setReport({ ...report, deviation: e.target.value })
             }
           />
           <Input
-            placeholder="Khó khăn gặp phải"
+            placeholder="Difficulties encountered"
             value={report.difficulty}
             onChange={(e) =>
               setReport({ ...report, difficulty: e.target.value })
             }
           />
           <Input
-            placeholder="Đề xuất cải thiện (Nếu có)"
+            placeholder="Proposed improvements (if any)"
             value={report.improvement}
             onChange={(e) =>
               setReport({ ...report, improvement: e.target.value })

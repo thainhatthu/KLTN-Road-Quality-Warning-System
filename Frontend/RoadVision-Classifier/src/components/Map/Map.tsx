@@ -67,7 +67,7 @@ const Map: React.FC = () => {
 
       L.marker(currentLocation, { icon })
         .addTo(map)
-        .bindPopup("Vị trí hiện tại của bạn")
+        .bindPopup("Current Location")
         .openPopup();
     });
 
@@ -112,7 +112,7 @@ const Map: React.FC = () => {
           });
         }
       } catch (err) {
-        console.error("Lỗi khi lấy info roads:", err);
+        console.error("Error fetching road info:", err);
       }
     })();
   }, []);

@@ -26,11 +26,4 @@ export default {
     const data: LoginDataType = await axiosRequest.post(url, formData);
     return data;
   },
-
-  // changePass: async (formData: ForgotFormDataType) => {
-  //   const url = `/auth/api/changePassword`;
-  //   const data: LoginDataType = await axiosRequest.post(url, formData);
-  //   return data;
-  // },
-
 };
