@@ -7,9 +7,6 @@ import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-control-geocoder";
 import "./map.css";
 import dataService from "../../services/data.service";
-import onButton from "../../assets/img/onButton.png";
-import offButton from "../../assets/img/offButton.png";
-import { message } from "antd";
 import {
   MapPin,
   Flag,
@@ -21,7 +18,9 @@ import {
   Ruler,
   Sparkles,
 } from "lucide-react";
-import "leaflet-control-geocoder";
+import "leaflet.heat";
+import onButton from "../../assets/img/onButton.png";
+import offButton from "../../assets/img/offButton.png";
 
 declare module "leaflet" {
   namespace Control {
@@ -35,7 +34,6 @@ declare module "leaflet" {
 const Map: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<L.Map | null>(null);
-  const [isBadRoutesVisible, setIsBadRoutesVisible] = useState(false);
   const [startLocation, setStartLocation] = useState("");
   const [endLocation, setEndLocation] = useState("");
   const [routeInfo, setRouteInfo] = useState<any[]>([]);
@@ -46,14 +44,132 @@ const Map: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
+  const [showBadZone, setShowBadZone] = useState(false);
+  const badZoneGroupRef = useRef<L.LayerGroup | null>(null);
+
+  // Bad zone layer
+  const toggleBadZones = async () => {
+    const map = leafletMap.current;
+    if (!map) return;
+
+    if (showBadZone) {
+      badZoneGroupRef.current?.clearLayers();
+      map.removeLayer(badZoneGroupRef.current!);
+      setShowBadZone(false);
+      return;
+    }
+
+    try {
+      const response = await dataService.getRouteMap();
+      const rawGroups = response;
+
+      if (!Array.isArray(rawGroups)) {
+        console.error("Invalid data from getRouteMap");
+        return;
+      }
+
+      const parsedPoints = rawGroups.flat().map((p: string) => {
+        const [lat, lng] = p.replace(/[()]/g, "").split(",").map(Number);
+        return [lat, lng] as [number, number];
+      });
+
+      const clusters: [number, number][][] = [];
+      const used = new Array(parsedPoints.length).fill(false);
+      const maxDist = 0.0004;
+      const minClusterSize = 3;
+
+      for (let i = 0; i < parsedPoints.length; i++) {
+        if (used[i]) continue;
+        const group = [parsedPoints[i]];
+        used[i] = true;
+
+        for (let j = 0; j < parsedPoints.length; j++) {
+          if (!used[j]) {
+            const d = Math.hypot(
+              parsedPoints[i][0] - parsedPoints[j][0],
+              parsedPoints[i][1] - parsedPoints[j][1]
+            );
+            if (d < maxDist) {
+              group.push(parsedPoints[j]);
+              used[j] = true;
+            }
+          }
+        }
+        clusters.push(group);
+      }
+
+      const groupLayer = L.layerGroup();
+
+      clusters.forEach((group) => {
+        group.forEach(([lat, lng]) => {
+          const marker = L.circleMarker([lat, lng], {
+            radius: 12,
+            color: "#EB5A3C",
+            fillColor: "#FF2929",
+            fillOpacity: 0.5,
+            weight: 1,
+          }).bindPopup("⚠️ Bad zone");
+
+          groupLayer.addLayer(marker);
+        });
+
+        const centerLat =
+          group.reduce((sum, p) => sum + p[0], 0) / group.length;
+        const centerLng =
+          group.reduce((sum, p) => sum + p[1], 0) / group.length;
+        const center = [centerLat, centerLng] as [number, number];
+
+        groupLayer.addLayer(
+          L.circle(center, {
+            radius: 40,
+            color: "#FF4545",
+            fillColor: "#FF4545",
+            fillOpacity: 0.4,
+            weight: 0,
+          })
+        );
+        groupLayer.addLayer(
+          L.circle(center, {
+            radius: 70,
+            color: "#F8EDE3",
+            fillColor: "#F8EDE3",
+            fillOpacity: 0.25,
+            weight: 0,
+          })
+        );
+        if (group.length >= minClusterSize) {
+          const avgLat = group.reduce((sum, p) => sum + p[0], 0) / group.length;
+          const avgLng = group.reduce((sum, p) => sum + p[1], 0) / group.length;
+          const zone = L.circle([avgLat, avgLng], {
+            radius: 60,
+            color: "#9333ea",
+            fillColor: "#e9d5ff",
+            fillOpacity: 0.25,
+            weight: 1,
+          }).bindPopup(`⚠️ Bad zone (${group.length} points)`);
+
+          groupLayer.addLayer(zone);
+        }
+      });
+
+      groupLayer.addTo(map);
+      badZoneGroupRef.current = groupLayer;
+      setShowBadZone(true);
+    } catch (err) {
+      console.error("Error fetching bad zone data", err);
+    }
+  };
+  // Initialize map
   useEffect(() => {
     if (!mapRef.current) return;
     const map = L.map(mapRef.current).setView([10.762622, 106.660172], 14);
     leafletMap.current = map;
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
+
     navigator.geolocation?.getCurrentPosition((position) => {
       const { latitude, longitude } = position.coords;
       const currentLocation = L.latLng(latitude, longitude);
@@ -71,127 +187,77 @@ const Map: React.FC = () => {
         .openPopup();
     });
 
+    const markerGroup = L.layerGroup();
+    const zoneGroup = L.layerGroup();
+
     (async () => {
-      try {
-        const roads = await dataService.getInfoRoads({ all: false });
+      const roads = await dataService.getInfoRoads({ all: false });
+      if (Array.isArray(roads)) {
+        roads.forEach((roadStr: string) => {
+          const road = JSON.parse(roadStr);
+          const { latitude, longitude, filepath, level } = road;
 
-        if (Array.isArray(roads)) {
-          roads.forEach((roadStr: string) => {
-            const road = JSON.parse(roadStr);
-            const { latitude, longitude, filepath, level } = road;
-            const levelColorMap: Record<string, string> = {
-              Good: "green",
-              Poor: "yellow",
-              "Very poor": "red",
-              Satisfactory: "blue",
-            };
+          const levelColorMap: Record<string, string> = {
+            Good: "green",
+            Poor: "orange",
+            "Very poor": "red",
+            Satisfactory: "blue",
+          };
 
-            const markerColor =
-              levelColorMap[level as keyof typeof levelColorMap] || "gray";
+          const markerColor =
+            levelColorMap[level as keyof typeof levelColorMap] || "gray";
 
-            const customIcon = L.divIcon({
-              className: "",
-              html: `
-                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="${markerColor}">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 7 13 7 13s7-8.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
-                  </svg>
-                `,
-              iconSize: [30, 30],
-              iconAnchor: [15, 30],
-            });
-            const fullImageUrl = `https://b151-42-116-6-46.ngrok-free.app/${filepath}`;
-            L.marker([latitude, longitude], { icon: customIcon }).addTo(map)
-              .bindPopup(`
-                    <div>
-                      <p><b>Road status:</b> ${level}</p>
-                      <p><b>Lat:</b> ${latitude}</p>
-                      <p><b>Long:</b> ${longitude}</p>
-                      <img src="${fullImageUrl}" alt="Ảnh đường" style="width: 100px; height: auto;" />
-                    </div>
-                  `);
+          const customIcon = L.divIcon({
+            className: "",
+            html: `
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="${markerColor}">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 7 13 7 13s7-8.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+            </svg>
+          `,
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
           });
-        }
-      } catch (err) {
-        console.error("Error fetching road info:", err);
+
+          const fullImageUrl = `https://b151-42-116-6-46.ngrok-free.app/${filepath}`;
+
+          const marker = L.marker([latitude, longitude], { icon: customIcon })
+            .bindPopup(`
+          <div>
+            <p><b>Road status:</b> ${level}</p>
+            <p><b>Lat:</b> ${latitude}</p>
+            <p><b>Long:</b> ${longitude}</p>
+            <img src="${fullImageUrl}" alt="Ảnh đường" style="width: 100px; height: auto;" />
+          </div>
+        `);
+          markerGroup.addLayer(marker);
+
+          const zone = L.circle([latitude, longitude], {
+            radius: 80,
+            color: markerColor,
+            fillColor: markerColor,
+            fillOpacity: 0.25,
+            weight: 1,
+          }).bindPopup(`<b>Road status:</b> ${level}`);
+          zoneGroup.addLayer(zone);
+        });
       }
+      const zoom = map.getZoom();
+      if (zoom >= 15) map.addLayer(markerGroup);
+      else map.addLayer(zoneGroup);
+      map.on("zoomend", () => {
+        const z = map.getZoom();
+        if (z >= 15) {
+          map.removeLayer(zoneGroup);
+          map.addLayer(markerGroup);
+        } else {
+          map.removeLayer(markerGroup);
+          map.addLayer(zoneGroup);
+        }
+      });
     })();
   }, []);
 
-  const toggleBadRoutes = async () => {
-    if (!leafletMap.current) return;
-    leafletMap.current.eachLayer((layer) => {
-      if (
-        (layer instanceof L.Polyline || layer instanceof L.Circle) &&
-        (layer as any)._badRouteLayer
-      ) {
-        leafletMap.current?.removeLayer(layer);
-      }
-    });
-
-    if (!isBadRoutesVisible) {
-      try {
-        const response = await dataService.getRouteMap();
-        const rawGroups = response;
-
-        if (!Array.isArray(rawGroups)) {
-          console.error("Bad route API return invalid datas:", rawGroups);
-          message.error("Data bad route is invalid");
-          return;
-        }
-
-        const parsed = rawGroups.flat().map((p: string) => {
-          const [lat, lng] = p.replace(/[()]/g, "").split(",").map(Number);
-          return [lat, lng];
-        });
-
-        const clusters: [number, number][][] = [];
-        const used = new Array(parsed.length).fill(false);
-        const maxDist = 0.0004;
-        const minClusterSize = 5;
-        for (let i = 0; i < parsed.length; i++) {
-          if (used[i]) continue;
-          const group = [parsed[i]];
-          used[i] = true;
-          for (let j = 0; j < parsed.length; j++) {
-            if (!used[j]) {
-              const d = Math.hypot(
-                parsed[i][0] - parsed[j][0],
-                parsed[i][1] - parsed[j][1]
-              );
-              if (d < maxDist) {
-                group.push(parsed[j]);
-                used[j] = true;
-              }
-            }
-          }
-          clusters.push(group as [number, number][]);
-        }
-        clusters.forEach((group) => {
-          if (group.length >= minClusterSize) {
-            const lat = group.reduce((a, p) => a + p[0], 0) / group.length;
-            const lng = group.reduce((a, p) => a + p[1], 0) / group.length;
-            const circle = L.circle([lat, lng], {
-              radius: 30,
-              color: "red",
-              fillColor: "red",
-              fillOpacity: 0.3,
-            }).addTo(leafletMap.current!);
-            (circle as any)._badRouteLayer = true;
-          } else {
-            const poly = L.polyline(group, { color: "red", weight: 4 }).addTo(
-              leafletMap.current!
-            );
-            (poly as any)._badRouteLayer = true;
-            poly.bindPopup("Damage route").openPopup();
-          }
-        });
-      } catch (err) {
-        console.error("Error when call API bad routes:", err);
-        message.error("Can not get data bad routes");
-      }
-    }
-    setIsBadRoutesVisible(!isBadRoutesVisible);
-  };
+  // Fetch suggestions for search query
   const fetchSuggestions = (query: string) => {
     if (!query) {
       setSuggestions([]);
@@ -210,7 +276,7 @@ const Map: React.FC = () => {
       setSuggestions(results);
     });
   };
-
+  // Handle suggestion selection
   const handleSelectSuggestion = (result: any) => {
     setSearchQuery(result.name);
     setSuggestions([]);
@@ -247,7 +313,7 @@ const Map: React.FC = () => {
         })
       : [];
   };
-
+  // Calculate weight for a route based on damage points
   const calculateWeightForRoute = (
     coords: [number, number][],
     damagePoints: { lat: number; lng: number; weight: number }[],
@@ -275,7 +341,7 @@ const Map: React.FC = () => {
             counted.add(i);
 
             L.circleMarker([d.lat, d.lng], {
-              radius: 6,
+              radius: 10,
               color: "red",
               fillColor: "#f03",
               fillOpacity: 0.7,
@@ -435,15 +501,16 @@ const Map: React.FC = () => {
         </h2>
         <div className="flex items-center justify-between mb-6 p-3 border border-blue-100 rounded-lg shadow-sm bg-blue-50">
           <span className="text-sm font-medium text-blue-700">
-            Show damaged roads
+            Show damaged zone
           </span>
           <img
-            src={isBadRoutesVisible ? onButton : offButton}
-            alt="Toggle Bad Routes"
+            src={showBadZone ? onButton : offButton}
+            alt="Toggle Bad Zones"
             className="w-10 h-10 cursor-pointer"
-            onClick={toggleBadRoutes}
+            onClick={toggleBadZones}
           />
         </div>
+
         <div className="mb-4">
           <input
             type="text"
