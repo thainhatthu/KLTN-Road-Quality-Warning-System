@@ -147,7 +147,7 @@ class Task(BaseModel):
         finally:
             db.close()
 
-    def update_status(self, status: str, road_id: int = None, ward_id: int = None,report=None) -> bool:
+    def update_status(self, status: str, road_id: int = None, ward_id: int = None, report=None) -> bool:
         db = Postgresql()
         try:
             user_result = db.select(
@@ -171,7 +171,7 @@ class Task(BaseModel):
             user_role = role_result[0]
 
             if ward_id:
-                if user_role != 1:  
+                if user_role != 1:
                     print(f"User '{self.username}' is not an admin.")
                     return False
 
@@ -196,7 +196,7 @@ class Task(BaseModel):
                 return True
 
             if road_id:
-                if user_role not in [1, 2]:  
+                if user_role not in [1, 2]:
                     print(f"User '{self.username}' is not authorized to update road status.")
                     return False
 
@@ -214,6 +214,7 @@ class Task(BaseModel):
                         f"status = '{status}', update_at = '{updated_at}'",
                         f"id = {road_id}"
                     )
+
                 if report:
                     report = json.dumps(report.dict())
                     db.update(
@@ -222,10 +223,20 @@ class Task(BaseModel):
                         f"id = {road_id}"
                     )
 
+                # Gọi lại RouteMap để cập nhật MongoDB nếu status là Done
+                if status == 'Done':
+                    from services import RouteMap
+                    road_info = db.execute(
+                        f'''SELECT ward_id FROM "road" WHERE id = {road_id}''',
+                        fetch='one'
+                    )
+                    if road_info:
+                        related_ward_id = road_info[0]
+                        RouteMap([related_ward_id])  # Tự động cập nhật route_map trong MongoDB
+
                 db.commit()
                 print(f"Road status updated to '{status}' for road_id '{road_id}' successfully.")
                 return True
-
 
             print("Invalid parameters for updating status.")
             return False
