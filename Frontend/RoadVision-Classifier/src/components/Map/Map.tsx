@@ -46,6 +46,7 @@ const Map: React.FC = () => {
 
   const [showBadZone, setShowBadZone] = useState(false);
   const badZoneGroupRef = useRef<L.LayerGroup | null>(null);
+  const countedMarkerGroupRef = useRef<L.LayerGroup | null>(null);
 
   // Bad zone layer
   const toggleBadZones = async () => {
@@ -317,7 +318,7 @@ const Map: React.FC = () => {
   const calculateWeightForRoute = (
     coords: [number, number][],
     damagePoints: { lat: number; lng: number; weight: number }[],
-    map: L.Map
+    _p0: L.Map
   ): number => {
     let totalWeight = 0;
     const counted = new Set<number>();
@@ -336,18 +337,19 @@ const Map: React.FC = () => {
           const projLat = aLat + t * ax;
           const projLng = aLng + t * ay;
           const dist = Math.hypot(projLat - d.lat, projLng - d.lng);
-          if (dist < 0.0001 && !counted.has(i)) {
+          if (dist < 0.00005 && !counted.has(i)) {
             totalWeight += d.weight;
             counted.add(i);
 
-            L.circleMarker([d.lat, d.lng], {
-              radius: 10,
-              color: "red",
-              fillColor: "#f03",
+            const marker = L.circleMarker([d.lat, d.lng], {
+              radius: 5,
+              color: "#c20027",
+              fillColor: "#c20027",
               fillOpacity: 0.7,
-            })
-              .addTo(map)
-              .bindPopup(`✅ Counted (weight=${d.weight})`);
+            }).bindPopup(`✅ Counted (weight=${d.weight})`);
+
+            countedMarkerGroupRef.current?.addLayer(marker);
+
             break;
           }
         }
@@ -446,7 +448,13 @@ const Map: React.FC = () => {
         }
 
         const info: any[] = [];
-
+        if (countedMarkerGroupRef.current) {
+          countedMarkerGroupRef.current.clearLayers();
+        } else {
+          countedMarkerGroupRef.current = L.layerGroup().addTo(
+            leafletMap.current!
+          );
+        }
         data.routes.forEach((r: any, idx: number) => {
           const coords = r.geometry.coordinates.map(([lon, lat]: any) => [
             lat,
