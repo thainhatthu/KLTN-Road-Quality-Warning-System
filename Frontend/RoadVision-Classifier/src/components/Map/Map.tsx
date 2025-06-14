@@ -47,6 +47,8 @@ const Map: React.FC = () => {
   const [showBadZone, setShowBadZone] = useState(false);
   const badZoneGroupRef = useRef<L.LayerGroup | null>(null);
   const countedMarkerGroupRef = useRef<L.LayerGroup | null>(null);
+  const [nearbyDamagedRoads, setNearbyDamagedRoads] = useState<any[]>([]);
+  const [showNearbyList, setShowNearbyList] = useState(false);
 
   // Bad zone layer
   const toggleBadZones = async () => {
@@ -175,6 +177,7 @@ const Map: React.FC = () => {
       const { latitude, longitude } = position.coords;
       const currentLocation = L.latLng(latitude, longitude);
       map.setView(currentLocation, 14);
+      fetchNearbyDamagedRoads(latitude, longitude);
       const icon = L.divIcon({
         className: "current-location-icon",
         html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="pink"><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="blue" /><circle cx="12" cy="12" r="4" fill="white" /></svg>`,
@@ -380,6 +383,39 @@ const Map: React.FC = () => {
       )
       .addTo(map);
   };
+  const getDistanceKm = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ) => {
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const fetchNearbyDamagedRoads = async (lat: number, lng: number) => {
+    try {
+      const res = await dataService.getInfoRoads({ all: false });
+      const roads = Array.isArray(res)
+        ? res.map((item: string) => JSON.parse(item))
+        : [];
+
+      const nearby = roads.filter(
+        (road: any) =>
+          getDistanceKm(lat, lng, road.latitude, road.longitude) < 1.0
+      );
+
+      setNearbyDamagedRoads(nearby);
+    } catch (err) {
+      console.error("❌ Failed to fetch nearby damaged roads:", err);
+    }
+  };
 
   const findRoute = async () => {
     const geocoder = (L.Control as any).Geocoder.nominatim();
@@ -433,7 +469,7 @@ const Map: React.FC = () => {
         setStartMarker(newStartMarker);
         setEndMarker(newEndMarker);
         const res = await fetch(
-          `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
+          `http://192.168.120.179/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
         );
         const data = await res.json();
 
@@ -507,7 +543,7 @@ const Map: React.FC = () => {
         <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-3">
           <Search size={24} /> Location Search
         </h2>
-        <div className="flex items-center justify-between mb-6 p-3 border border-blue-100 rounded-lg shadow-sm bg-blue-50">
+        <div className="flex items-center justify-between mb-2 p-3 border border-blue-100 rounded-lg shadow-sm bg-blue-50">
           <span className="text-sm font-medium text-blue-700">
             Show damaged zone
           </span>
@@ -518,6 +554,41 @@ const Map: React.FC = () => {
             onClick={toggleBadZones}
           />
         </div>
+        {nearbyDamagedRoads.length > 0 && (
+          <div className="border border-yellow-300 bg-yellow-50 rounded-xl p-4 mb-4 shadow-sm transition-all duration-300">
+            <button
+              onClick={() => setShowNearbyList((prev) => !prev)}
+              className="w-full flex items-center justify-between text-left text-yellow-800 font-semibold text-base hover:opacity-90"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle size={18} />
+                Nearby damaged roads
+              </div>
+              <span className="text-sm">{showNearbyList ? "▲" : "▼"}</span>
+            </button>
+
+            {showNearbyList && (
+              <ul className="mt-3 max-h-64 overflow-y-auto pr-2 divide-y divide-yellow-200 text-sm text-gray-800">
+                {nearbyDamagedRoads.map((r, idx) => (
+                  <li key={idx} className="py-2 pl-1">
+                    <div className="font-medium mb-1">
+                      📍 {r.location || <i>Unknown location</i>}
+                    </div>
+                    <div className="text-gray-600 text-sm flex flex-wrap gap-x-4">
+                      <span className="italic">
+                        {r.level || "Unspecified level"}
+                      </span>
+                      <span className="text-gray-500 text-xs">
+                        Lat: {r.latitude?.toFixed(5) || "N/A"} – Lng:{" "}
+                        {r.longitude?.toFixed(5) || "N/A"}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <div className="mb-4">
           <input
