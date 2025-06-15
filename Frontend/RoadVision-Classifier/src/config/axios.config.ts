@@ -4,7 +4,6 @@ import { message } from "antd";
 let loadingMessage: any = null;
 let requestCount = 0;
 
-// Hiển thị loading
 const showLoading = () => {
   if (requestCount === 0 && !loadingMessage) {
     // Tạo lớp overlay
@@ -54,7 +53,7 @@ const hideLoading = () => {
   }
 };
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = "https://b151-42-116-6-46.ngrok-free.app";
 
 const axiosRequest = axios.create({
   baseURL: BASE_URL,
@@ -74,7 +73,6 @@ axiosRequest.interceptors.request.use((config) => {
 axiosRequest.interceptors.response.use(
   (response) => {
     hideLoading();
-    // Trả về dữ liệu nếu tồn tại, nếu không trả về toàn bộ response
     return response?.data?.data;
   },
   (error) => {
@@ -82,7 +80,7 @@ axiosRequest.interceptors.response.use(
 
     showError(error?.response?.data?.message || "Internal Server Error");
 
-    return Promise.reject(error); // Giữ lỗi để xử lý tiếp
+    return Promise.reject(error); 
   }
 );
 
