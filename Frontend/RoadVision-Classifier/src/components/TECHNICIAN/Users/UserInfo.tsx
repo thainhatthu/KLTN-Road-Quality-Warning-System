@@ -116,9 +116,9 @@ export default function UserInfo({
           console.log("Extracted roads", extractedRoads);
           setDataSource(extractedRoads || []);
         }
-      } else console.log("Mảng rỗng");
+      } else console.log("Empty array");
     } catch (error) {
-      console.log("Không thể lấy danh sách đường!", error);
+      console.log("Error fetching road list:", error);
     } finally {
       setLoading(false);
     }

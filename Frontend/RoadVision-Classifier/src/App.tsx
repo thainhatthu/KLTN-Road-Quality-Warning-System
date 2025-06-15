@@ -39,7 +39,7 @@ const App: React.FC = () => {
   }, []);
 
   if (defaultPage === null) {
-    return <div>Loading...</div>; // Hiển thị trạng thái tải trong khi xác định trang mặc định
+    return <div>Loading...</div>; 
   }
   return (
     <Router>

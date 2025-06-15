@@ -17,76 +17,42 @@ import type { WebView as WebViewType } from "react-native-webview";
 import type { LocationObjectCoords } from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import dataService from "@/services/data.service";
-import { API_URL } from "@/configs";
 import LeafletMapWebView from "@/components/LeafletMapWebView";
 import { useBadRoutesStore } from "@/stores/badRoutesStore";
-type Suggestion = { display_name: string; lat: string; lon: string };
 
 export default function FullMapScreen() {
   const webviewRef = useRef<WebViewType>(null);
   const [location, setLocation] = useState<LocationObjectCoords | null>(null);
   const [showRouteHint, setShowRouteHint] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => setShowRouteHint(false), 7000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const [from, setFrom] = useState<{
     input: string;
     coord: { lat: number; lng: number } | null;
-    suggestions: Suggestion[];
-  }>({
-    input: "",
-    coord: null,
-    suggestions: [],
-  });
+    suggestions: any[];
+  }>({ input: "", coord: null, suggestions: [] });
   const [to, setTo] = useState<{
     input: string;
     coord: { lat: number; lng: number } | null;
-    suggestions: Suggestion[];
-  }>({
-    input: "",
-    coord: null,
-    suggestions: [],
-  });
+    suggestions: any[];
+  }>({ input: "", coord: null, suggestions: [] });
   const [routesInfo, setRoutesInfo] = useState<any[]>([]);
   const [showRoutesModal, setShowRoutesModal] = useState(false);
-  const [selectedMarkerInfo, setSelectedMarkerInfo] = useState<null | {
-    title: string;
+  type MarkerInfo = {
     lat: number;
     lng: number;
-    address: string;
-    time: string;
-    result: string;
-    image: string;
-  }>(null);
+    address?: string;
+    image?: string;
+    result?: string;
+    time?: string;
+  };
+  const [selectedMarkerInfo, setSelectedMarkerInfo] =
+    useState<MarkerInfo | null>(null);
 
   const showBadRoutes = useBadRoutesStore((s) => s.badRoutes);
   const badRoutes = useBadRoutesStore((s) => s.badRoutes);
-  useEffect(() => {
-    const fetchBadRoutes = async () => {
-      try {
-        const res = await dataService.getRouteMap();
-        const parsed = Array.isArray(res)
-          ? res.map((route) =>
-              route.map((point: string) => {
-                const [lat, lng] = point
-                  .replace("(", "")
-                  .replace(")", "")
-                  .split(",")
-                  .map((v) => parseFloat(v.trim()));
-                return [lat, lng];
-              })
-            )
-          : [];
-        // Process the parsed data here if needed
-        console.log("Parsed bad routes:", parsed);
-      } catch (error) {
-        console.error("❌ Error fetching bad routes:", error);
-      }
-    };
 
-    fetchBadRoutes();
+  useEffect(() => {
+    const timer = setTimeout(() => setShowRouteHint(false), 7000);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -98,13 +64,6 @@ export default function FullMapScreen() {
     })();
   }, []);
 
-  const handleLoadEnd = () => {
-    if (location && webviewRef.current) {
-      const js = `window.setUserLocation(${location.latitude}, ${location.longitude});`;
-      webviewRef.current.injectJavaScript(js);
-    }
-  };
-
   const fetchSuggestions = async (text: string, type: "from" | "to") => {
     if (text.length < 3) return;
     const res = await fetch(
@@ -112,58 +71,108 @@ export default function FullMapScreen() {
         text
       )}`
     );
-    const data: Suggestion[] = await res.json();
+    const data = await res.json();
     if (type === "from") setFrom((prev) => ({ ...prev, suggestions: data }));
     else setTo((prev) => ({ ...prev, suggestions: data }));
   };
 
-  const handleSelectSuggestion = (item: Suggestion, type: "from" | "to") => {
+  const handleSelectSuggestion = (item: any, type: "from" | "to") => {
     const coord = { lat: parseFloat(item.lat), lng: parseFloat(item.lon) };
     if (type === "from")
       setFrom({ input: item.display_name, coord, suggestions: [] });
     else setTo({ input: item.display_name, coord, suggestions: [] });
   };
 
-  const handleRoute = () => {
-    if (!to.coord) return;
+  const calculateWeight = (route: any, damagePoints: any[]) => {
+    let weight = 0;
+    const counted = new Set<number>();
+    damagePoints.forEach((d, i) => {
+      for (let j = 0; j < route.coords.length - 1; j++) {
+        const [aLat, aLng] = route.coords[j];
+        const [bLat, bLng] = route.coords[j + 1];
+        const ax = bLat - aLat,
+          ay = bLng - aLng;
+        const bx = d.lat - aLat,
+          by = d.lng - aLng;
+        const t = (ax * bx + ay * by) / (ax * ax + ay * ay);
+        if (t >= 0 && t <= 1) {
+          const projLat = aLat + t * ax;
+          const projLng = aLng + t * ay;
+          const dist = Math.hypot(projLat - d.lat, projLng - d.lng);
+          if (dist < 0.00005 && !counted.has(i)) {
+            weight += d.weight;
+            counted.add(i);
+          }
+        }
+      }
+    });
+    return weight;
+  };
 
+  const handleRoute = async () => {
+    if (!to.coord) return;
     const fromCoord =
       from.coord ??
       (location ? { lat: location.latitude, lng: location.longitude } : null);
-
     if (!fromCoord) return;
 
-    const js = `window.drawRoute(${fromCoord.lat}, ${fromCoord.lng}, ${to.coord.lat}, ${to.coord.lng});`;
-    webviewRef.current?.injectJavaScript(js);
-    setShowRoutesModal(true);
-  };
+    const url = `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${fromCoord.lng},${fromCoord.lat};${to.coord.lng},${to.coord.lat}?alternatives=true&overview=full&geometries=geojson`;
 
-  useEffect(() => {
-    const fetchRoads = async () => {
-      try {
-        const res = (await dataService.getInfoRoads({ all: false })) as {
-          data: { data: string[] };
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const routes = data.routes.map((r: any, idx: number) => ({
+        index: idx,
+        distance: (r.distance / 1000).toFixed(2),
+        duration: (r.duration / 60).toFixed(0),
+        coords: r.geometry.coordinates.map(([lon, lat]: number[]) => [
+          lat,
+          lon,
+        ]),
+      }));
+
+      const roadRes = (await dataService.getInfoRoads({ all: false })) as {
+        data?: { data?: string[] };
+      };
+      const parsed = Array.isArray(roadRes?.data?.data)
+        ? roadRes.data.data.map((item: string) => JSON.parse(item))
+        : [];
+
+      const damagePoints = parsed.map((r: any) => ({
+        lat: r.latitude,
+        lng: r.longitude,
+        weight: Number(r.weight) || 1,
+      }));
+
+      const colorPool = ["orange", "blue", "purple", "brown"];
+      const enriched = routes.map((r: any, i: number) => {
+        const weight = calculateWeight(r, damagePoints);
+        return {
+          ...r,
+          dangerWeight: weight,
+          color: colorPool[i % colorPool.length],
         };
+      });
 
-        if (webviewRef.current && Array.isArray(res?.data?.data)) {
-          const parsedRoads = res.data.data.map((item) => JSON.parse(item));
+      const sorted = enriched.sort(
+        (
+          a: { dangerWeight: number; duration: string },
+          b: { dangerWeight: number; duration: string }
+        ) =>
+          a.dangerWeight - b.dangerWeight ||
+          parseFloat(a.duration) - parseFloat(b.duration)
+      );
 
-          // Inject API_BASE cho WebView
-          const jsSetBase = `window.API_BASE = "${API_URL}";`;
-          webviewRef.current.injectJavaScript(jsSetBase);
-          const jsDrawMarkers = `window.displayRoadMarkers(${JSON.stringify(
-            parsedRoads
-          )});`;
-          webviewRef.current.injectJavaScript(jsDrawMarkers);
-        }
-      } catch (error) {
-        console.error("❌ Error fetching roads:", error);
-      }
-    };
-
-    fetchRoads();
-  }, []);
-
+      webviewRef.current?.injectJavaScript(
+        `window.drawPolylineRoute(${JSON.stringify(sorted)});`
+      );
+      setRoutesInfo(sorted);
+      setShowRoutesModal(true);
+    } catch (err) {
+      console.error("❌ Error calculating route:", err);
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -760,8 +769,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderColor: "#ccc",
     borderWidth: 1,
-borderBottomRightRadius: 10,
-borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
     maxHeight: 140,
     marginBottom: 10,
     paddingHorizontal: 8,

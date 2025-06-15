@@ -9,8 +9,9 @@ export default {
     during: "monthly" | "yearly";
     number: number;
   }) => {
+    const token = getAccessToken();
     const url = `/datasvc/api/statisticsRoad`;
-    const requestUrl = `${url}?during=${during}&number=${number}`;
+    const requestUrl = `${url}?during=${during}&number=${number}&token=${token}`;
     try {
       const statisticInfo = await axiosRequest.get(requestUrl);
       return statisticInfo;

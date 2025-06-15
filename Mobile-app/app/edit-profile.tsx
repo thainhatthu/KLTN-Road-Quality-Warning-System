@@ -21,7 +21,6 @@ import profileApi from "@/services/userprofile.service";
 import { API_URL } from "@/configs";
 import { setStoredUserInfo } from "@/utils/auth.util";
 
-
 export default function EditProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -29,7 +28,7 @@ export default function EditProfileScreen() {
 
   const [name, setName] = useState(profile?.fullname || "");
   const user = useAccountStore((state) => state.account);
-  const setAccount = useAccountStore((state) => state.setAccount); 
+  const setAccount = useAccountStore((state) => state.setAccount);
   const [phone, setPhone] = useState(profile?.phonenumber || "");
   const [dob, setDob] = useState(
     profile?.birthday ? new Date(profile.birthday) : new Date()
@@ -83,19 +82,22 @@ export default function EditProfileScreen() {
         setAvatarUri(selectedAsset.uri);
         const timestamp = new Date().getTime();
         const user_avatar = `${API_URL}/user/api/getAvatar?username=${user?.username}&t=${timestamp}`;
-        const fullInfo = { ...user, avatar: user_avatar, username: user?.username ?? "" };
+        const fullInfo = {
+          ...user,
+          avatar: user_avatar,
+          username: user?.username ?? "",
+        };
 
         setStoredUserInfo(fullInfo);
         setAccount(fullInfo);
         setShowModal(false);
-        Alert.alert("Thành công", "Cập nhật avatar thành công");
+        Alert.alert("Success", "Avatar updated successfully");
       } catch (err) {
-        console.error("❌ Upload thất bại:", err);
-        Alert.alert("Lỗi", "Upload thất bại");
+        console.error("❌ Upload failed:", err);
+        Alert.alert("Error", "Upload failed");
       }
     }
   };
-
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || dob;
@@ -145,10 +147,12 @@ export default function EditProfileScreen() {
           style={styles.avatar}
         />
 
-      <TouchableOpacity style={styles.editIcon} onPress={() => setShowModal(true)}>
-        <Ionicons name="pencil" size={14} color="#fff" />
-      </TouchableOpacity>
-
+        <TouchableOpacity
+          style={styles.editIcon}
+          onPress={() => setShowModal(true)}
+        >
+          <Ionicons name="pencil" size={14} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.name}>{user?.username ?? "User name"}</Text>
@@ -181,17 +185,28 @@ export default function EditProfileScreen() {
             <Text style={{ marginLeft: 6 }}>{dob.toDateString()}</Text>
           </TouchableOpacity>
 
-        <View style={[styles.input, { width: "48%", height: 40, justifyContent: "center", paddingVertical: 0, paddingHorizontal: 4 }]}>
-          <Picker
-            selectedValue={gender}
-            onValueChange={(itemValue) => setGender(itemValue)}
-            dropdownIconColor="#6E6D6D"
+          <View
+            style={[
+              styles.input,
+              {
+                width: "48%",
+                height: 40,
+                justifyContent: "center",
+                paddingVertical: 0,
+                paddingHorizontal: 4,
+              },
+            ]}
           >
-            <Picker.Item label="Select gender" value="" color="#6E6D6D" />
-            <Picker.Item label="Male" value="Male" />
-            <Picker.Item label="Female" value="Female" />
-          </Picker>
-        </View>
+            <Picker
+              selectedValue={gender}
+              onValueChange={(itemValue) => setGender(itemValue)}
+              dropdownIconColor="#6E6D6D"
+            >
+              <Picker.Item label="Select gender" value="" color="#6E6D6D" />
+              <Picker.Item label="Male" value="Male" />
+              <Picker.Item label="Female" value="Female" />
+            </Picker>
+          </View>
         </View>
         <TextInput
           placeholder="Address"
@@ -200,7 +215,12 @@ export default function EditProfileScreen() {
           style={styles.input}
           placeholderTextColor="#6E6D6D"
         />
-        <View style={[styles.input, { height: 40, paddingHorizontal: 0, justifyContent: "center" }]}>
+        <View
+          style={[
+            styles.input,
+            { height: 40, paddingHorizontal: 0, justifyContent: "center" },
+          ]}
+        >
           <Picker
             selectedValue={state}
             onValueChange={(itemValue) => setState(itemValue)}
@@ -209,7 +229,11 @@ export default function EditProfileScreen() {
           >
             <Picker.Item label="Select state" value="" color="#6E6D6D" />
             {stateList.map((stateItem) => (
-              <Picker.Item key={stateItem.key} label={stateItem.label} value={stateItem.label} />
+              <Picker.Item
+                key={stateItem.key}
+                label={stateItem.label}
+                value={stateItem.label}
+              />
             ))}
           </Picker>
         </View>
@@ -231,19 +255,15 @@ export default function EditProfileScreen() {
         >
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-        >
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveText}>Save</Text>
         </TouchableOpacity>
-
       </View>
 
       {showModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Chọn ảnh đại diện</Text>
+            <Text style={styles.modalTitle}>Choose Avatar</Text>
             <TouchableOpacity style={styles.modalButton} onPress={openCamera}>
               <Text style={styles.modalButtonText}>Use Camera</Text>
             </TouchableOpacity>
@@ -254,12 +274,13 @@ export default function EditProfileScreen() {
               style={[styles.modalButton, { backgroundColor: "#ccc" }]}
               onPress={() => setShowModal(false)}
             >
-              <Text style={[styles.modalButtonText, { color: "#000" }]}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: "#000" }]}>
+                Cancel
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
-
     </ScrollView>
   );
 }
@@ -323,7 +344,7 @@ const styles = StyleSheet.create({
     width: "90%",
     justifyContent: "space-between",
   },
-    inputBox2: {
+  inputBox2: {
     backgroundColor: "#E6F5FF",
     padding: 12,
     borderRadius: 12,

@@ -41,7 +41,7 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
       setDataSource(users);
       setRecoilProfile(users);
     } catch (error) {
-      console.log("Không thể lấy danh sách người dùng!");
+      console.log("Error fetching all users:", error);
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
       form.resetFields();
       setIsModalVisible(false);
     } catch (error) {
-      console.log("Thêm tài khoản thất bại!");
+      console.log("Error adding user:", error);
     }
   };
 
@@ -85,7 +85,7 @@ export default function AllUser({ onViewUserInfo }: AllUserProps) {
           alert("Delete user successfully!");
           fetchAllUsers();
         } catch (error) {
-          console.log("Xóa tài khoản thất bại!");
+          console.log("Error deleting user:", error);
         }
       },
     });
