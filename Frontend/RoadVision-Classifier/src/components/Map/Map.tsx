@@ -469,7 +469,7 @@ const Map: React.FC = () => {
         setStartMarker(newStartMarker);
         setEndMarker(newEndMarker);
         const res = await fetch(
-          `http://192.168.120.179/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
+          `https://b151-42-116-6-46.ngrok-free.app/osrm/route/v1/driving/${s.lng},${s.lat};${e.lng},${e.lat}?alternatives=true&overview=full&steps=true&geometries=geojson`
         );
         const data = await res.json();
 
