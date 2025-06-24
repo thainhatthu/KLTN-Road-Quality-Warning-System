@@ -7,7 +7,6 @@ from PIL import Image
 from io import BytesIO
 current_file_path = os.path.abspath(__file__)
 
-
 class RoadSchema(BaseModel):
     id: int = Field(None, description="Id of the image")
     user_id: int =Field(None, description="User own imgae")
