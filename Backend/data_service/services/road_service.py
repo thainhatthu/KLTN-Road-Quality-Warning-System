@@ -15,6 +15,7 @@ def get_location(lat, lon):
     try:
         geolocator = Nominatim(user_agent='n3twork@gmail.com')
         location = geolocator.reverse((lat, lon), language="vi")
+        print(location)
         if location:
             location = location.raw.get('display_name')
             location_part = location.split(', ')
