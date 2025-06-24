@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { PageEnum } from "../../defination/enums/page.enum";
 import { handleLogOut } from "../../utils/auth.util";
 import defaultAvatar from "../../assets/img/defaultAvatar.png";
-const api_url = "https://b151-42-116-6-46.ngrok-free.app";
+const api_url = "https://94a7-42-116-6-46.ngrok-free.app";
 
 const Header: React.FC = () => {
   const userRecoilStateValue = useRecoilValue(accountState);

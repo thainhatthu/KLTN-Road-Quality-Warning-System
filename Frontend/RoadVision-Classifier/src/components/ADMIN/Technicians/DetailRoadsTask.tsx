@@ -6,7 +6,7 @@ import technicianService from "../../../services/technicianprofile.service";
 import { AiOutlineDelete, AiOutlineEdit } from "react-icons/ai";
 import manageAlltechnicianService from "../../../services/manageAlltechnician.service";
 import { message } from "antd";
-const api_url = "https://b151-42-116-6-46.ngrok-free.app"
+const api_url = "https://94a7-42-116-6-46.ngrok-free.app"
 
 interface AllTaskDetailProps {
   task: any;
