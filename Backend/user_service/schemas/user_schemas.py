@@ -168,7 +168,6 @@ class User(BaseModel):
                     "avatar": avatar,
                     "contribution": contribution  
                 })
-
             return {"data": users_data}
 
         except Exception as e:

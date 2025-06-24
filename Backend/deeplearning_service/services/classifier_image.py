@@ -42,7 +42,6 @@ class ImageTransform():
     def __call__(self, img, phase='Test'):
         return self.data_transform[phase](img)
 
-
 def classifier_road(img):
     model=restevit_road_cls(num_class=4)
     checkpoint = torch.load('models/ResEViT_multiclass.pth',map_location=torch.device("cpu"))
