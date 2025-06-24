@@ -2,7 +2,6 @@ from main import app
 from fastapi.responses import FileResponse, JSONResponse
 import os
 
-
 @app.get("/api/getImage")
 async def get_image(imagePath: str):
     try:
