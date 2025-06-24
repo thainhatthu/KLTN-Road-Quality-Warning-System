@@ -53,7 +53,7 @@ const hideLoading = () => {
   }
 };
 
-const BASE_URL = "https://b151-42-116-6-46.ngrok-free.app";
+const BASE_URL = "https://94a7-42-116-6-46.ngrok-free.app";
 
 const axiosRequest = axios.create({
   baseURL: BASE_URL,
