@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 from typing import Tuple
 from Database import Postgresql
 from pydantic import BaseModel
@@ -7,11 +7,10 @@ import json
 class Task(BaseModel):
     username: str
     province_name: str = None
-    district_name: str = None
     ward_name: str = None
     deadline: datetime = None 
 
-    def assign_task(self) -> Tuple[bool, str, str, str, str]:
+    def assign_task(self) -> Tuple[bool, str, str, str]:
         db = Postgresql()
         try:
             user_result = db.select(
@@ -21,7 +20,7 @@ class Task(BaseModel):
             )
             if not user_result:
                 print(f"User '{self.username}' does not exist.")
-                return False, None, None, None, None
+                return False, None, None, None
             user_id = user_result[0]
 
             role_result = db.select(
@@ -31,7 +30,7 @@ class Task(BaseModel):
             )
             if not role_result or role_result[0] != 2: 
                 print(f"User not found or does not have 'technical' role.")
-                return False, None, None, None, None
+                return False, None, None, None
 
             user_info_result = db.select(
                 '"user"',
@@ -40,25 +39,24 @@ class Task(BaseModel):
             )
             if not user_info_result:
                 print(f"Fullname not found for user '{self.username}'.")
-                return False, None, None, None, None
+                return False, None, None, None
             fullname = user_info_result[0]
 
             query = f"""
-                SELECT w.id, d.name, p.name
+                SELECT w.id, p.name
                 FROM "ward" w
-                JOIN "district" d ON w.district_id = d.id
-                JOIN "province" p ON d.province_id = p.id
-                WHERE w.name = '{self.ward_name}' AND d.name = '{self.district_name}' AND p.name = '{self.province_name}'
+                JOIN "province" p ON w.province_id = p.id
+                WHERE w.name = '{self.ward_name}' AND p.name = '{self.province_name}'
             """
             ward_result = db.execute(query, fetch='one')
 
             if not ward_result:
                 print(f"Ward '{self.ward_name}' does not exist.")
-                return False, None, None, None, None
+                return False, None, None, None
 
-            ward_id, district_name, province_name = ward_result
-
+            ward_id, province_name = ward_result
             formatted_deadline = self.deadline.strftime('%Y-%m-%d %H:%M:%S')
+
             db.insert(
                 '"assignment"',
                 'user_id, ward_id, deadline',
@@ -67,10 +65,10 @@ class Task(BaseModel):
             db.commit()
 
             print(f"Task assigned to {self.username} successfully.")
-            return True, fullname, district_name, province_name
+            return True, fullname, self.ward_name, province_name
         except Exception as e:
             print(f"Error assigning task: {e}")
-            return False, None, None, None, None
+            return False, None, None, None
         finally:
             db.close()
 
@@ -78,53 +76,46 @@ class Task(BaseModel):
         db = Postgresql()
         try:
             query = f'''
-                SELECT s.id, s.deadline, s.status, w.name, d.name, p.name, w.id, d.id, p.id
+                SELECT s.id, s.deadline, s.status, w.name, p.name, w.id, p.id
                 FROM "assignment" s
                 JOIN "ward" w ON s.ward_id = w.id
-                JOIN "district" d ON w.district_id = d.id
-                JOIN "province" p ON d.province_id = p.id
+                JOIN "province" p ON w.province_id = p.id
                 JOIN "account" a ON s.user_id = a.id
             '''
-            
             if role == "admin" and user_id is not None:
-                query += f"WHERE s.user_id = {user_id}"
+                query += f" WHERE s.user_id = {user_id}"
             else:
-                query += f"WHERE s.user_id = (SELECT id FROM account WHERE username = '{self.username}')"
+                query += f" WHERE s.user_id = (SELECT id FROM account WHERE username = '{self.username}')"
 
             task_results = db.execute(query, fetch='all')
 
             tasks = []
             for row in task_results:
                 road_done_query = f'''
-                    SELECT COUNT(*)
-                    FROM "road"
-                    WHERE ward_id = {row[6]} AND status = 'Done'
+                    SELECT COUNT(*) FROM "road" WHERE ward_id = {row[5]} AND status = 'Done'
                 '''
                 road_count = db.execute(road_done_query, fetch='one')[0]
 
                 all_road_query = f'''
-                    SELECT COUNT(*)
-                    FROM "road"
-                    WHERE ward_id = {row[6]}
+                    SELECT COUNT(*) FROM "road" WHERE ward_id = {row[5]}
                 '''
                 all_road_count = db.execute(all_road_query, fetch='one')[0]
 
                 deadline = row[1].strftime('%Y-%m-%d %H:%M:%S') if isinstance(row[1], datetime) else None
-                location = f"{row[3]}, {row[4]}, {row[5]}"
+                location = f"{row[3]}, {row[4]}"
 
                 tasks.append({
                     "task_id": row[0],
                     "deadline": deadline,
                     "status": row[2],
                     "location": location,
-                    "ward_id": row[6],
-                    "district_id": row[7],
-                    "province_id": row[8],
+                    "ward_id": row[5],
+                    "province_id": row[6],
                     "road_done": road_count,
                     "all_road": all_road_count
                 })
             return tasks
-        
+
         except Exception as e:
             print(f"Error getting tasks: {e}")
             return []
@@ -223,7 +214,6 @@ class Task(BaseModel):
                         f"id = {road_id}"
                     )
 
-                # Gọi lại RouteMap để cập nhật MongoDB nếu status là Done
                 if status == 'Done':
                     from services import RouteMap
                     road_info = db.execute(
@@ -232,7 +222,7 @@ class Task(BaseModel):
                     )
                     if road_info:
                         related_ward_id = road_info[0]
-                        RouteMap([related_ward_id])  # Tự động cập nhật route_map trong MongoDB
+                        RouteMap([related_ward_id])  # cập nhật MongoDB
 
                 db.commit()
                 print(f"Road status updated to '{status}' for road_id '{road_id}' successfully.")
@@ -250,12 +240,9 @@ class Task(BaseModel):
         db = Postgresql()
         try:
             query = f'''
-                SELECT report
-                FROM road r
-                WHERE id = {road_id}
+                SELECT report FROM road WHERE id = {road_id}
             '''
             report_results = db.execute(query, fetch='all')
-
             return report_results
         except Exception as e:
             print(f"Error getting reports: {e}")

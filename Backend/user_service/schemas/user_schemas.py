@@ -234,11 +234,10 @@ class User(BaseModel):
         db = Postgresql()
         try:
             query = """
-                SELECT w.name, d.name, p.name
+                SELECT w.name, p.name
                 FROM "road" r
                 JOIN "ward" w ON r.ward_id = w.id
-                JOIN "district" d ON w.district_id = d.id
-                JOIN "province" p ON d.province_id = p.id
+                JOIN "province" p ON w.province_id = p.id
                 WHERE NOT EXISTS (
                     SELECT 1 
                     FROM "assignment" a 
@@ -251,19 +250,16 @@ class User(BaseModel):
                 return {}
 
             locations = {}
-            for ward_name, district_name, province_name in ward_results:
+            for ward_name, province_name in ward_results:
                 if province_name not in locations:
-                    locations[province_name] = {}
-                if district_name not in locations[province_name]:
-                    locations[province_name][district_name] = set()
-                locations[province_name][district_name].add(ward_name)
+                    locations[province_name] = set()
+                locations[province_name].add(ward_name)
 
+            # Convert sets to lists
             formatted_locations = {
-                province: {
-                    district: list(wards) for district, wards in districts.items()
-                }
-                for province, districts in locations.items()
+                province: list(wards) for province, wards in locations.items()
             }
+
             return formatted_locations
         
         except Exception as e:

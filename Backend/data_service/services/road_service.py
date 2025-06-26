@@ -20,11 +20,10 @@ def get_location(lat, lon):
             location = location.raw.get('display_name')
             location_part = location.split(', ')
             province = location_part[-3]
-            district = location_part[-4]
-            ward = location_part[-5]
+            ward = location_part[-4]
             location=", ".join(location_part[:-2])
-            print(location, [ward, district, province])
-            return location,[ward, district, province]
+            print(location, [ward, province])
+            return location,[ward, province]
         else:
             return None, []
     except Exception as e:
