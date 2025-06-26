@@ -278,10 +278,10 @@ CREATE TABLE public.assignment (
 ALTER TABLE public.assignment OWNER TO admin;
 
 --
--- Name: assignment_district_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- Name: assignment_ward_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
-CREATE SEQUENCE public.assignment_district_id_seq
+CREATE SEQUENCE public.assignment_ward_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -290,13 +290,13 @@ CREATE SEQUENCE public.assignment_district_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.assignment_district_id_seq OWNER TO admin;
+ALTER TABLE public.assignment_ward_id_seq OWNER TO admin;
 
 --
--- Name: assignment_district_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Name: assignment_ward_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
-ALTER SEQUENCE public.assignment_district_id_seq OWNED BY public.assignment.ward_id;
+ALTER SEQUENCE public.assignment_ward_id_seq OWNED BY public.assignment.ward_id;
 
 
 --
@@ -350,7 +350,7 @@ ALTER SEQUENCE public.assignment_user_id_seq OWNED BY public.assignment.user_id;
 CREATE TABLE public.ward (
     id integer NOT NULL,
     name character varying(50) NOT NULL,
-    district_id integer NOT NULL
+    province_id integer NOT NULL
 );
 
 
@@ -376,20 +376,6 @@ ALTER TABLE public.ward_id_seq OWNER TO admin;
 --
 
 ALTER SEQUENCE public.ward_id_seq OWNED BY public.ward.id;
-
-
---
--- Name: district; Type: TABLE; Schema: public; Owner: admin
---
-
-CREATE TABLE public.district (
-    id integer DEFAULT nextval('public.ward_id_seq'::regclass) NOT NULL,
-    province_id integer,
-    name character varying(255)
-);
-
-
-ALTER TABLE public.district OWNER TO admin;
 
 --
 -- Name: province; Type: TABLE; Schema: public; Owner: admin
@@ -466,28 +452,6 @@ ALTER SEQUENCE public.user_user_id_seq OWNED BY public."user".user_id;
 
 
 --
--- Name: ward_district_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
---
-
-CREATE SEQUENCE public.ward_district_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.ward_district_id_seq OWNER TO admin;
-
---
--- Name: ward_district_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
---
-
-ALTER SEQUENCE public.ward_district_id_seq OWNED BY public.ward.district_id;
-
-
---
 -- Name: AccessRoad id_user; Type: DEFAULT; Schema: public; Owner: admin
 --
 
@@ -526,7 +490,7 @@ ALTER TABLE ONLY public.assignment ALTER COLUMN user_id SET DEFAULT nextval('pub
 -- Name: assignment ward_id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.assignment ALTER COLUMN ward_id SET DEFAULT nextval('public.assignment_district_id_seq'::regclass);
+ALTER TABLE ONLY public.assignment ALTER COLUMN ward_id SET DEFAULT nextval('public.assignment_ward_id_seq'::regclass);
 
 
 --
@@ -579,150 +543,6 @@ ALTER TABLE ONLY public.ward ALTER COLUMN id SET DEFAULT nextval('public.ward_id
 
 
 --
--- Name: ward district_id; Type: DEFAULT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.ward ALTER COLUMN district_id SET DEFAULT nextval('public.ward_district_id_seq'::regclass);
-
---
--- Data for Name: district; Type: TABLE DATA; Schema: public; Owner: admin
---
-
-COPY public.district (id, province_id, name) FROM stdin;
-1	1	Quận Ba Đình
-2	1	Quận Hoàn Kiếm
-3	1	Quận Tây Hồ
-4	1	Quận Long Biên
-5	1	Quận Cầu Giấy
-6	1	Quận Đống Đa
-7	1	Quận Hai Bà Trưng
-8	1	Quận Hoàng Mai
-9	1	Quận Thanh Xuân
-10	1	Quận Nam Từ Liêm
-11	1	Quận Bắc Từ Liêm
-12	1	Huyện Sóc Sơn
-13	1	Huyện Đông Anh
-14	1	Huyện Gia Lâm
-15	1	Huyện Thanh Trì
-16	1	Huyện Mê Linh
-17	1	Huyện Ba Vì
-18	1	Huyện Phúc Thọ
-19	1	Huyện Thạch Thất
-20	1	Huyện Quốc Oai
-21	1	Huyện Chương Mỹ
-22	1	Huyện Đan Phượng
-23	1	Huyện Hoài Đức
-24	1	Huyện Thanh Oai
-25	1	Huyện Mỹ Đức
-26	1	Huyện Ứng Hòa
-27	1	Thị xã Sơn Tây
-28	2	Quận Hồng Bàng
-29	2	Quận Ngô Quyền
-30	2	Quận Lê Chân
-31	2	Quận Hải An
-32	2	Quận Kiến An
-33	2	Quận Đồ Sơn
-34	2	Quận Dương Kinh
-35	2	Huyện An Lão
-36	2	Huyện Kiến Thuỵ
-37	2	Huyện Thủy Nguyên
-38	2	Huyện An Dương
-39	2	Huyện Tiên Lãng
-40	2	Huyện Vĩnh Bảo
-41	2	Huyện Cát Hải
-42	2	Huyện Bạch Long Vĩ
-43	3	Thành phố Hạ Long
-44	3	Thành phố Móng Cái
-45	3	Thành phố Cẩm Phả
-46	3	Thành phố Uông Bí
-47	3	Huyện Bình Liêu
-48	3	Huyện Đầm Hà
-49	3	Huyện Hải Hà
-50	3	Huyện Tiên Yên
-51	3	Huyện Ba Chẽ
-52	3	Huyện Đông Triều
-53	3	Huyện Hoành Bồ
-54	3	Huyện Vân Đồn
-55	3	Thị xã Quảng Yên
-56	3	Huyện Cô Tô
-57	4	Thành phố Bắc Ninh
-58	4	Huyện Yên Phong
-59	4	Huyện Quế Võ
-60	4	Huyện Tiên Du
-61	4	Huyện Từ Sơn
-62	4	Huyện Thuận Thành
-63	4	Huyện Gia Bình
-64	4	Huyện Lương Tài
-65	5	Thành phố Phủ Lý
-66	5	Huyện Duy Tiên
-67	5	Huyện Kim Bảng
-68	5	Huyện Thanh Liêm
-69	5	Huyện Bình Lục
-70	5	Huyện Lý Nhân
-71	6	Thành phố Hải Dương
-72	6	Thị xã Chí Linh
-73	6	Huyện Nam Sách
-74	6	Huyện Kinh Môn
-75	6	Huyện Kim Thành
-76	6	Huyện Thanh Hà
-77	6	Huyện Cẩm Giàng
-78	6	Huyện Bình Giang
-79	6	Huyện Gia Lộc
-80	6	Huyện Tứ Kỳ
-81	6	Huyện Ninh Giang
-82	6	Huyện Thanh Miện
-83	45	Quận 1
-84	45	Quận 3
-85	45	Quận 4
-86	45	Quận 5
-87	45	Quận 6
-88	45	Quận 7
-89	45	Quận 8
-90	45	Quận 10
-91	45	Quận 11
-92	45	Quận 12
-93	45	Quận Bình Tân
-94	45	Quận Bình Thạnh
-95	45	Quận Gò Vấp
-96	45	Quận Phú Nhuận
-97	45	Quận Tân Bình
-98	45	Quận Tân Phú
-99	45	Thành phố Thủ Đức
-100	45	Huyện Bình Chánh
-101	45	Huyện Cần Giờ
-102	45	Huyện Củ Chi
-103	45	Huyện Hóc Môn
-104	45	Huyện Nhà Bè
-105	32	Quận Hải Châu
-106	32	Quận Thanh Khê
-107	32	Quận Sơn Trà
-108	32	Quận Ngũ Hành Sơn
-109	32	Quận Liên Chiểu
-110	32	Quận Cẩm Lệ
-111	32	Huyện Hòa Vang
-112	32	Huyện Hoàng Sa
-113	55	Quận Ninh Kiều
-114	55	Quận Ô Môn
-115	55	Quận Bình Thủy
-116	55	Quận Cái Răng
-117	55	Quận Thốt Nốt
-118	55	Huyện Vĩnh Thạnh
-119	55	Huyện Cờ Đỏ
-120	55	Huyện Phong Điền
-121	55	Huyện Thới Lai
-214	47	Thành phố Thuận An
-215	47	Thành phố Tân Uyên
-216	47	Thành phố Dĩ An
-217	47	Thị xã Bến Cát
-218	47	Thành phố Thủ Dầu Một
-219	47	Huyện Dầu Tiếng
-220	47	Huyện Bàu Bàng
-221	47	Huyện Phú Giáo
-222	47	Huyện Bắc Tân Uyên
-\.
-
-
---
 -- Data for Name: permission; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
@@ -738,444 +558,149 @@ COPY public.permission (id, name, description) FROM stdin;
 --
 
 COPY public.province (name, id) FROM stdin;
-Hà Nội	1
-Hải Phòng	2
-Quảng Ninh	3
-Bắc Ninh	4
-Hà Nam	5
-Hải Dương	6
-Hưng Yên	7
-Nam Định	8
-Ninh Bình	9
-Thái Bình	10
-Vĩnh Phúc	11
-Bắc Giang	12
-Bắc Kạn	13
-Cao Bằng	14
-Điện Biên	15
-Hà Giang	16
-Hòa Bình	17
-Lai Châu	18
-Lạng Sơn	19
-Lào Cai	20
-Phú Thọ	21
-Sơn La	22
-Thái Nguyên	23
-Tuyên Quang	24
-Yên Bái	25
-Thanh Hóa	26
-Nghệ An	27
-Hà Tĩnh	28
-Quảng Bình	29
-Quảng Trị	30
-Thừa Thiên Huế	31
-Đà Nẵng	32
-Bình Định	33
-Bình Thuận	34
-Khánh Hòa	35
-Ninh Thuận	36
-Phú Yên	37
-Quảng Nam	38
-Quảng Ngãi	39
-Đắk Lắk	40
-Đắk Nông	41
-Gia Lai	42
-Kon Tum	43
-Lâm Đồng	44
-Thành phố Hồ Chí Minh	45
-Bà Rịa - Vũng Tàu	46
-Bình Phước	48
-Đồng Nai	49
-Tây Ninh	50
-An Giang	51
-Bạc Liêu	52
-Bến Tre	53
-Cà Mau	54
-Cần Thơ	55
-Đồng Tháp	56
-Hậu Giang	57
-Kiên Giang	58
-Long An	59
-Sóc Trăng	60
-Tiền Giang	61
-Trà Vinh	62
-Vĩnh Long	63
-Tỉnh Bình Dương	47
+Tuyên Quang	1
+Cao Bằng	2
+Lai Châu	3
+Lào Cai	4
+Thái Nguyên	5
+Điện Biên	6
+Lạng Sơn	7
+Sơn La	8
+Phú Thọ	9
+Bắc Ninh	10
+Quảng Ninh	11
+Thành phố Hà Nội	12
+Thành phố Hải Phòng	13
+Hưng Yên	14
+Ninh Bình	15
+Thanh Hóa	16
+Nghệ An	17
+Hà Tĩnh	18
+Quảng Trị	19
+Thành phố Huế	20
+Thành phố Đà Nẵng	21
+Quảng Ngãi	22
+Gia Lai	23
+Đắk Lắk	24
+Khánh Hoà	25
+Lâm Đồng	26
+Đồng Nai	27
+Tây Ninh	28
+Thành phố Hồ Chí Minh	29
+Đồng Tháp	30
+An Giang	31
+Vĩnh Long	32
+Thành phố Cần Thơ	33
+Cà Mau	34
 \.
 
 --
 -- Data for Name: ward; Type: TABLE DATA; Schema: public; Owner: admin
 --
 
-COPY public.ward (id, name, district_id) FROM stdin;
-1	Phường An Khánh	99
-2	Phường An Lợi Đông	99
-3	Phường An Phú	99
-4	Phường Bình Chiểu	99
-5	Phường Bình Thọ	99
-6	Phường Bình Trưng Đông	99
-7	Phường Bình Trưng Tây	99
-8	Phường Cát Lái	99
-9	Phường Hiệp Bình Chánh	99
-10	Phường Hiệp Bình Phước	99
-11	Phường Hiệp Phú	99
-12	Phường Linh Chiểu	99
-13	Phường Linh Đông	99
-14	Phường Linh Tây	99
-15	Phường Linh Trung	99
-16	Phường Linh Xuân	99
-17	Phường Long Bình	99
-18	Phường Long Phước	99
-19	Phường Long Thạnh Mỹ	99
-20	Phường Long Trường	99
-21	Phường Phú Hữu	99
-22	Phường Phước Bình	99
-23	Phường Phước Long A	99
-24	Phường Phước Long B	99
-25	Phường Tam Bình	99
-26	Phường Tam Phú	99
-27	Phường Tăng Nhơn Phú A	99
-28	Phường Tăng Nhơn Phú B	99
-29	Phường Tân Phú	99
-30	Phường Thảo Điền	99
-31	Phường Thạnh Mỹ Lợi	99
-32	Phường Thủ Thiêm	99
-33	Phường Trường Thạnh	99
-34	Phường Trường Thọ	99
-35	Phường Bến Nghé	83
-36	Phường Bến Thành	83
-37	Phường Cô Giang	83
-38	Phường Cầu Kho	83
-39	Phường Cầu Ông Lãnh	83
-40	Phường Nguyễn Cư Trinh	83
-41	Phường Nguyễn Thái Bình	83
-42	Phường Phạm Ngũ Lão	83
-43	Phường Tân Định	83
-44	Phường Đa Kao	83
-45	Phường 1	84
-46	Phường 2	84
-47	Phường 3	84
-48	Phường 4	84
-49	Phường 5	84
-50	Phường 9	84
-51	Phường 10	84
-52	Phường 11	84
-53	Phường 12	84
-54	Phường 13	84
-55	Phường 14	84
-56	Phường Võ Thị Sáu	84
-57	Phường Thạnh Xuân	92
-58	Phường Thạnh Lộc	92
-59	Phường Hiệp Thành	92
-60	Phường Thới An	92
-61	Phường Tân Chánh Hiệp	92
-62	Phường An Phú Đông	92
-63	Phường Tân Thới Hiệp	92
-64	Phường Trung Mỹ Tây	92
-65	Phường Tân Hưng Thuận	92
-66	Phường Đông Hưng Thuận	92
-67	Phường Tân Thới Nhất	92
-68	Phường 1	85
-69	Phường 2	85
-70	Phường 3	85
-71	Phường 4	85
-72	Phường 5	85
-73	Phường 7	85
-74	Phường 8	85
-75	Phường 9	85
-76	Phường 10	85
-77	Phường 13	85
-78	Phường 15	85
-79	Phường 16	85
-80	Phường 18	85
-81	Phường 1	86
-82	Phường 2	86
-83	Phường 4	86
-84	Phường 5	86
-85	Phường 7	86
-86	Phường 9	86
-87	Phường 11	86
-88	Phường 12	86
-89	Phường 13	86
-90	Phường 14	86
-91	Phường 1	87
-92	Phường 2	87
-93	Phường 7	87
-94	Phường 8	87
-95	Phường 9	87
-96	Phường 11	87
-97	Phường 12	87
-98	Phường 13	87
-99	Phường 14	87
-100	Phường Phú Mỹ	88
-101	Phường Phú Thuận	88
-102	Phường Bình Thuận	88
-103	Phường Tân Phong	88
-104	Phường Tân Phú	88
-105	Phường Tân Hưng	88
-106	Phường Tân Kiểng	88
-107	Phường Tân Quy	88
-108	Phường Tân Thuận Đông	88
-109	Phường Tân Thuận Tây	88
-110	Phường Rạch Ông	89
-111	Phường 4	89
-112	Phường 5	89
-113	Phường 6	89
-114	Phường 7	89
-115	Phường Hưng Phú	89
-116	Phường Xóm Củi	89
-117	Phường 14	89
-118	Phường 15	89
-119	Phường 16	89
-120	Phường 1	90
-121	Phường 2	90
-122	Phường 4	90
-123	Phường 6	90
-124	Phường 8	90
-125	Phường 9	90
-126	Phường 10	90
-127	Phường 12	90
-128	Phường 13	90
-129	Phường 14	90
-130	Phường 15	90
-131	Phường 1	91
-132	Phường 3	91
-133	Phường 5	91
-134	Phường 7	91
-135	Phường 8	91
-136	Phường 10	91
-137	Phường 11	91
-138	Phường 14	91
-139	Phường 15	91
-140	Phường 16	91
-141	Phường 1	97
-142	Phường 2	97
-143	Phường 3	97
-144	Phường 4	97
-145	Phường 5	97
-146	Phường 6	97
-147	Phường 7	97
-148	Phường 8	97
-149	Phường 9	97
-150	Phường 10	97
-151	Phường 11	97
-152	Phường 12	97
-153	Phường 13	97
-154	Phường 14	97
-155	Phường 15	97
-156	Phường Hòa Thạnh	98
-157	Phường Phú Thạnh	98
-158	Phường Hiệp Tân	98
-159	Phường Phú Trung	98
-160	Phường Phú Thọ Hòa	98
-161	Phường Sơn Kỳ	98
-162	Phường Tân Quý	98
-163	Phường Tân Sơn Nhì	98
-164	Phường Tân Thành	98
-165	Phường Tân Thới Hòa	98
-166	Phường Tây Thạnh	98
-167	Phường 1	96
-168	Phường 2	96
-169	Phường 4	96
-170	Phường 5	96
-171	Phường 7	96
-172	Phường 8	96
-173	Phường 9	96
-174	Phường 10	96
-175	Phường 11	96
-176	Phường 13	96
-177	Phường 15	96
-178	Phường An Lạc	93
-179	Phường An Lạc A	93
-180	Phường Bình Hưng Hòa	93
-181	Phường Bình Hưng Hòa A	93
-182	Phường Bình Hưng Hòa B	93
-183	Phường Tân Tạo	93
-184	Phường Tân Tạo A	93
-185	Phường Bình Trị Đông A	93
-186	Phường Bình Trị Đông B	93
-187	Phường 1	94
-188	Phường 2	94
-189	Phường 5	94
-190	Phường 7	94
-191	Phường 11	94
-192	Phường 12	94
-193	Phường 13	94
-194	Phường 14	94
-195	Phường 17	94
-196	Phường 19	94
-197	Phường 22	94
-198	Phường 25	94
-199	Phường 26	94
-200	Phường 27	94
-201	Phường 28	94
-202	Phường 1	95
-203	Phường 3	95
-204	Phường 5	95
-205	Phường 6	95
-206	Phường 8	95
-207	Phường 10	95
-208	Phường 11	95
-209	Phường 12	95
-210	Phường 14	95
-211	Phường 15	95
-212	Phường 16	95
-213	Phường 17	95
-223	Thị Trấn Hóc Môn	103
-224	Xã Đông Thạnh	103
-225	Xã Bà Điểm	103
-226	Xã Nhị Bình	103
-227	Xã Tân Hiệp	103
-228	Xã Tân Thới Nhì	103
-229	Xã Tân Xuân	103
-230	Xã Thới Tam Thôn	103
-231	Xã Trung Chánh	103
-232	Xã Xuân Thới Đông	103
-233	Xã Xuân Thới Sơn	103
-234	Xã Xuân Thới Thượng	103
-235	Xã An Thới Đông	101
-236	Xã Bình Khánh	101
-237	 Xã Cần Thạnh	101
-238	Xã Long Hoà	101
-239	Xã Lý Nhơn	101
-240	Xã Tam Thôn Hiệp	101
-241	Xã Thạnh An	101
-242	Thị Trấn Cần Thạnh	101
-243	Thị Trấn Nhà Bè	104
-244	Xã Hiệp Phước	104
-245	Xã Long Thới	104
-246	Xã Nhơn Đức	104
-247	Xã Phú Xuân	104
-248	Xã Phước Kiển	104
-249	Xã Phước Lộc	104
-250	Thị Trấn Tân Túc	100
-251	Xã Tân Kiên	100
-252	Xã Tân Nhựt	100
-253	Xã An Phú Tây	100
-254	Xã Tân Quý Tây	100
-255	Xã Hưng Long	100
-256	Xã Qui Đức	100
-257	Xã Bình Chánh	100
-258	Xã Lê Minh Xuân	100
-259	Xã Phạm Văn Hai	100
-260	Xã Đình Xuyên	100
-261	Xã Bình Hưng	100
-262	Xã Bình Lợi	100
-263	Xã Đa Phước	100
-264	Xã Phong Phú	100
-265	Xã Vĩnh Lộc A	100
-266	Xã Vĩnh Lộc B	100
-267	 Xã An Nhơn Tây	102
-268	 Xã An Phú	102
-269	 Xã Bình Mỹ	102
-270	 Xã Hòa Phú	102
-271	 Xã Nhuận Đức	102
-272	 Xã Phạm Văn Cội	102
-273	 Xã Phú Hòa Đông	102
-274	 Xã Phú Mỹ Hưng	102
-275	 Xã Phước Hiệp	102
-276	 Xã Phước Thạnh	102
-277	 Xã Phước Vĩnh An	102
-278	 Xã Tân An Hội	102
-279	 Xã Tân Phú Trung	102
-280	 Xã Tân Thạnh Đông	102
-281	 Xã Tân Thạnh Tây	102
-282	 Xã Tân Thông Hội	102
-283	 Xã Thái Mỹ	102
-284	 Xã Trung An	102
-285	 Xã Trung Lập Hạ	102
-286	 Xã Trung Lập Thượng	102
-287	Phường An Phú	214
-288	Phường An Thạnh	214
-289	Phường Bình Chuẩn	214
-290	Phường Bình Hòa	214
-291	Phường Bình Nhâm	214
-292	Phường Hưng Định	214
-293	Phường Lái Thiêu	214
-294	Phường Thuận Giao	214
-295	Phường Vĩnh Phú	214
-296	Xã An Sơn	214
-297	Phường Hội Nghĩa	215
-298	Phường Khánh Bình	215
-299	Phường Phú Chánh	215
-300	Phường Tân Hiệp	215
-301	Phường Tân Phước Khánh	215
-302	Phường Tân Vĩnh Hiệp	215
-303	Phường Thái Hòa	215
-304	Phường Thạnh Phước	215
-305	Phường Uyên Hưng	215
-306	Phường Vĩnh Tân	215
-307	Xã Bạch Đằng	215
-308	Xã Thạnh Hội	215
-309	Phường An Bình	216
-310	Phường Bình An	216
-311	Phường Bình Thắng	216
-312	Phường Dĩ An	216
-313	Phường Đông Hòa	216
-314	Phường Tân Bình	216
-315	Phường Tân Đông Hiệp	216
-316	Phường Mỹ Phước	217
-317	Phường Thới Hoà	217
-318	Phường Hoà Lợi	217
-319	Phường Tân Định	217
-320	Phường Chánh Phú Hoà	217
-321	Xã An Tây	217
-322	Xã An Điền	217
-323	Xã Phú An	217
-324	Xã Chánh Mỹ	218
-325	Xã Chánh Nghĩa	218
-326	Xã Định Hòa	218
-327	Xã Hiệp An	218
-328	Xã Hiệp Thành	218
-329	Xã Hòa Phú	218
-330	Xã Phú Cường	218
-331	Xã Phú Hòa	218
-332	Xã Phú Lợi	218
-333	Xã Phú Mỹ	218
-334	Xã Phú Tân	218
-335	Xã Phú Thọ	218
-336	Xã Tân An	218
-337	Xã Tương Bình Hiệp	218
-338	Thị trấn Dầu Tiếng	28
-339	Xã An Lập	28
-340	Xã Định An	28
-341	Xã Định Hiệp	28
-342	Xã Định Thành	28
-343	Xã Long Hòa	28
-344	Xã Long Tân	28
-345	Xã Minh Hòa	28
-346	Xã Minh Tân	28
-347	Xã Minh Thạnh	28
-348	Xã Thanh An	28
-349	Xã Thanh Tuyền	28
-350	Thị trấn Lai Uyên	220
-351	Xã Cây Trường II	220
-352	Xã Hưng Hòa	220
-353	Xã Lai Hưng	220
-354	Xã Long Nguyên	220
-355	Xã Tân Hưng	220
-356	Xã Trừ Văn Thố	220
-357	Thị trấn Phước Vĩnh	221
-358	Xã An Bình	221
-359	Xã An Linh	221
-360	Xã An Long	221
-361	Xã An Thái	221
-362	Xã Phước Hòa	221
-363	Xã Phước Sang	221
-364	Xã Tam Lập	221
-365	Xã Tân Hiệp	221
-366	Xã Tân Long	221
-367	Xã Vĩnh Hòa	221
-368	Thị trấn Tân Thành	222
-369	Thị trấn Tân Bình	222
-370	Xã Bình Mỹ	222
-371	Xã Đất Cuốc	222
-372	Xã Hiếu Liêm	222
-373	Xã Lạc An	222
-374	Xã Tân Định	222
-375	Xã Tân Lập	222
-376	Xã Tân Mỹ	222
-377	Xã Thường Tân	222
+COPY public.ward (id, name, province_id) FROM stdin;
+1	Phường Hiệp Bình	29
+2	Phường Tam Bình	29
+3	Phường Thủ Đức	29
+4	Phường Linh Xuân	29
+5	Phường Long Bình	29
+6	Phường Tăng Nhơn Phú	29
+7	Phường Phước Long	29
+8	Phường Long Phước	29
+9	Phường Long Trường	29
+10	Phường An Khánh	29
+11	Phường Bình Trưng	29
+12	Phường Cát Lái	29
+13	Phường Tân Định	29
+14	Phường Sài Gòn	29
+15	Phường Bến Thành	29
+16	Phường Cầu Ông Lãnh	29
+17	Phường Xuân Hòa	29
+18	Phường Nhiêu Lộc	29
+19	Phường Bàn Cờ	29
+20	Phường Vĩnh Hội	29
+21	Phường Khánh Hội	29
+22	Phường Xóm Chiếu	29
+23	Phường Chợ Quán	29
+24	Phường An Đông	29
+25	Phường Chợ Lớn	29
+26	Phường Bình Tiên	29
+27	Phường Bình Tây	29
+28	Phường Bình Phú	29
+29	Phường Phú Lâm	29
+30	Phường Tân Mỹ	29
+31	Phường Phú Thuận	29
+32	Phường Tân Hưng	29
+33	Phường Tân Thuận	29
+34	Phường Chánh Hưng	29
+35	Phường Bình Đông	29
+36	Phường Phú Định	29
+37	Phường Vườn Lài	29
+38	Phường Diên Hồng	29
+39	Phường Hòa Hưng	29
+40	Phường Minh Phụng	29
+41	Phường Bình Thới	29
+42	Phường Hòa Bình	29
+43	Phường Phú Thọ	29
+44	Phường Đông Hưng Thuận	29
+45	Phường Trung Mỹ Tây	29
+46	Phường Tân Thới Hiệp	29
+47	Phường Thới An	29
+48	Phường An Phú Đông	29
+49	Phường Gia Định	29
+50	Phường Bình Thạnh	29
+51	Phường Bình Lợi Trung	29
+52	Phường Thạnh Mỹ Tây	29
+53	Phường Bình Quới	29
+54	Phường Bình Tân	29
+55	Phường Bình Hưng Hòa	29
+56	Phường Bình Trị Đông	29
+57	Phường An Lạc	29
+58	Phường Tân Tạo	29
+59	Phường Hạnh Thông	29
+60	Phường An Nhơn	29
+61	Phường Gò Vấp	29
+62	Phường Thông Tây Hội	29
+63	Phường An Hội Tây	29
+64	Phường An Hội Đông	29
+65	Phường Đức Nhuận	29
+66	Phường Cầu Kiệu	29
+67	Phường Phú Nhuận	29
+68	Phường Tây Thạnh	29
+69	Phường Tân Sơn Nhì	29
+70	Phường Phú Thọ Hòa	29
+71	Phường Phú Thạnh	29
+72	Phường Tân Phú	29
+73	Phường Tân Sơn Hòa	29
+74	Phường Tân Sơn Nhất	29
+75	Phường Tân Hòa	29
+76	Phường Bảy Hiền	29
+77	Phường Tân Bình	29
+78	Phường Tân Sơn	29
+79	Xã Vĩnh Lộc	29
+80	Xã Tân Vĩnh Lộc	29
+81	Xã Bình Lợi	29
+82	Xã Tân Nhựt	29
+83	Xã Bình Chánh	29
+84	Xã Hưng Long	29
+85	Xã Bình Hưng	29
+86	Xã An Nhơn Tây	29
+87	Xã Thái Mỹ	29
+88	Xã Nhuận Đức	29
+89	Xã Tân An Hội	29
+90	Xã Củ Chi	29
+91	Xã Phú Hòa Đông	29
+92	Xã Bình Mỹ	29
+93	Xã Bình Khánh	29
+94	Xã An Thới Đông	29
+95	Xã Cần Giờ	29
+96	Xã Thạnh An	29
+97	Xã Đông Thạnh	29
+98	Xã Hóc Môn	29
+99	Xã Xuân Thới Sơn	29
+100	Xã Bà Điểm	29
+101	Xã Nhà Bè	29
+102	Xã Hiệp Phước	29
 \.
 
 
@@ -1229,10 +754,10 @@ SELECT pg_catalog.setval('public.account_id_seq', 129, true);
 
 
 --
--- Name: assignment_district_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+-- Name: assignment_ward_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
 --
 
-SELECT pg_catalog.setval('public.assignment_district_id_seq', 1, true);
+SELECT pg_catalog.setval('public.assignment_ward_id_seq', 1, true);
 
 
 --
@@ -1261,13 +786,6 @@ SELECT pg_catalog.setval('public.province_id_seq', 63, true);
 --
 
 SELECT pg_catalog.setval('public.user_user_id_seq', 1, false);
-
-
---
--- Name: ward_district_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
---
-
-SELECT pg_catalog.setval('public.ward_district_id_seq', 1, false);
 
 
 --
@@ -1341,13 +859,6 @@ ALTER TABLE ONLY public.assignment
     ADD CONSTRAINT assignment_pkey PRIMARY KEY (id);
 
 
---
--- Name: district distric_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.district
-    ADD CONSTRAINT distric_pkey PRIMARY KEY (id);
-
 
 --
 -- Name: province province_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
@@ -1372,6 +883,8 @@ ALTER TABLE ONLY public."user"
 ALTER TABLE ONLY public.ward
     ADD CONSTRAINT ward_pkey PRIMARY KEY (id);
 
+ALTER TABLE public.ward
+    ADD CONSTRAINT ward_province_id_fkey FOREIGN KEY (province_id) REFERENCES public.province(id) ON DELETE CASCADE;
 
 --
 -- Name: AccessRoad AccessRoad_fk0; Type: FK CONSTRAINT; Schema: public; Owner: admin
@@ -1414,11 +927,11 @@ ALTER TABLE ONLY public.assignment
 
 
 --
--- Name: road road_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: road road_ward_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.road
-    ADD CONSTRAINT road_district_id_fkey FOREIGN KEY (ward_id) REFERENCES public.ward(id);
+    ADD CONSTRAINT road_ward_id_fkey FOREIGN KEY (ward_id) REFERENCES public.ward(id);
 
 
 --
@@ -1443,14 +956,6 @@ ALTER TABLE ONLY public.role
 
 ALTER TABLE ONLY public."user"
     ADD CONSTRAINT user_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.account(id) ON DELETE CASCADE;
-
-
---
--- Name: ward ward_district_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
---
-
-ALTER TABLE ONLY public.ward
-    ADD CONSTRAINT ward_district_id_fkey FOREIGN KEY (district_id) REFERENCES public.district(id) ON DELETE CASCADE;
 
 
 --
@@ -1545,10 +1050,10 @@ GRANT ALL ON TABLE public.assignment TO dev;
 
 
 --
--- Name: SEQUENCE assignment_district_id_seq; Type: ACL; Schema: public; Owner: admin
+-- Name: SEQUENCE assignment_ward_id_seq; Type: ACL; Schema: public; Owner: admin
 --
 
-GRANT SELECT,USAGE ON SEQUENCE public.assignment_district_id_seq TO dev;
+GRANT SELECT,USAGE ON SEQUENCE public.assignment_ward_id_seq TO dev;
 
 
 --
@@ -1580,13 +1085,6 @@ GRANT SELECT,USAGE ON SEQUENCE public.ward_id_seq TO dev;
 
 
 --
--- Name: TABLE district; Type: ACL; Schema: public; Owner: admin
---
-
-GRANT ALL ON TABLE public.district TO dev;
-
-
---
 -- Name: TABLE province; Type: ACL; Schema: public; Owner: admin
 --
 
@@ -1612,14 +1110,6 @@ GRANT ALL ON TABLE public."user" TO dev;
 --
 
 GRANT SELECT,USAGE ON SEQUENCE public.user_user_id_seq TO dev;
-
-
---
--- Name: SEQUENCE ward_district_id_seq; Type: ACL; Schema: public; Owner: admin
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.ward_district_id_seq TO dev;
-
 
 --
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: admin

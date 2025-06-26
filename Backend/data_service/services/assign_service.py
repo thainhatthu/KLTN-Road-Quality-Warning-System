@@ -16,7 +16,7 @@ class AssignService:
             )
 
         try:
-            success, fullname, district_name, province_name = task.assign_task()
+            success, fullname, _, province_name = task.assign_task() 
 
             if not success:
                 raise HTTPException(
@@ -24,10 +24,10 @@ class AssignService:
                     detail="Task assignment failed due to invalid user or role."
                 )
 
-            if not district_name or not province_name:
+            if not province_name:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="District or province information is missing."
+                    detail="Province information is missing."
                 )
 
             if not task.deadline:
@@ -44,7 +44,6 @@ class AssignService:
                     "username": task.username,
                     "fullname": fullname if fullname else "N/A",
                     "ward_name": task.ward_name,
-                    "district_name": district_name,
                     "province_name": province_name,
                     "deadline": formatted_deadline
                 },
@@ -65,7 +64,7 @@ class AssignService:
                 message=f"An error occurred while assigning task: {e}",
                 status_code=500
             )
-        
+
     @staticmethod
     def update_status_service(user_info: dict, status: str, road_id: int = None, ward_id: int = None, report=None):
         role = user_info.get("role")
@@ -101,11 +100,11 @@ class AssignService:
                 data.update({"ward_id": ward_id})
             if road_id:
                 data.update({"road_id": road_id})
-                db=Postgresql()
+                db = Postgresql()
                 ward_id = db.execute(f"SELECT ward_id FROM road WHERE id={road_id}")[0]
                 db.close()
             print(ward_id)
-            threading.Thread(target=RouteMap,args=([ward_id],)).start()
+            threading.Thread(target=RouteMap, args=([ward_id],)).start()
 
             return format_response(
                 status="Success",
@@ -128,7 +127,7 @@ class AssignService:
                 message="An error occurred while updating status",
                 status_code=500
             )
-        
+
     @staticmethod
     def get_task(user_info: dict, user_id: int = None):
         username = user_info.get("username")
@@ -173,7 +172,7 @@ class AssignService:
                 message="An error occurred while retrieving tasks",
                 status_code=500
             )
-        
+
     @staticmethod
     def delete_task(user_info: dict, task_id: int):
         username = user_info.get("username")
@@ -216,6 +215,7 @@ class AssignService:
                 message="An error occurred while deleting task",
                 status_code=500
             )
+
     @staticmethod
     def get_report_task(user_info: dict, road_id: int = None):
         username = user_info.get("username")
@@ -231,7 +231,7 @@ class AssignService:
             task = Task(username=username)
             report_results = task.get_report_task(road_id=road_id)
 
-            if not  report_results:
+            if not report_results:
                 return format_response(
                     status="Success",
                     data=[],
